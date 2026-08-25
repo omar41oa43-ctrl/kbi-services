@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  serverExternalPackages: ['firebase-admin', 'jwks-rsa', 'jose'],
   images: {
     unoptimized: false,
     remotePatterns: [
@@ -29,15 +30,14 @@ const nextConfig = {
   },
   async headers() {
     const noStore = 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0'
-    const staticCache = 'public, max-age=31536000, immutable'
     const swCache = 'public, max-age=0, must-revalidate'
     
     // Strict yet compatible CSP
     const cspHeader = `
       default-src 'self';
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://www.googletagmanager.com https://identitytoolkit.googleapis.com;
-      connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://ipwho.is https://api.qrserver.com;
-      img-src 'self' data: https://*.unsplash.com https://firebasestorage.googleapis.com https://api.qrserver.com https://www.googletagmanager.com https://*.google-analytics.com https://*.doubleclick.net;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://www.googletagmanager.com https://identitytoolkit.googleapis.com https://unpkg.com;
+      connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://ipwho.is https://api.qrserver.com https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://server.arcgisonline.com;
+      img-src 'self' data: blob: https://*.openstreetmap.org https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://server.arcgisonline.com https://*.arcgisonline.com https://*.unsplash.com https://firebasestorage.googleapis.com https://api.qrserver.com https://www.googletagmanager.com https://*.google-analytics.com https://*.doubleclick.net;
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
       font-src 'self' https://fonts.gstatic.com;
       frame-src 'self' https://*.firebaseapp.com https://*.web.app;
@@ -49,15 +49,25 @@ const nextConfig = {
 
     return [
       {
-        source: '/_next/static/:path*',
+        source: '/admin/:path*',
         headers: [
-          { key: 'Cache-Control', value: staticCache },
+          { key: 'Cache-Control', value: noStore },
+          { key: 'CDN-Cache-Control', value: noStore },
+          { key: 'Vercel-CDN-Cache-Control', value: noStore },
+          { key: 'Pragma', value: 'no-cache' },
+          { key: 'Expires', value: '0' },
+          { key: 'Surrogate-Control', value: 'no-store' },
         ],
       },
       {
-        source: '/_next/image',
+        source: '/admin',
         headers: [
-          { key: 'Cache-Control', value: staticCache },
+          { key: 'Cache-Control', value: noStore },
+          { key: 'CDN-Cache-Control', value: noStore },
+          { key: 'Vercel-CDN-Cache-Control', value: noStore },
+          { key: 'Pragma', value: 'no-cache' },
+          { key: 'Expires', value: '0' },
+          { key: 'Surrogate-Control', value: 'no-store' },
         ],
       },
       {
@@ -68,6 +78,7 @@ const nextConfig = {
           { key: 'Vercel-CDN-Cache-Control', value: noStore },
           { key: 'Pragma', value: 'no-cache' },
           { key: 'Expires', value: '0' },
+          { key: 'Surrogate-Control', value: 'no-store' },
         ],
       },
       {
@@ -75,14 +86,6 @@ const nextConfig = {
         headers: [
           { key: 'Cache-Control', value: swCache },
           { key: 'Service-Worker-Allowed', value: '/' },
-        ],
-      },
-      {
-        source: '/admin/:path*',
-        headers: [
-          { key: 'Cache-Control', value: noStore },
-          { key: 'Pragma', value: 'no-cache' },
-          { key: 'Expires', value: '0' },
         ],
       },
       {
