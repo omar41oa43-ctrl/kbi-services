@@ -259,134 +259,194 @@ export function OrderTracker() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
+                className="space-y-6"
               >
                 {(() => {
                   const step = resolveStatusStep(orderData.status)
                   const currentIndex = step - 1
                   const currentStatus = orderStatuses[currentIndex]
+                  const formattedDate = orderData.date || (orderData.createdAt ? new Date(orderData.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "")
 
                   return (
-                <GlassCard className="bg-gradient-to-br from-white/6 via-transparent to-cyan-500/10 ring-1 ring-white/10 shadow-[0_30px_90px_-55px_rgba(6,182,212,0.55)]">
-                  <div className="pointer-events-none absolute inset-0">
-                    <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-cyan-500/10 blur-3xl" />
-                    <div className="absolute -bottom-28 -left-24 w-72 h-72 rounded-full bg-blue-500/10 blur-3xl" />
-                    <div className="absolute inset-0 bg-[radial-gradient(70%_60%_at_50%_0%,rgba(6,182,212,0.14),rgba(0,0,0,0)_62%)]" />
-                  </div>
-                  {/* Order Info */}
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 pb-6 border-b border-border">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">{t("Tracking Number")}</p>
-                      <p className="text-xl font-mono font-bold text-cyan-600 dark:text-cyan-400">{orderData.orderId}</p>
-                    </div>
-                    <div className="text-start sm:text-end">
-                      <p className="text-sm text-muted-foreground mb-1">{t("Order Date")}</p>
-                      <p className="font-semibold text-foreground">{orderData.date || orderData.createdAt?.split('T')[0]}</p>
-                    </div>
-                  </div>
+                    <div className="relative overflow-hidden rounded-3xl border border-white/15 dark:border-white/10 bg-card/90 backdrop-blur-2xl shadow-2xl p-6 sm:p-8">
+                      {/* Ambient background glow */}
+                      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+                        <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-cyan-500/15 blur-3xl" />
+                        <div className="absolute -bottom-28 -left-24 w-80 h-80 rounded-full bg-blue-500/15 blur-3xl" />
+                      </div>
 
-                  {/* Device Info */}
-                  <div className="grid grid-cols-2 gap-4 mb-8 text-sm">
-                    <div>
-                      <p className="text-muted-foreground mb-1">{t("Device")}</p>
-                      <p className="font-semibold text-foreground">{orderData.device}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground mb-1">{t("Issue")}</p>
-                      <p className="font-semibold text-foreground">{orderData.issue}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground mb-1">{t("Technician")}</p>
-                      <p className="font-semibold text-cyan-700 dark:text-cyan-200">{orderData.technicianName || "---"}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground mb-1">{t("Est. Completion")}</p>
-                      <p className="font-semibold text-foreground">{orderData.estimatedCompletion || "---"}</p>
-                    </div>
-                  </div>
-
-                  {/* Status Timeline */}
-                  <div className="mb-8">
-                    <div className="flex items-center justify-between gap-4 mb-6">
-                      <h3 className="text-lg font-bold text-foreground">{t("Order Status")}</h3>
-                      {currentStatus?.name ? (
-                        <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-3 py-1 text-xs font-bold text-cyan-700 dark:text-cyan-200">
-                          <span className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
-                          {isAr ? t(currentStatus.name) : currentStatus.name}
-                        </div>
-                      ) : null}
-                    </div>
-                    <div className="relative">
-                      <div className={`absolute top-0 bottom-0 w-px ${isAr ? "right-[23px]" : "left-[23px]"} bg-gradient-to-b from-cyan-500/35 via-border to-transparent`} />
-
-                      <div className="space-y-4">
-                        {orderStatuses.map((status, index) => {
-                          const isCompleted = index < currentIndex
-                          const isCurrent = index === currentIndex
-                          const isPending = index > currentIndex
-
-                          return (
-                            <motion.div
-                              key={status.id}
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: index * 0.1 }}
-                              className={`flex items-start gap-4 relative ${isPending ? "opacity-40" : ""}`}
+                      {/* Header Badge & Order Number */}
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-border/70">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("Tracking Number")}</span>
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30">
+                              <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
+                              LIVE
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2.5">
+                            <h2 className="text-2xl sm:text-3xl font-extrabold font-mono text-cyan-600 dark:text-cyan-400 tracking-tight">
+                              {orderData.orderId}
+                            </h2>
+                            <button
+                              onClick={() => {
+                                if (navigator.clipboard) {
+                                  navigator.clipboard.writeText(orderData.orderId)
+                                }
+                              }}
+                              className="p-1.5 rounded-lg bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground transition-all active:scale-90"
+                              title={t("Copy order ID")}
+                              aria-label={t("Copy order ID")}
                             >
-                              <div
-                                className={`relative z-10 w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${isCompleted
-                                  ? "bg-cyan-500 text-black shadow-md"
-                                  : isCurrent
-                                    ? "bg-cyan-500/15 border-2 border-cyan-500 text-cyan-600 dark:text-cyan-200 shadow-md"
-                                    : "bg-muted border border-border text-muted-foreground"
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="text-start sm:text-end space-y-1">
+                          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("Order Date")}</span>
+                          <p className="text-sm sm:text-base font-semibold text-foreground">{formattedDate || "---"}</p>
+                        </div>
+                      </div>
+
+                      {/* Device & Service Information Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 my-6">
+                        <div className="p-4 rounded-2xl bg-muted/40 dark:bg-white/5 border border-border/60 hover:border-cyan-500/30 transition-colors">
+                          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">{t("Device")}</span>
+                          <p className="text-base font-bold text-foreground truncate">{orderData.device || "---"}</p>
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-muted/40 dark:bg-white/5 border border-border/60 hover:border-cyan-500/30 transition-colors">
+                          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">{t("Issue")}</span>
+                          <p className="text-sm font-semibold text-foreground line-clamp-2">{orderData.issue || "General Service"}</p>
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-muted/40 dark:bg-white/5 border border-border/60 hover:border-cyan-500/30 transition-colors">
+                          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">{t("Technician")}</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center text-xs font-bold">
+                              {orderData.technicianName ? orderData.technicianName.charAt(0).toUpperCase() : "T"}
+                            </div>
+                            <p className="text-sm font-bold text-cyan-700 dark:text-cyan-300">
+                              {orderData.technicianName || t("Assigning Specialist...")}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-muted/40 dark:bg-white/5 border border-border/60 hover:border-cyan-500/30 transition-colors">
+                          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">{t("Est. Completion")}</span>
+                          <p className="text-sm font-semibold text-foreground">{orderData.estimatedCompletion || t("Same-day Service")}</p>
+                        </div>
+                      </div>
+
+                      {/* Status Timeline Card */}
+                      <div className="p-5 sm:p-6 rounded-2xl bg-muted/30 dark:bg-black/40 border border-border/70 my-6">
+                        <div className="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-border/60">
+                          <h3 className="text-base font-bold text-foreground">{t("Order Status")}</h3>
+                          {currentStatus?.name ? (
+                            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/15 px-3.5 py-1 text-xs font-bold text-cyan-700 dark:text-cyan-200 shadow-xs">
+                              <span className="h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
+                              {isAr ? t(currentStatus.name) : currentStatus.name}
+                            </div>
+                          ) : null}
+                        </div>
+
+                        <div className="relative">
+                          {/* Vertical Track Line */}
+                          <div
+                            className={`absolute top-3 bottom-3 w-0.5 ${isAr ? "right-[21px]" : "left-[21px]"} bg-gradient-to-b from-cyan-500 via-cyan-500/40 to-border/50`}
+                          />
+
+                          <div className="space-y-4">
+                            {orderStatuses.map((status, index) => {
+                              const isCompleted = index < currentIndex
+                              const isCurrent = index === currentIndex
+                              const isPending = index > currentIndex
+
+                              return (
+                                <motion.div
+                                  key={status.id}
+                                  initial={{ opacity: 0, x: isAr ? 15 : -15 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: index * 0.05 }}
+                                  className={`flex items-start gap-4 relative transition-all duration-300 ${
+                                    isPending ? "opacity-35 grayscale" : "opacity-100"
                                   }`}
-                              >
-                                {isCurrent ? (
-                                  <span className="pointer-events-none absolute -inset-2 rounded-full bg-cyan-500/15 blur-md" />
-                                ) : null}
-                                {statusIcons[index]}
-                              </div>
-                              <div className="pt-2">
-                                <p
-                                  className={`font-bold ${isCurrent ? "text-cyan-600 dark:text-cyan-300" : isCompleted ? "text-foreground" : "text-muted-foreground"}`}
                                 >
-                                  {isAr ? t(status.name) : status.name}
-                                </p>
-                                <p className="text-sm text-muted-foreground">{isAr ? t(status.description) : status.description}</p>
-                              </div>
-                            </motion.div>
-                          )
-                        })}
+                                  <div
+                                    className={`relative z-10 w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-300 ${
+                                      isCompleted
+                                        ? "bg-emerald-500 text-black shadow-md shadow-emerald-500/20"
+                                        : isCurrent
+                                        ? "bg-cyan-500 text-black font-bold ring-4 ring-cyan-500/25 shadow-lg shadow-cyan-500/30 scale-105"
+                                        : "bg-background border border-border text-muted-foreground"
+                                    }`}
+                                  >
+                                    {isCompleted ? (
+                                      <CheckCircle2 className="w-5 h-5" />
+                                    ) : (
+                                      statusIcons[index]
+                                    )}
+                                  </div>
+
+                                  <div className="pt-1.5 min-w-0 flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <p
+                                        className={`text-sm font-bold truncate ${
+                                          isCurrent
+                                            ? "text-cyan-600 dark:text-cyan-300 font-extrabold"
+                                            : isCompleted
+                                            ? "text-foreground font-semibold"
+                                            : "text-muted-foreground"
+                                        }`}
+                                      >
+                                        {isAr ? t(status.name) : status.name}
+                                      </p>
+                                      {isCurrent && (
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30">
+                                          Current
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                                      {isAr ? t(status.description) : status.description}
+                                    </p>
+                                  </div>
+                                </motion.div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Contact Quick Action Buttons */}
+                      <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                        <a
+                          href={`https://wa.me/971502491034?text=${encodeURIComponent(`Hello, I'm checking on my order ${orderData.orderId}`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 flex items-center justify-center gap-2 py-3.5 px-6 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold text-sm shadow-md hover:shadow-emerald-500/25 active:scale-[0.98] transition-all"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                          <span suppressHydrationWarning>{t("Chat on WhatsApp")}</span>
+                        </a>
+                        <a
+                          href="tel:+971502491034"
+                          className="flex-1 flex items-center justify-center gap-2 py-3.5 px-6 bg-muted hover:bg-accent border border-border text-foreground rounded-2xl font-bold text-sm shadow-xs hover:border-border active:scale-[0.98] transition-all"
+                        >
+                          <Phone className="w-4 h-4" />
+                          <span suppressHydrationWarning>{t("Call Support")}</span>
+                        </a>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Contact Options */}
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <a
-                      href="https://wa.me/971502491034"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 flex items-center justify-center gap-2 py-3 bg-green-500 text-white rounded-full font-semibold hover:bg-green-600 transition-colors"
-                    >
-                      <MessageCircle className="w-5 h-5" />
-                      {t("Chat on WhatsApp")}
-                    </a>
-                    <a
-                      href="tel:+971502491034"
-                      className="flex-1 flex items-center justify-center gap-2 py-3 glass rounded-full font-semibold hover:bg-white/10 transition-colors"
-                    >
-                      <Phone className="w-5 h-5" />
-                      {t("Call Support")}
-                    </a>
-                  </div>
-                </GlassCard>
                   )
                 })()}
 
                 {ordersList.length > 0 && (
                   <button
                     onClick={() => { setOrderData(null) }}
-                    className="mt-6 mx-auto block text-muted-foreground hover:text-foreground underline text-sm"
+                    className="mt-6 mx-auto block text-muted-foreground hover:text-foreground underline text-sm font-semibold"
                   >
                     {t("Back to list")}
                   </button>

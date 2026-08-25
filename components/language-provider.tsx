@@ -225,6 +225,8 @@ const DICTIONARY: Record<string, string> = {
   "Call Support": "اتصل بالدعم",
   "ETA": "الوقت المتوقع",
   "Copy order ID": "نسخ رقم الطلب",
+  "Assigning Specialist...": "جاري تعيين فني مختص...",
+  "Same-day Service": "خدمة في نفس اليوم",
   "Searching...": "جاري البحث...",
   "Enter registered phone number": "أدخل رقم الهاتف المسجل",
   "Order Tracking": "تتبع الطلب",
