@@ -1,0 +1,9 @@
+.git
+node_modules
+.next
+.vercel
+functions
+kbi_technician_app
+fix
+*.log
+.DS_Store
