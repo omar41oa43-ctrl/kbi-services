@@ -152,10 +152,10 @@ export function OrderTracker() {
               <div className="relative flex-1">
                 <Search className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground ${isAr ? "right-4" : "left-4"}`} />
                 <input
-                  type="tel"
+                  type="text"
                   value={inputVal}
                   onChange={(e) => setInputVal(e.target.value)}
-                  placeholder={t("Enter registered phone number")}
+                  placeholder={t("Enter order ID or phone number")}
                   className={`w-full py-4 bg-background border border-input rounded-xl focus:outline-none focus:border-cyan-500 transition-colors text-foreground text-base shadow-xs placeholder:text-muted-foreground/60 ${isAr ? "pr-12 pl-4 text-right placeholder:text-right" : "pl-12 pr-4 text-left"}`}
                   dir={isAr ? "rtl" : "ltr"}
                 />
