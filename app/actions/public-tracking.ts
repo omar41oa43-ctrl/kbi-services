@@ -100,19 +100,21 @@ export async function getPublicOrderAction(orderId: string) {
             }
         }
 
-        // 2. Try querying 'orders' collection with 'in' queries on orderId, id, trackingNumber
+        // 2. Try querying 'orders' collection with 'in' queries on orderId, orderNumber, previousOrderId, trackingNumber
         for (const chunk of chunkArray(searchKeys, 10)) {
-            const [qOrderId, qTracking] = await Promise.all([
+            const [qOrderId, qOrderNum, qPrev, qTracking] = await Promise.all([
                 db.collection("orders").where("orderId", "in", chunk).limit(1).get(),
+                db.collection("orders").where("orderNumber", "in", chunk).limit(1).get(),
+                db.collection("orders").where("previousOrderId", "in", chunk).limit(1).get(),
                 db.collection("orders").where("trackingNumber", "in", chunk).limit(1).get(),
             ])
 
-            const hit = !qOrderId.empty ? qOrderId.docs[0] : (!qTracking.empty ? qTracking.docs[0] : null)
+            const hit = !qOrderId.empty ? qOrderId.docs[0] : (!qOrderNum.empty ? qOrderNum.docs[0] : (!qPrev.empty ? qPrev.docs[0] : (!qTracking.empty ? qTracking.docs[0] : null)))
             if (hit) {
                 const data = hit.data() || {}
                 return {
                     id: hit.id,
-                    orderId: data.orderId || hit.id,
+                    orderId: data.orderId || data.orderNumber || hit.id,
                     status: data.status || "pending",
                     device: data.device || `${data.brand || ""} ${data.model || ""}`.trim() || "Device Repair",
                     service: data.service || data.serviceType || data.issueType || data.issue || "General Repair",
@@ -133,12 +135,13 @@ export async function getPublicOrderAction(orderId: string) {
 
         // 3. Try querying 'bookings' collection
         for (const chunk of chunkArray(searchKeys, 10)) {
-            const [qOrderId, qTracking] = await Promise.all([
+            const [qOrderId, qBookingId, qTracking] = await Promise.all([
                 db.collection("bookings").where("orderId", "in", chunk).limit(1).get(),
+                db.collection("bookings").where("bookingId", "in", chunk).limit(1).get(),
                 db.collection("bookings").where("trackingNumber", "in", chunk).limit(1).get(),
             ])
 
-            const hit = !qOrderId.empty ? qOrderId.docs[0] : (!qTracking.empty ? qTracking.docs[0] : null)
+            const hit = !qOrderId.empty ? qOrderId.docs[0] : (!qBookingId.empty ? qBookingId.docs[0] : (!qTracking.empty ? qTracking.docs[0] : null))
             if (hit) {
                 const data = hit.data() || {}
                 return {

@@ -77,9 +77,11 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
 
         // Continue with Firebase for backward compatibility
         for (const entry of deviceEntries) {
-            // Get sequential order number from admin actions
-            const nextOrderResult = await getNextOrderNumberAction()
-            const orderId = nextOrderResult.orderNumber || `KBI-${Math.floor(1000 + Math.random() * 9000)}`
+            const orderId = pgOrderNumber
+
+            const lat = typeof formData.locationLat === "number" ? formData.locationLat : null
+            const lng = typeof formData.locationLng === "number" ? formData.locationLng : null
+            const hasCoords = typeof lat === "number" && typeof lng === "number"
 
             const payload = {
                 orderId,
@@ -100,48 +102,49 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
                 status: "Order Created",
                 technician: "unassigned",
                 price: 0,
-                createdAt: new Date(),
-                updatedAt: new Date()
+                createdAt: Timestamp.now(),
+                updatedAt: Timestamp.now(),
             }
 
-            // Add Order
-            const orderRef = adminDb.collection("orders").doc()
-            await orderRef.set(payload);
+            await adminDb.collection("orders").add(payload)
 
-            const lat = typeof formData.locationLat === "number" ? formData.locationLat : null
-            const lng = typeof formData.locationLng === "number" ? formData.locationLng : null
-            const hasCoords = typeof lat === "number" && typeof lng === "number"
-
-            // Add Booking to 'bookings' collection
-            const bookingPayload = {
+            const bookingPayload: any = {
                 bookingId: orderId,
+                orderId,
                 customerName: formData.name,
                 customerPhone: formData.phone,
-                customerEmail: formData.email || "",
-                service: entry.deviceName,
-                device: `${entry.brandName || ""} ${entry.model || ""}`.trim(),
-                issue: entry.issues.join(", "),
-                address: formData.address || "",
-                location: {
-                    lat: hasCoords ? lat : 0,
-                    lng: hasCoords ? lng : 0
-                },
-                priority: "Normal",
-                status: "Pending",
-                assignedTechnician: null,
+                serviceType: entry.deviceName,
+                deviceModel: `${entry.brandName} ${entry.model}`,
+                deviceIssues: entry.issues,
+                address: formData.address,
                 notes: formData.notes || "",
-                createdAt: new Date(),
-                updatedAt: new Date()
+                scheduledDate: formData.preferredDate || "",
+                scheduledTime: formData.preferredTime || "",
+                status: "pending",
+                priority: "MEDIUM",
+                createdAt: Timestamp.now(),
+                updatedAt: Timestamp.now(),
             }
+
+            if (hasCoords) {
+                bookingPayload.latitude = lat
+                bookingPayload.longitude = lng
+                bookingPayload.location = {
+                    lat,
+                    lng,
+                    address: String(formData.address || ""),
+                }
+            }
+
             await adminDb.collection("bookings").doc(orderId).set(bookingPayload)
 
-            // Add to job_history
-            await adminDb.collection("job_history").add({
+            await adminDb.collection("customer_timeline").add({
                 bookingId: orderId,
+                orderId,
+                status: "pending",
                 action: "Booking Created",
-                performedBy: "Customer",
-                timestamp: new Date(),
-                notes: "Booking submitted via customer website form."
+                notes: `Customer created a booking for ${entry.brandName} ${entry.model}`,
+                timestamp: Timestamp.now(),
             })
 
             const srRef = adminDb.collection("service_requests").doc()
@@ -162,9 +165,7 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
                 orderId,
             })
 
-            if (orderId !== pgOrderNumber) {
-                createdIds.push(orderId)
-            }
+            createdIds.push(orderId)
 
             // Add Notification
             await adminDb.collection("notifications").add({
