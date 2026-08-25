@@ -1,0 +1,107 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return signedIn()
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid))
+        : null;
+    }
+
+    function role() {
+      return (signedIn() && userDoc().exists && "role" in userDoc().data) ? userDoc().data.role : "";
+    }
+
+    function isAdmin() {
+      return signedIn() && (role() == "admin" || role() == "super_admin");
+    }
+
+    function techDoc(uid) {
+      return get(/databases/$(database)/documents/technicians/$(uid));
+    }
+
+    function techActive(uid) {
+      return signedIn()
+        && techDoc(uid).exists
+        && techDoc(uid).data.isApproved == true
+        && techDoc(uid).data.isActive == true
+        && techDoc(uid).data.subscriptionStatus == "active";
+    }
+
+    function isTechActive() {
+      return signedIn() && techActive(request.auth.uid);
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn() && (isAdmin() || request.auth.uid == uid);
+      allow create: if signedIn() && request.auth.uid == uid;
+      allow update: if signedIn() && (isAdmin() || request.auth.uid == uid);
+      allow delete: if isAdmin();
+    }
+
+    match /technician_requests/{id} {
+      allow create: if signedIn() && request.auth.uid == id;
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == id);
+      allow update: if isAdmin() || (signedIn() && request.auth.uid == id);
+      allow delete: if isAdmin();
+    }
+
+    match /technicians/{uid} {
+      allow read: if signedIn();
+      allow create: if isAdmin();
+      allow update: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow delete: if isAdmin();
+    }
+
+    match /subscriptions/{id} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == resource.data.techId);
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /service_requests/{id} {
+      function isAssignedTech() {
+        return signedIn()
+          && (
+            (resource.data.assignedTo is list && resource.data.assignedTo.hasAny([request.auth.uid]))
+            || (resource.data.offers is list && resource.data.offers.hasAny([request.auth.uid]))
+            || (resource.data.technicianId == request.auth.uid)
+          );
+      }
+
+      allow create: if isAdmin();
+      allow read: if signedIn();
+      allow update: if isAdmin() || (isTechActive() && isAssignedTech());
+      allow delete: if isAdmin();
+    }
+
+    match /payments/{id} {
+      allow read: if signedIn();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /audit_logs/{id} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    match /notifications/{id} {
+      allow read: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isAdmin();
+      allow update: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

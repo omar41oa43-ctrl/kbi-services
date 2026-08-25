@@ -1,0 +1,472 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  CUSTOMER
+  TECHNICIAN
+  ADMIN
+  COMPANY
+}
+
+enum OrderStatus {
+  PENDING
+  REVIEWING
+  QUOTED
+  APPROVED
+  ASSIGNED
+  ON_THE_WAY
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum NotificationType {
+  NEW_ORDER
+  QUOTE_CREATED
+  TECHNICIAN_ASSIGNED
+  REPAIR_COMPLETED
+}
+
+enum NotificationChannel {
+  WHATSAPP
+  EMAIL
+  PUSH
+}
+
+enum TechnicianStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+model User {
+  id                    String              @id @default(cuid())
+  name                  String
+  email                 String?             @unique
+  phone                 String?             @unique
+  role                  UserRole           @default(CUSTOMER)
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  // new fields for crm
+  preferredLanguage    String? @default("en")
+  marketingConsent      Boolean @default(true)
+  internalNotes      String?
+
+  // existing relations
+  orders                Order[]
+  technician           Technician?
+  customerAddresses    CustomerAddress[]
+  payments           Payment[]
+  reviews            Review[]
+  warranties         Warranty[]
+
+  // phase5 new relations
+  customerTimeline      CustomerTimeline[]
+  customerTags        CustomerTagAssignment[]
+  conversations        Conversation[]
+  campaignRecipients    CampaignRecipient[]
+  emailLogs          EmailLog[]
+  notificationLogs   NotificationLog[]
+  automationExecutions AutomationExecution[]
+}
+
+model Order {
+  id               String             @id @default(cuid())
+  orderNumber      String             @unique
+  customerId       String
+  description      String?
+  address          String?
+  latitude         Float?
+  longitude        Float?
+  status           OrderStatus        @default(PENDING)
+  images           String[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  technicianId     String?
+
+  customer           User                   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  devices            Device[]
+  quotes             Quote[]
+  statusHistory      OrderStatusHistory[]
+  technician         Technician?            @relation(fields: [technicianId], references: [id])
+  notifications      Notification[]
+  technicianEarnings TechnicianEarnings[]
+  repairPhotos       RepairPhoto[]
+  customerSignature  CustomerSignature?
+  chatMessages       ChatMessage[]
+  payments           Payment[]
+  invoice            Invoice?
+  review             Review?
+  warranty           Warranty?
+  emailLogs          EmailLog[]
+}
+
+model Device {
+  id        String  @id @default(cuid())
+  orderId   String
+  category  String
+  brand     String
+  model     String
+  issue     String
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Quote {
+  id           String   @id @default(cuid())
+  orderId      String
+  repairCost   Decimal?
+  partsCost    Decimal?
+  laborCost    Decimal?
+  discount     Decimal?
+  finalPrice   Decimal?
+  notes        String?
+  createdAt    DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(cuid())
+  orderId   String
+  status    OrderStatus
+  changedAt DateTime    @default(now())
+  changedBy String?
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String             @id @default(cuid())
+  type      NotificationType
+  channel   NotificationChannel
+  recipient String
+  message   String
+  sent      Boolean            @default(false)
+  sentAt    DateTime?
+  createdAt DateTime           @default(now())
+
+  orderId String?
+  order   Order?  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Technician {
+  id                String          @id @default(cuid())
+  userId            String          @unique
+  status            TechnicianStatus @default(PENDING_APPROVAL)
+  available         Boolean          @default(true)
+  rating            Float?
+  latitude          Float?
+  longitude         Float?
+  lastActive        DateTime?
+  experienceYears   Int?
+  specialization    String?
+  serviceAreas      String[]
+  idDocumentUrl     String?
+  profilePhotoUrl   String?
+
+  user          User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignedOrders Order[]
+  locations      TechnicianLocation[]
+  earnings       TechnicianEarnings[]
+  availability   TechnicianAvailability[]
+  reviews        Review[]
+}
+
+model TechnicianLocation {
+  id           String   @id @default(cuid())
+  technicianId String
+  latitude     Float
+  longitude    Float
+  timestamp    DateTime @default(now())
+
+  technician Technician @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+}
+
+model TechnicianEarnings {
+  id           String   @id @default(cuid())
+  technicianId String
+  orderId      String
+  amount       Decimal
+  status       String   @default("PENDING")
+  paidAt       DateTime?
+  createdAt    DateTime @default(now())
+
+  technician Technician @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+  order      Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model TechnicianAvailability {
+  id           String  @id @default(cuid())
+  technicianId String
+  dayOfWeek    Int // 0 = Sunday, 1 = Monday, ... 6 = Saturday
+  startTime    String
+  endTime      String
+  isAvailable  Boolean @default(true)
+
+  technician Technician @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+}
+
+model RepairPhoto {
+  id         String   @id @default(cuid())
+  orderId    String
+  type       String // BEFORE, AFTER
+  url        String
+  uploadedAt DateTime @default(now())
+  uploadedBy String
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model CustomerSignature {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  url       String
+  signedAt  DateTime @default(now())
+  signedBy  String
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model ChatMessage {
+  id         String   @id @default(cuid())
+  orderId    String
+  senderId   String
+  senderType String // CUSTOMER, TECHNICIAN, ADMIN
+  message    String
+  imageUrl   String?
+  readAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model CustomerAddress {
+  id         String   @id @default(cuid())
+  userId     String
+  label      String? // Home, Work, etc.
+  address    String
+  latitude   Float?
+  longitude  Float?
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id           String   @id @default(cuid())
+  orderId      String
+  userId       String
+  amount       Decimal
+  method       String // CREDIT_CARD, CASH, APPLE_PAY, GOOGLE_PAY
+  status       String   @default("PENDING")
+  transactionId String?
+  paidAt       DateTime?
+  createdAt    DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Invoice {
+  id            String   @id @default(cuid())
+  orderId       String   @unique
+  invoiceNumber String   @unique
+  amount        Decimal
+  pdfUrl        String?
+  createdAt     DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id                String   @id @default(cuid())
+  orderId           String   @unique
+  userId            String
+  technicianId      String?
+  serviceRating     Int // 1-5
+  technicianRating  Int? // 1-5
+  comment           String?
+  imageUrl          String?
+  createdAt         DateTime @default(now())
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  technician Technician? @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+  order      Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Warranty {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  userId    String
+  startDate DateTime
+  endDate   DateTime
+  status    String   @default("ACTIVE")
+  notes     String?
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+// Phase 5 Models
+
+model CustomerTag {
+  id        String   @id @default(cuid())
+  name      String
+  color     String?
+  createdAt DateTime @default(now())
+
+  customerTags CustomerTagAssignment[]
+}
+
+model CustomerTagAssignment {
+  id         String @id @default(cuid())
+  userId     String
+  tagId      String
+  assignedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tag CustomerTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tagId])
+}
+
+model CustomerTimeline {
+  id        String   @id @default(cuid())
+  userId    String
+  eventType String
+  title     String
+  data      Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Campaign {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  type        String
+  status      String @default("DRAFT")
+  sentAt      DateTime?
+  createdAt   DateTime @default(now())
+
+  campaignRecipients CampaignRecipient[]
+}
+
+model CampaignRecipient {
+  id         String   @id @default(cuid())
+  campaignId String
+  userId     String
+  status     String @default("PENDING")
+  sentAt     DateTime?
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AutomationRule {
+  id          String   @id @default(cuid())
+  name        String
+  trigger     String
+  conditions  Json?
+  actions     Json?
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+
+  executions AutomationExecution[]
+}
+
+model AutomationExecution {
+  id          String   @id @default(cuid())
+  ruleId      String
+  userId      String?
+  status      String @default("SUCCESS")
+  executedAt  DateTime @default(now())
+
+  rule AutomationRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Conversation {
+  id         String   @id @default(cuid())
+  channel     String
+  userId     String
+  status      String @default("OPEN")
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages Message[]
+}
+
+model Message {
+  id            String   @id @default(cuid())
+  conversationId String
+  senderType   String
+  senderId     String
+  content      String
+  mediaUrl     String?
+  isRead       Boolean @default(false)
+  createdAt    DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model EmailLog {
+  id         String   @id @default(cuid())
+  to         String
+  subject    String
+  template   String
+  status     String @default("PENDING")
+  sentAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  userId String?
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderId String?
+  order Order? @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model NotificationLog {
+  id         String   @id @default(cuid())
+  userId     String
+  channel    String
+  type       String
+  status     String @default("PENDING")
+  sentAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AIRecommendation {
+  id        String   @id @default(cuid())
+  type      String
+  content   String
+  data      Json?
+  createdAt DateTime @default(now())
+}
+
+model BusinessInsight {
+  id          String   @id @default(cuid())
+  type        String
+  content     String
+  data        Json?
+  generatedAt DateTime @default(now())
+}

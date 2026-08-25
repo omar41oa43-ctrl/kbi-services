@@ -1,0 +1,123 @@
+import { adminDb } from "@/lib/firebase-admin"
+
+export type SiteContact = {
+    companyName?: string;
+    whatsapp: string;
+    phone: string;
+    email: string;
+    address: string;
+    addressAr?: string;
+    whatsappRaw: string;
+    phoneDisplay: string;
+    footerText?: string;
+    footerTextAr?: string;
+    serviceAreas?: string[];
+    workingHoursWeekdays?: string;
+    workingHoursFriday?: string;
+    googleSiteVerification?: string;
+    socialLinks: {
+        facebook: string;
+        instagram: string;
+        tiktok: string;
+    };
+    socialLinksEnabled: {
+        facebook: boolean;
+        instagram: boolean;
+        tiktok: boolean;
+    };
+    companyPresentationUrl?: string;
+}
+
+export async function getSiteContact(): Promise<SiteContact> {
+    const cacheKey = "__kbi_site_contact_cache_v1"
+    const now = Date.now()
+    const ttlMs = 10 * 60 * 1000
+    const cached = (globalThis as any)[cacheKey] as { value: SiteContact; ts: number } | undefined
+    if (cached && now - cached.ts < ttlMs) return cached.value
+
+    const defaults: SiteContact = {
+        companyName: "KBI GLOBAL TECHNOLOGIES",
+        whatsapp: "971502491034",
+        phone: "+971502491034",
+        email: "info@kbi.ae",
+        address: "Abu Dhabi, UAE",
+        whatsappRaw: "971502491034",
+        phoneDisplay: "+971 50 249 1034",
+        serviceAreas: [
+            "Al Reem Island", "Khalifa City", "MBZ City", "Al Shamkha", "Al Reef", 
+            "Al Nahyan", "Tourist Club Area", "Musaffah", "Shakhbout City", 
+            "Al Ain Road", "Corniche", "Marina Mall Area", "Al Bateen", 
+            "Al Mushrif", "Al Khalidiyah", "Al Karama", "Al Rowdah", 
+            "Al Muroor", "Saadiyat Island", "Yas Island", "Masdar City", 
+            "Al Samha", "Al Bahia", "Al Rahba", "Al Shahama", 
+            "Baniyas", "Al Shawamekh", "Al Falah", "Hydra Village", "All Abu Dhabi"
+        ],
+        workingHoursWeekdays: "8:00 AM - 10:00 PM",
+        workingHoursFriday: "2:00 PM - 10:00 PM",
+        socialLinks: {
+            facebook: "",
+            instagram: "",
+            tiktok: ""
+        },
+        socialLinksEnabled: {
+            facebook: true,
+            instagram: true,
+            tiktok: true
+        },
+        companyPresentationUrl: ""
+    }
+
+    try {
+        const doc = await adminDb.collection("settings").doc("site").get()
+        if (!doc.exists) return defaults
+
+        const data = doc.data() || {}
+
+        const rawPhone = data.mainPhone || defaults.phone
+        const rawWhatsapp = data.whatsapp || defaults.whatsapp
+        const address = data.address || defaults.address
+        const addressAr = data.addressAr
+        const footerText = data.footerText
+        const footerTextAr = data.footerTextAr
+        const serviceAreas = data.serviceAreas ? data.serviceAreas.split(",").map((s: string) => s.trim()) : defaults.serviceAreas
+        const workingHoursWeekdays = data.workingHoursWeekdays || defaults.workingHoursWeekdays
+        const workingHoursFriday = data.workingHoursFriday || defaults.workingHoursFriday
+        const googleSiteVerification = data.googleSiteVerification
+        const socialLinks = data.socialLinks || {}
+        const socialLinksEnabled = data.socialLinksEnabled || {}
+        const companyPresentationUrl = data.companyPresentationUrl || ""
+
+        const value: SiteContact = {
+            companyName: data.companyName || data.company || defaults.companyName,
+            whatsapp: rawWhatsapp,
+            phone: rawPhone,
+            email: data.email || defaults.email,
+            address: address,
+            addressAr: addressAr,
+            whatsappRaw: rawWhatsapp.replace(/[^0-9]/g, ""),
+            phoneDisplay: rawPhone,
+            footerText: footerText,
+            footerTextAr: footerTextAr,
+            serviceAreas: serviceAreas,
+            workingHoursWeekdays: workingHoursWeekdays,
+            workingHoursFriday: workingHoursFriday,
+            googleSiteVerification: googleSiteVerification,
+            socialLinks: {
+                facebook: socialLinks.facebook || defaults.socialLinks.facebook,
+                instagram: socialLinks.instagram || defaults.socialLinks.instagram,
+                tiktok: socialLinks.tiktok || defaults.socialLinks.tiktok
+            },
+            socialLinksEnabled: {
+                facebook: socialLinksEnabled.facebook ?? defaults.socialLinksEnabled.facebook,
+                instagram: socialLinksEnabled.instagram ?? defaults.socialLinksEnabled.instagram,
+                tiktok: socialLinksEnabled.tiktok ?? defaults.socialLinksEnabled.tiktok
+            },
+            companyPresentationUrl: companyPresentationUrl
+        }
+        ;(globalThis as any)[cacheKey] = { value, ts: now }
+        return value
+    } catch {
+        ;(globalThis as any)[cacheKey] = { value: defaults, ts: now }
+        return defaults
+    }
+}
