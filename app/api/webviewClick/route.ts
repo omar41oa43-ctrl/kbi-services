@@ -9,9 +9,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  let body: unknown = null
   try {
-    body = await req.json()
+    await req.json()
   } catch {}
-  return NextResponse.json({ ok: true, body }, { status: 200, headers: { "Cache-Control": "no-store" } })
+  return NextResponse.json({ ok: true }, { status: 200, headers: { "Cache-Control": "no-store" } })
 }

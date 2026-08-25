@@ -2,7 +2,7 @@ import { Timestamp } from "firebase/firestore";
 
 export type UserRole = "super_admin" | "admin" | "technician" | "customer";
 
-export type OrderStatus = "pending" | "in_progress" | "on_way" | "completed" | "cancelled";
+export type OrderStatus = "pending" | "assigned" | "in_progress" | "on_way" | "completed" | "cancelled";
 
 export interface User {
   uid: string;
@@ -41,6 +41,7 @@ export interface Order {
 
   location?: string;
   scheduledDate?: Timestamp;
+  assignedAt?: Timestamp;
   completedDate?: Timestamp;
 
   images?: string[]; // Storage URLs

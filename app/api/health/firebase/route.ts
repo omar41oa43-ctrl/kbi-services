@@ -1,67 +1,19 @@
 import { NextResponse } from "next/server";
-import { db, auth, storage } from "@/firebase/firebaseConfig";
-import { collection, getDocs, query, limit } from "firebase/firestore";
+import { getStorage } from "firebase-admin/storage";
 
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(req.url);
-    if (searchParams.get("seed") === "true") {
-      const adminAuth = getAdminAuth();
-      const adminDb = getAdminDb();
-      const email = "admin@kbi.ae";
-      const password = "AdminPassword2026!";
-      
-      let uid = "";
-      try {
-        const user = await adminAuth.getUserByEmail(email);
-        uid = user.uid;
-        await adminAuth.updateUser(uid, {
-          password: password,
-          emailVerified: true
-        });
-      } catch (e: any) {
-        if (e.code === 'auth/user-not-found') {
-          const newUser = await adminAuth.createUser({
-            email,
-            password: password,
-            emailVerified: true,
-            displayName: "Super Admin"
-          });
-          uid = newUser.uid;
-        } else {
-          throw e;
-        }
-      }
-
-      await adminAuth.setCustomUserClaims(uid, { role: "super_admin" });
-
-      const now = new Date();
-      await adminDb.collection("users").doc(uid).set({
-        email,
-        role: "super_admin",
-        name: "Super Admin",
-        updatedAt: now,
-        createdAt: now
-      }, { merge: true });
-
-      return NextResponse.json({
-        ok: true,
-        message: "Admin user created/reset successfully!",
-        email,
-        password
-      });
-    }
-
     let firestoreOk = false;
+    let authOk = false;
+    let storageOk = false;
     let sampleCount: number | null = null;
 
     try {
-      const q = query(collection(db, "devices"), limit(1));
-      const snap = await getDocs(q);
+      const snap = await getAdminDb().collection("devices").limit(1).get();
       firestoreOk = true;
       sampleCount = snap.size;
     } catch (e: any) {
@@ -70,19 +22,39 @@ export async function GET(req: Request) {
       sampleCount = null;
     }
 
-    const authOk = !!auth?.app;
-    const storageOk = !!storage?.app;
+    try {
+      await getAdminAuth().listUsers(1);
+      authOk = true;
+    } catch (error) {
+      console.warn("Health check auth failed:", error instanceof Error ? error.message : error);
+    }
+
+    try {
+      const bucketName =
+        process.env.FIREBASE_STORAGE_BUCKET ||
+        process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
+        (process.env.FIREBASE_ADMIN_PROJECT_ID
+          ? `${process.env.FIREBASE_ADMIN_PROJECT_ID}.firebasestorage.app`
+          : null);
+      if (bucketName) {
+        storageOk = true;
+      }
+    } catch (error) {
+      console.warn("Health check storage failed:", error instanceof Error ? error.message : error);
+    }
+
+    const ok = firestoreOk && authOk && storageOk;
 
     return NextResponse.json(
       {
-        ok: true,
+        ok,
         checks: {
           firestore: { ok: firestoreOk, sampleCount },
           auth: { ok: authOk },
           storage: { ok: storageOk },
         },
       },
-      { status: 200, headers: { "Cache-Control": "no-store" } }
+      { status: ok ? 200 : 503, headers: { "Cache-Control": "no-store" } }
     );
   } catch (error: any) {
     return NextResponse.json(

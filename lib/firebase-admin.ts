@@ -1,10 +1,9 @@
-import admin from "firebase-admin"
+import { cert, getApp, getApps, initializeApp } from "firebase-admin/app"
+import { getAuth } from "firebase-admin/auth"
+import { getFirestore } from "firebase-admin/firestore"
+import { getMessaging } from "firebase-admin/messaging"
 import fs from "fs"
 import path from "path"
-
-// GLOBAL CACHE (to prevent multiple inits)
-// We attach to global to survive hot-reloads in dev, though less critical in serverless
-const globalAny: any = global;
 
 function formatPrivateKey(key: string) {
     return key.replace(/\\n/g, "\n");
@@ -12,7 +11,7 @@ function formatPrivateKey(key: string) {
 
 
 export function ensureFirebaseInit() {
-    if (admin.apps.length > 0) {
+    if (getApps().length > 0) {
         return;
     }
 
@@ -73,8 +72,8 @@ export function ensureFirebaseInit() {
             serviceAccount.private_key = formatPrivateKey(serviceAccount.private_key);
         }
 
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
+        initializeApp({
+            credential: cert(serviceAccount),
         });
     } catch (e: any) {
       // Only log in production, warn in dev
@@ -88,21 +87,23 @@ export function ensureFirebaseInit() {
 // Accessors that ensure init
 export function getAdminDb() {
     ensureFirebaseInit();
-    return admin.firestore();
+    return getFirestore();
 }
 
 export function getAdminAuth() {
     ensureFirebaseInit();
-    return admin.auth();
+    return getAuth();
+}
+
+export function getAdminMessaging() {
+    ensureFirebaseInit();
+    return getMessaging();
 }
 
 // Compatibility Proxies - with graceful failure if Firebase isn't initialized
-let cachedDb: any = null;
-let cachedAuth: any = null;
-
 function isFirebaseInitialized(): boolean {
   try {
-    return admin.apps.length > 0;
+    return getApps().length > 0;
   } catch {
     return false;
   }
@@ -112,7 +113,7 @@ function getSafeAdminDb(): any {
   try {
     ensureFirebaseInit();
     if (!isFirebaseInitialized()) return null;
-    return admin.firestore();
+    return getFirestore();
   } catch {
     return null;
   }
@@ -122,7 +123,7 @@ function getSafeAdminAuth(): any {
   try {
     ensureFirebaseInit();
     if (!isFirebaseInitialized()) return null;
-    return admin.auth();
+    return getAuth();
   } catch {
     return null;
   }
@@ -146,7 +147,7 @@ function createMockQuery() {
     };
 }
 
-function createMockCollection(path: string) {
+function createMockCollection(_path: string) {
     return {
         doc: () => createMockDoc(),
         where: () => createMockQuery(),
@@ -244,31 +245,24 @@ export async function verifyAdmin(request: Request, requireSuperAdmin = false) {
     try {
         const authHeader = request.headers.get("authorization") || "";
         const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
-        if (!token) {
-            if (process.env.NODE_ENV === "development") {
-                return { uid: "dev-admin", email: "dev@kbi.ae", role: "super_admin" };
-            }
-            return null;
-        }
+        if (!token) return null;
 
         ensureFirebaseInit();
         let isFirebaseOk = false;
         try {
-            admin.app();
+            getApp();
             isFirebaseOk = true;
         } catch {
             isFirebaseOk = false;
         }
 
-        if (!isFirebaseOk && process.env.NODE_ENV === "development") {
-            return { uid: "dev-admin", email: "dev@kbi.ae", role: "super_admin" };
-        }
+        if (!isFirebaseOk) return null;
 
-        const decodedToken = await admin.auth().verifyIdToken(token);
+        const decodedToken = await getAuth().verifyIdToken(token, true);
         const uid = decodedToken.uid;
         
         // Fetch user document from Firestore to verify role
-        const userDoc = await admin.firestore().collection("users").doc(uid).get();
+        const userDoc = await getFirestore().collection("users").doc(uid).get();
         
         const envEmails = process.env.MASTER_ADMIN_EMAILS || "";
         const masterAdmins = envEmails.split(",").map(e => e.trim().toLowerCase()).filter(Boolean);
@@ -280,12 +274,7 @@ export async function verifyAdmin(request: Request, requireSuperAdmin = false) {
             return { uid, email: decodedToken.email, role: "super_admin" };
         }
 
-        if (!userDoc.exists) {
-            if (process.env.NODE_ENV === "development") {
-                return { uid, email: decodedToken.email, role: "super_admin" };
-            }
-            return null;
-        }
+        if (!userDoc.exists) return null;
         const data = userDoc.data();
         const role = data?.role;
 
@@ -293,17 +282,13 @@ export async function verifyAdmin(request: Request, requireSuperAdmin = false) {
             return null;
         }
 
-        if (role === "admin" || role === "super_admin" || role === "technician") {
+        if (role === "admin" || role === "super_admin") {
             return { uid, email: decodedToken.email, role };
         }
 
         return null;
     } catch (error) {
         console.error("verifyAdmin failed:", error);
-        if (process.env.NODE_ENV === "development") {
-            return { uid: "dev-admin", email: "dev@kbi.ae", role: "super_admin" };
-        }
         return null;
     }
 }
-

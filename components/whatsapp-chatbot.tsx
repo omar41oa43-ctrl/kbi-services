@@ -183,15 +183,15 @@ export function WhatsAppChatbot({
 
       <motion.button
         onClick={() => setOpen((v) => !v)}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className={`relative flex items-center justify-center md:gap-3 md:px-5 md:py-3 p-4 rounded-full font-bold shadow-[0_15px_35px_rgba(16,185,129,0.4)] hover:shadow-[0_20px_45px_rgba(16,185,129,0.5)] z-[101] transition-all duration-300 ${
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.92 }}
+        className={`relative flex items-center justify-center w-14 h-14 rounded-full font-bold shadow-[0_10px_30px_rgba(16,185,129,0.4)] hover:shadow-[0_15px_35px_rgba(16,185,129,0.6)] z-[101] transition-all duration-300 ${
           bookingStep 
-            ? "bg-gradient-to-r from-cyan-500 to-blue-500 shadow-[0_15px_35px_rgba(6,182,212,0.4)] hover:shadow-[0_20px_45px_rgba(6,182,212,0.5)]" 
+            ? "bg-gradient-to-r from-cyan-500 to-blue-500 shadow-[0_10px_30px_rgba(6,182,212,0.4)] hover:shadow-[0_15px_35px_rgba(6,182,212,0.6)]" 
             : "bg-gradient-to-r from-green-500 to-emerald-500"
         }`}
-        title={t("Chat with Support")}
-        aria-label={t("Chat with Support")}
+        title={bookingStep ? t("Need Help?") : t("Chat with Support")}
+        aria-label={bookingStep ? t("Need Help?") : t("Chat with Support")}
         suppressHydrationWarning
       >
         <div className={`absolute -inset-1 rounded-full animate-pulse -z-10 ${
@@ -216,10 +216,6 @@ export function WhatsAppChatbot({
             <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
           </svg>
         )}
-        
-        <span className="text-sm hidden md:inline tracking-wide text-black" suppressHydrationWarning>
-          {bookingStep ? t("Need Help?") : t("Chat with Support")}
-        </span>
       </motion.button>
     </div>
   )

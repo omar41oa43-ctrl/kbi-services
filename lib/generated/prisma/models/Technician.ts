@@ -31,6 +31,13 @@ export type TechnicianAvgAggregateOutputType = {
   latitude: number | null
   longitude: number | null
   experienceYears: number | null
+  batteryLevel: number | null
+  speed: number | null
+  heading: number | null
+  cashInHand: runtime.Decimal | null
+  walletBalance: runtime.Decimal | null
+  acceptanceRate: number | null
+  completionRate: number | null
 }
 
 export type TechnicianSumAggregateOutputType = {
@@ -38,6 +45,13 @@ export type TechnicianSumAggregateOutputType = {
   latitude: number | null
   longitude: number | null
   experienceYears: number | null
+  batteryLevel: number | null
+  speed: number | null
+  heading: number | null
+  cashInHand: runtime.Decimal | null
+  walletBalance: runtime.Decimal | null
+  acceptanceRate: number | null
+  completionRate: number | null
 }
 
 export type TechnicianMinAggregateOutputType = {
@@ -53,6 +67,19 @@ export type TechnicianMinAggregateOutputType = {
   specialization: string | null
   idDocumentUrl: string | null
   profilePhotoUrl: string | null
+  batteryLevel: number | null
+  networkStatus: string | null
+  speed: number | null
+  heading: number | null
+  cashInHand: runtime.Decimal | null
+  walletBalance: runtime.Decimal | null
+  acceptanceRate: number | null
+  completionRate: number | null
+  vehicleType: string | null
+  deviceId: string | null
+  appVersion: string | null
+  isSuspended: boolean | null
+  isLocked: boolean | null
 }
 
 export type TechnicianMaxAggregateOutputType = {
@@ -68,6 +95,19 @@ export type TechnicianMaxAggregateOutputType = {
   specialization: string | null
   idDocumentUrl: string | null
   profilePhotoUrl: string | null
+  batteryLevel: number | null
+  networkStatus: string | null
+  speed: number | null
+  heading: number | null
+  cashInHand: runtime.Decimal | null
+  walletBalance: runtime.Decimal | null
+  acceptanceRate: number | null
+  completionRate: number | null
+  vehicleType: string | null
+  deviceId: string | null
+  appVersion: string | null
+  isSuspended: boolean | null
+  isLocked: boolean | null
 }
 
 export type TechnicianCountAggregateOutputType = {
@@ -84,6 +124,19 @@ export type TechnicianCountAggregateOutputType = {
   serviceAreas: number
   idDocumentUrl: number
   profilePhotoUrl: number
+  batteryLevel: number
+  networkStatus: number
+  speed: number
+  heading: number
+  cashInHand: number
+  walletBalance: number
+  acceptanceRate: number
+  completionRate: number
+  vehicleType: number
+  deviceId: number
+  appVersion: number
+  isSuspended: number
+  isLocked: number
   _all: number
 }
 
@@ -93,6 +146,13 @@ export type TechnicianAvgAggregateInputType = {
   latitude?: true
   longitude?: true
   experienceYears?: true
+  batteryLevel?: true
+  speed?: true
+  heading?: true
+  cashInHand?: true
+  walletBalance?: true
+  acceptanceRate?: true
+  completionRate?: true
 }
 
 export type TechnicianSumAggregateInputType = {
@@ -100,6 +160,13 @@ export type TechnicianSumAggregateInputType = {
   latitude?: true
   longitude?: true
   experienceYears?: true
+  batteryLevel?: true
+  speed?: true
+  heading?: true
+  cashInHand?: true
+  walletBalance?: true
+  acceptanceRate?: true
+  completionRate?: true
 }
 
 export type TechnicianMinAggregateInputType = {
@@ -115,6 +182,19 @@ export type TechnicianMinAggregateInputType = {
   specialization?: true
   idDocumentUrl?: true
   profilePhotoUrl?: true
+  batteryLevel?: true
+  networkStatus?: true
+  speed?: true
+  heading?: true
+  cashInHand?: true
+  walletBalance?: true
+  acceptanceRate?: true
+  completionRate?: true
+  vehicleType?: true
+  deviceId?: true
+  appVersion?: true
+  isSuspended?: true
+  isLocked?: true
 }
 
 export type TechnicianMaxAggregateInputType = {
@@ -130,6 +210,19 @@ export type TechnicianMaxAggregateInputType = {
   specialization?: true
   idDocumentUrl?: true
   profilePhotoUrl?: true
+  batteryLevel?: true
+  networkStatus?: true
+  speed?: true
+  heading?: true
+  cashInHand?: true
+  walletBalance?: true
+  acceptanceRate?: true
+  completionRate?: true
+  vehicleType?: true
+  deviceId?: true
+  appVersion?: true
+  isSuspended?: true
+  isLocked?: true
 }
 
 export type TechnicianCountAggregateInputType = {
@@ -146,6 +239,19 @@ export type TechnicianCountAggregateInputType = {
   serviceAreas?: true
   idDocumentUrl?: true
   profilePhotoUrl?: true
+  batteryLevel?: true
+  networkStatus?: true
+  speed?: true
+  heading?: true
+  cashInHand?: true
+  walletBalance?: true
+  acceptanceRate?: true
+  completionRate?: true
+  vehicleType?: true
+  deviceId?: true
+  appVersion?: true
+  isSuspended?: true
+  isLocked?: true
   _all?: true
 }
 
@@ -249,6 +355,19 @@ export type TechnicianGroupByOutputType = {
   serviceAreas: string[]
   idDocumentUrl: string | null
   profilePhotoUrl: string | null
+  batteryLevel: number | null
+  networkStatus: string | null
+  speed: number | null
+  heading: number | null
+  cashInHand: runtime.Decimal | null
+  walletBalance: runtime.Decimal | null
+  acceptanceRate: number | null
+  completionRate: number | null
+  vehicleType: string | null
+  deviceId: string | null
+  appVersion: string | null
+  isSuspended: boolean
+  isLocked: boolean
   _count: TechnicianCountAggregateOutputType | null
   _avg: TechnicianAvgAggregateOutputType | null
   _sum: TechnicianSumAggregateOutputType | null
@@ -288,12 +407,28 @@ export type TechnicianWhereInput = {
   serviceAreas?: Prisma.StringNullableListFilter<"Technician">
   idDocumentUrl?: Prisma.StringNullableFilter<"Technician"> | string | null
   profilePhotoUrl?: Prisma.StringNullableFilter<"Technician"> | string | null
+  batteryLevel?: Prisma.IntNullableFilter<"Technician"> | number | null
+  networkStatus?: Prisma.StringNullableFilter<"Technician"> | string | null
+  speed?: Prisma.FloatNullableFilter<"Technician"> | number | null
+  heading?: Prisma.FloatNullableFilter<"Technician"> | number | null
+  cashInHand?: Prisma.DecimalNullableFilter<"Technician"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.DecimalNullableFilter<"Technician"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.FloatNullableFilter<"Technician"> | number | null
+  completionRate?: Prisma.FloatNullableFilter<"Technician"> | number | null
+  vehicleType?: Prisma.StringNullableFilter<"Technician"> | string | null
+  deviceId?: Prisma.StringNullableFilter<"Technician"> | string | null
+  appVersion?: Prisma.StringNullableFilter<"Technician"> | string | null
+  isSuspended?: Prisma.BoolFilter<"Technician"> | boolean
+  isLocked?: Prisma.BoolFilter<"Technician"> | boolean
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   assignedOrders?: Prisma.OrderListRelationFilter
   locations?: Prisma.TechnicianLocationListRelationFilter
   earnings?: Prisma.TechnicianEarningsListRelationFilter
   availability?: Prisma.TechnicianAvailabilityListRelationFilter
   reviews?: Prisma.ReviewListRelationFilter
+  telemetry?: Prisma.TechnicianTelemetryListRelationFilter
+  remoteCommands?: Prisma.RemoteCommandListRelationFilter
+  inventory?: Prisma.TechnicianInventoryListRelationFilter
 }
 
 export type TechnicianOrderByWithRelationInput = {
@@ -310,12 +445,28 @@ export type TechnicianOrderByWithRelationInput = {
   serviceAreas?: Prisma.SortOrder
   idDocumentUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   profilePhotoUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  batteryLevel?: Prisma.SortOrderInput | Prisma.SortOrder
+  networkStatus?: Prisma.SortOrderInput | Prisma.SortOrder
+  speed?: Prisma.SortOrderInput | Prisma.SortOrder
+  heading?: Prisma.SortOrderInput | Prisma.SortOrder
+  cashInHand?: Prisma.SortOrderInput | Prisma.SortOrder
+  walletBalance?: Prisma.SortOrderInput | Prisma.SortOrder
+  acceptanceRate?: Prisma.SortOrderInput | Prisma.SortOrder
+  completionRate?: Prisma.SortOrderInput | Prisma.SortOrder
+  vehicleType?: Prisma.SortOrderInput | Prisma.SortOrder
+  deviceId?: Prisma.SortOrderInput | Prisma.SortOrder
+  appVersion?: Prisma.SortOrderInput | Prisma.SortOrder
+  isSuspended?: Prisma.SortOrder
+  isLocked?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
   assignedOrders?: Prisma.OrderOrderByRelationAggregateInput
   locations?: Prisma.TechnicianLocationOrderByRelationAggregateInput
   earnings?: Prisma.TechnicianEarningsOrderByRelationAggregateInput
   availability?: Prisma.TechnicianAvailabilityOrderByRelationAggregateInput
   reviews?: Prisma.ReviewOrderByRelationAggregateInput
+  telemetry?: Prisma.TechnicianTelemetryOrderByRelationAggregateInput
+  remoteCommands?: Prisma.RemoteCommandOrderByRelationAggregateInput
+  inventory?: Prisma.TechnicianInventoryOrderByRelationAggregateInput
 }
 
 export type TechnicianWhereUniqueInput = Prisma.AtLeast<{
@@ -335,12 +486,28 @@ export type TechnicianWhereUniqueInput = Prisma.AtLeast<{
   serviceAreas?: Prisma.StringNullableListFilter<"Technician">
   idDocumentUrl?: Prisma.StringNullableFilter<"Technician"> | string | null
   profilePhotoUrl?: Prisma.StringNullableFilter<"Technician"> | string | null
+  batteryLevel?: Prisma.IntNullableFilter<"Technician"> | number | null
+  networkStatus?: Prisma.StringNullableFilter<"Technician"> | string | null
+  speed?: Prisma.FloatNullableFilter<"Technician"> | number | null
+  heading?: Prisma.FloatNullableFilter<"Technician"> | number | null
+  cashInHand?: Prisma.DecimalNullableFilter<"Technician"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.DecimalNullableFilter<"Technician"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.FloatNullableFilter<"Technician"> | number | null
+  completionRate?: Prisma.FloatNullableFilter<"Technician"> | number | null
+  vehicleType?: Prisma.StringNullableFilter<"Technician"> | string | null
+  deviceId?: Prisma.StringNullableFilter<"Technician"> | string | null
+  appVersion?: Prisma.StringNullableFilter<"Technician"> | string | null
+  isSuspended?: Prisma.BoolFilter<"Technician"> | boolean
+  isLocked?: Prisma.BoolFilter<"Technician"> | boolean
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   assignedOrders?: Prisma.OrderListRelationFilter
   locations?: Prisma.TechnicianLocationListRelationFilter
   earnings?: Prisma.TechnicianEarningsListRelationFilter
   availability?: Prisma.TechnicianAvailabilityListRelationFilter
   reviews?: Prisma.ReviewListRelationFilter
+  telemetry?: Prisma.TechnicianTelemetryListRelationFilter
+  remoteCommands?: Prisma.RemoteCommandListRelationFilter
+  inventory?: Prisma.TechnicianInventoryListRelationFilter
 }, "id" | "userId">
 
 export type TechnicianOrderByWithAggregationInput = {
@@ -357,6 +524,19 @@ export type TechnicianOrderByWithAggregationInput = {
   serviceAreas?: Prisma.SortOrder
   idDocumentUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   profilePhotoUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  batteryLevel?: Prisma.SortOrderInput | Prisma.SortOrder
+  networkStatus?: Prisma.SortOrderInput | Prisma.SortOrder
+  speed?: Prisma.SortOrderInput | Prisma.SortOrder
+  heading?: Prisma.SortOrderInput | Prisma.SortOrder
+  cashInHand?: Prisma.SortOrderInput | Prisma.SortOrder
+  walletBalance?: Prisma.SortOrderInput | Prisma.SortOrder
+  acceptanceRate?: Prisma.SortOrderInput | Prisma.SortOrder
+  completionRate?: Prisma.SortOrderInput | Prisma.SortOrder
+  vehicleType?: Prisma.SortOrderInput | Prisma.SortOrder
+  deviceId?: Prisma.SortOrderInput | Prisma.SortOrder
+  appVersion?: Prisma.SortOrderInput | Prisma.SortOrder
+  isSuspended?: Prisma.SortOrder
+  isLocked?: Prisma.SortOrder
   _count?: Prisma.TechnicianCountOrderByAggregateInput
   _avg?: Prisma.TechnicianAvgOrderByAggregateInput
   _max?: Prisma.TechnicianMaxOrderByAggregateInput
@@ -381,6 +561,19 @@ export type TechnicianScalarWhereWithAggregatesInput = {
   serviceAreas?: Prisma.StringNullableListFilter<"Technician">
   idDocumentUrl?: Prisma.StringNullableWithAggregatesFilter<"Technician"> | string | null
   profilePhotoUrl?: Prisma.StringNullableWithAggregatesFilter<"Technician"> | string | null
+  batteryLevel?: Prisma.IntNullableWithAggregatesFilter<"Technician"> | number | null
+  networkStatus?: Prisma.StringNullableWithAggregatesFilter<"Technician"> | string | null
+  speed?: Prisma.FloatNullableWithAggregatesFilter<"Technician"> | number | null
+  heading?: Prisma.FloatNullableWithAggregatesFilter<"Technician"> | number | null
+  cashInHand?: Prisma.DecimalNullableWithAggregatesFilter<"Technician"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.DecimalNullableWithAggregatesFilter<"Technician"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.FloatNullableWithAggregatesFilter<"Technician"> | number | null
+  completionRate?: Prisma.FloatNullableWithAggregatesFilter<"Technician"> | number | null
+  vehicleType?: Prisma.StringNullableWithAggregatesFilter<"Technician"> | string | null
+  deviceId?: Prisma.StringNullableWithAggregatesFilter<"Technician"> | string | null
+  appVersion?: Prisma.StringNullableWithAggregatesFilter<"Technician"> | string | null
+  isSuspended?: Prisma.BoolWithAggregatesFilter<"Technician"> | boolean
+  isLocked?: Prisma.BoolWithAggregatesFilter<"Technician"> | boolean
 }
 
 export type TechnicianCreateInput = {
@@ -396,12 +589,28 @@ export type TechnicianCreateInput = {
   serviceAreas?: Prisma.TechnicianCreateserviceAreasInput | string[]
   idDocumentUrl?: string | null
   profilePhotoUrl?: string | null
+  batteryLevel?: number | null
+  networkStatus?: string | null
+  speed?: number | null
+  heading?: number | null
+  cashInHand?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: number | null
+  completionRate?: number | null
+  vehicleType?: string | null
+  deviceId?: string | null
+  appVersion?: string | null
+  isSuspended?: boolean
+  isLocked?: boolean
   user: Prisma.UserCreateNestedOneWithoutTechnicianInput
   assignedOrders?: Prisma.OrderCreateNestedManyWithoutTechnicianInput
   locations?: Prisma.TechnicianLocationCreateNestedManyWithoutTechnicianInput
   earnings?: Prisma.TechnicianEarningsCreateNestedManyWithoutTechnicianInput
   availability?: Prisma.TechnicianAvailabilityCreateNestedManyWithoutTechnicianInput
   reviews?: Prisma.ReviewCreateNestedManyWithoutTechnicianInput
+  telemetry?: Prisma.TechnicianTelemetryCreateNestedManyWithoutTechnicianInput
+  remoteCommands?: Prisma.RemoteCommandCreateNestedManyWithoutTechnicianInput
+  inventory?: Prisma.TechnicianInventoryCreateNestedManyWithoutTechnicianInput
 }
 
 export type TechnicianUncheckedCreateInput = {
@@ -418,11 +627,27 @@ export type TechnicianUncheckedCreateInput = {
   serviceAreas?: Prisma.TechnicianCreateserviceAreasInput | string[]
   idDocumentUrl?: string | null
   profilePhotoUrl?: string | null
+  batteryLevel?: number | null
+  networkStatus?: string | null
+  speed?: number | null
+  heading?: number | null
+  cashInHand?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: number | null
+  completionRate?: number | null
+  vehicleType?: string | null
+  deviceId?: string | null
+  appVersion?: string | null
+  isSuspended?: boolean
+  isLocked?: boolean
   assignedOrders?: Prisma.OrderUncheckedCreateNestedManyWithoutTechnicianInput
   locations?: Prisma.TechnicianLocationUncheckedCreateNestedManyWithoutTechnicianInput
   earnings?: Prisma.TechnicianEarningsUncheckedCreateNestedManyWithoutTechnicianInput
   availability?: Prisma.TechnicianAvailabilityUncheckedCreateNestedManyWithoutTechnicianInput
   reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutTechnicianInput
+  telemetry?: Prisma.TechnicianTelemetryUncheckedCreateNestedManyWithoutTechnicianInput
+  remoteCommands?: Prisma.RemoteCommandUncheckedCreateNestedManyWithoutTechnicianInput
+  inventory?: Prisma.TechnicianInventoryUncheckedCreateNestedManyWithoutTechnicianInput
 }
 
 export type TechnicianUpdateInput = {
@@ -438,12 +663,28 @@ export type TechnicianUpdateInput = {
   serviceAreas?: Prisma.TechnicianUpdateserviceAreasInput | string[]
   idDocumentUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profilePhotoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batteryLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  networkStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  speed?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  heading?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cashInHand?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  completionRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isSuspended?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   user?: Prisma.UserUpdateOneRequiredWithoutTechnicianNestedInput
   assignedOrders?: Prisma.OrderUpdateManyWithoutTechnicianNestedInput
   locations?: Prisma.TechnicianLocationUpdateManyWithoutTechnicianNestedInput
   earnings?: Prisma.TechnicianEarningsUpdateManyWithoutTechnicianNestedInput
   availability?: Prisma.TechnicianAvailabilityUpdateManyWithoutTechnicianNestedInput
   reviews?: Prisma.ReviewUpdateManyWithoutTechnicianNestedInput
+  telemetry?: Prisma.TechnicianTelemetryUpdateManyWithoutTechnicianNestedInput
+  remoteCommands?: Prisma.RemoteCommandUpdateManyWithoutTechnicianNestedInput
+  inventory?: Prisma.TechnicianInventoryUpdateManyWithoutTechnicianNestedInput
 }
 
 export type TechnicianUncheckedUpdateInput = {
@@ -460,11 +701,27 @@ export type TechnicianUncheckedUpdateInput = {
   serviceAreas?: Prisma.TechnicianUpdateserviceAreasInput | string[]
   idDocumentUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profilePhotoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batteryLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  networkStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  speed?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  heading?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cashInHand?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  completionRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isSuspended?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   assignedOrders?: Prisma.OrderUncheckedUpdateManyWithoutTechnicianNestedInput
   locations?: Prisma.TechnicianLocationUncheckedUpdateManyWithoutTechnicianNestedInput
   earnings?: Prisma.TechnicianEarningsUncheckedUpdateManyWithoutTechnicianNestedInput
   availability?: Prisma.TechnicianAvailabilityUncheckedUpdateManyWithoutTechnicianNestedInput
   reviews?: Prisma.ReviewUncheckedUpdateManyWithoutTechnicianNestedInput
+  telemetry?: Prisma.TechnicianTelemetryUncheckedUpdateManyWithoutTechnicianNestedInput
+  remoteCommands?: Prisma.RemoteCommandUncheckedUpdateManyWithoutTechnicianNestedInput
+  inventory?: Prisma.TechnicianInventoryUncheckedUpdateManyWithoutTechnicianNestedInput
 }
 
 export type TechnicianCreateManyInput = {
@@ -481,6 +738,19 @@ export type TechnicianCreateManyInput = {
   serviceAreas?: Prisma.TechnicianCreateserviceAreasInput | string[]
   idDocumentUrl?: string | null
   profilePhotoUrl?: string | null
+  batteryLevel?: number | null
+  networkStatus?: string | null
+  speed?: number | null
+  heading?: number | null
+  cashInHand?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: number | null
+  completionRate?: number | null
+  vehicleType?: string | null
+  deviceId?: string | null
+  appVersion?: string | null
+  isSuspended?: boolean
+  isLocked?: boolean
 }
 
 export type TechnicianUpdateManyMutationInput = {
@@ -496,6 +766,19 @@ export type TechnicianUpdateManyMutationInput = {
   serviceAreas?: Prisma.TechnicianUpdateserviceAreasInput | string[]
   idDocumentUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profilePhotoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batteryLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  networkStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  speed?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  heading?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cashInHand?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  completionRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isSuspended?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type TechnicianUncheckedUpdateManyInput = {
@@ -512,6 +795,19 @@ export type TechnicianUncheckedUpdateManyInput = {
   serviceAreas?: Prisma.TechnicianUpdateserviceAreasInput | string[]
   idDocumentUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profilePhotoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batteryLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  networkStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  speed?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  heading?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cashInHand?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  completionRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isSuspended?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type TechnicianNullableScalarRelationFilter = {
@@ -533,6 +829,19 @@ export type TechnicianCountOrderByAggregateInput = {
   serviceAreas?: Prisma.SortOrder
   idDocumentUrl?: Prisma.SortOrder
   profilePhotoUrl?: Prisma.SortOrder
+  batteryLevel?: Prisma.SortOrder
+  networkStatus?: Prisma.SortOrder
+  speed?: Prisma.SortOrder
+  heading?: Prisma.SortOrder
+  cashInHand?: Prisma.SortOrder
+  walletBalance?: Prisma.SortOrder
+  acceptanceRate?: Prisma.SortOrder
+  completionRate?: Prisma.SortOrder
+  vehicleType?: Prisma.SortOrder
+  deviceId?: Prisma.SortOrder
+  appVersion?: Prisma.SortOrder
+  isSuspended?: Prisma.SortOrder
+  isLocked?: Prisma.SortOrder
 }
 
 export type TechnicianAvgOrderByAggregateInput = {
@@ -540,6 +849,13 @@ export type TechnicianAvgOrderByAggregateInput = {
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
   experienceYears?: Prisma.SortOrder
+  batteryLevel?: Prisma.SortOrder
+  speed?: Prisma.SortOrder
+  heading?: Prisma.SortOrder
+  cashInHand?: Prisma.SortOrder
+  walletBalance?: Prisma.SortOrder
+  acceptanceRate?: Prisma.SortOrder
+  completionRate?: Prisma.SortOrder
 }
 
 export type TechnicianMaxOrderByAggregateInput = {
@@ -555,6 +871,19 @@ export type TechnicianMaxOrderByAggregateInput = {
   specialization?: Prisma.SortOrder
   idDocumentUrl?: Prisma.SortOrder
   profilePhotoUrl?: Prisma.SortOrder
+  batteryLevel?: Prisma.SortOrder
+  networkStatus?: Prisma.SortOrder
+  speed?: Prisma.SortOrder
+  heading?: Prisma.SortOrder
+  cashInHand?: Prisma.SortOrder
+  walletBalance?: Prisma.SortOrder
+  acceptanceRate?: Prisma.SortOrder
+  completionRate?: Prisma.SortOrder
+  vehicleType?: Prisma.SortOrder
+  deviceId?: Prisma.SortOrder
+  appVersion?: Prisma.SortOrder
+  isSuspended?: Prisma.SortOrder
+  isLocked?: Prisma.SortOrder
 }
 
 export type TechnicianMinOrderByAggregateInput = {
@@ -570,6 +899,19 @@ export type TechnicianMinOrderByAggregateInput = {
   specialization?: Prisma.SortOrder
   idDocumentUrl?: Prisma.SortOrder
   profilePhotoUrl?: Prisma.SortOrder
+  batteryLevel?: Prisma.SortOrder
+  networkStatus?: Prisma.SortOrder
+  speed?: Prisma.SortOrder
+  heading?: Prisma.SortOrder
+  cashInHand?: Prisma.SortOrder
+  walletBalance?: Prisma.SortOrder
+  acceptanceRate?: Prisma.SortOrder
+  completionRate?: Prisma.SortOrder
+  vehicleType?: Prisma.SortOrder
+  deviceId?: Prisma.SortOrder
+  appVersion?: Prisma.SortOrder
+  isSuspended?: Prisma.SortOrder
+  isLocked?: Prisma.SortOrder
 }
 
 export type TechnicianSumOrderByAggregateInput = {
@@ -577,6 +919,13 @@ export type TechnicianSumOrderByAggregateInput = {
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
   experienceYears?: Prisma.SortOrder
+  batteryLevel?: Prisma.SortOrder
+  speed?: Prisma.SortOrder
+  heading?: Prisma.SortOrder
+  cashInHand?: Prisma.SortOrder
+  walletBalance?: Prisma.SortOrder
+  acceptanceRate?: Prisma.SortOrder
+  completionRate?: Prisma.SortOrder
 }
 
 export type TechnicianScalarRelationFilter = {
@@ -711,6 +1060,48 @@ export type TechnicianUpdateOneWithoutReviewsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.TechnicianUpdateToOneWithWhereWithoutReviewsInput, Prisma.TechnicianUpdateWithoutReviewsInput>, Prisma.TechnicianUncheckedUpdateWithoutReviewsInput>
 }
 
+export type TechnicianCreateNestedOneWithoutTelemetryInput = {
+  create?: Prisma.XOR<Prisma.TechnicianCreateWithoutTelemetryInput, Prisma.TechnicianUncheckedCreateWithoutTelemetryInput>
+  connectOrCreate?: Prisma.TechnicianCreateOrConnectWithoutTelemetryInput
+  connect?: Prisma.TechnicianWhereUniqueInput
+}
+
+export type TechnicianUpdateOneRequiredWithoutTelemetryNestedInput = {
+  create?: Prisma.XOR<Prisma.TechnicianCreateWithoutTelemetryInput, Prisma.TechnicianUncheckedCreateWithoutTelemetryInput>
+  connectOrCreate?: Prisma.TechnicianCreateOrConnectWithoutTelemetryInput
+  upsert?: Prisma.TechnicianUpsertWithoutTelemetryInput
+  connect?: Prisma.TechnicianWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TechnicianUpdateToOneWithWhereWithoutTelemetryInput, Prisma.TechnicianUpdateWithoutTelemetryInput>, Prisma.TechnicianUncheckedUpdateWithoutTelemetryInput>
+}
+
+export type TechnicianCreateNestedOneWithoutRemoteCommandsInput = {
+  create?: Prisma.XOR<Prisma.TechnicianCreateWithoutRemoteCommandsInput, Prisma.TechnicianUncheckedCreateWithoutRemoteCommandsInput>
+  connectOrCreate?: Prisma.TechnicianCreateOrConnectWithoutRemoteCommandsInput
+  connect?: Prisma.TechnicianWhereUniqueInput
+}
+
+export type TechnicianUpdateOneRequiredWithoutRemoteCommandsNestedInput = {
+  create?: Prisma.XOR<Prisma.TechnicianCreateWithoutRemoteCommandsInput, Prisma.TechnicianUncheckedCreateWithoutRemoteCommandsInput>
+  connectOrCreate?: Prisma.TechnicianCreateOrConnectWithoutRemoteCommandsInput
+  upsert?: Prisma.TechnicianUpsertWithoutRemoteCommandsInput
+  connect?: Prisma.TechnicianWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TechnicianUpdateToOneWithWhereWithoutRemoteCommandsInput, Prisma.TechnicianUpdateWithoutRemoteCommandsInput>, Prisma.TechnicianUncheckedUpdateWithoutRemoteCommandsInput>
+}
+
+export type TechnicianCreateNestedOneWithoutInventoryInput = {
+  create?: Prisma.XOR<Prisma.TechnicianCreateWithoutInventoryInput, Prisma.TechnicianUncheckedCreateWithoutInventoryInput>
+  connectOrCreate?: Prisma.TechnicianCreateOrConnectWithoutInventoryInput
+  connect?: Prisma.TechnicianWhereUniqueInput
+}
+
+export type TechnicianUpdateOneRequiredWithoutInventoryNestedInput = {
+  create?: Prisma.XOR<Prisma.TechnicianCreateWithoutInventoryInput, Prisma.TechnicianUncheckedCreateWithoutInventoryInput>
+  connectOrCreate?: Prisma.TechnicianCreateOrConnectWithoutInventoryInput
+  upsert?: Prisma.TechnicianUpsertWithoutInventoryInput
+  connect?: Prisma.TechnicianWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TechnicianUpdateToOneWithWhereWithoutInventoryInput, Prisma.TechnicianUpdateWithoutInventoryInput>, Prisma.TechnicianUncheckedUpdateWithoutInventoryInput>
+}
+
 export type TechnicianCreateWithoutUserInput = {
   id?: string
   status?: $Enums.TechnicianStatus
@@ -724,11 +1115,27 @@ export type TechnicianCreateWithoutUserInput = {
   serviceAreas?: Prisma.TechnicianCreateserviceAreasInput | string[]
   idDocumentUrl?: string | null
   profilePhotoUrl?: string | null
+  batteryLevel?: number | null
+  networkStatus?: string | null
+  speed?: number | null
+  heading?: number | null
+  cashInHand?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: number | null
+  completionRate?: number | null
+  vehicleType?: string | null
+  deviceId?: string | null
+  appVersion?: string | null
+  isSuspended?: boolean
+  isLocked?: boolean
   assignedOrders?: Prisma.OrderCreateNestedManyWithoutTechnicianInput
   locations?: Prisma.TechnicianLocationCreateNestedManyWithoutTechnicianInput
   earnings?: Prisma.TechnicianEarningsCreateNestedManyWithoutTechnicianInput
   availability?: Prisma.TechnicianAvailabilityCreateNestedManyWithoutTechnicianInput
   reviews?: Prisma.ReviewCreateNestedManyWithoutTechnicianInput
+  telemetry?: Prisma.TechnicianTelemetryCreateNestedManyWithoutTechnicianInput
+  remoteCommands?: Prisma.RemoteCommandCreateNestedManyWithoutTechnicianInput
+  inventory?: Prisma.TechnicianInventoryCreateNestedManyWithoutTechnicianInput
 }
 
 export type TechnicianUncheckedCreateWithoutUserInput = {
@@ -744,11 +1151,27 @@ export type TechnicianUncheckedCreateWithoutUserInput = {
   serviceAreas?: Prisma.TechnicianCreateserviceAreasInput | string[]
   idDocumentUrl?: string | null
   profilePhotoUrl?: string | null
+  batteryLevel?: number | null
+  networkStatus?: string | null
+  speed?: number | null
+  heading?: number | null
+  cashInHand?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: number | null
+  completionRate?: number | null
+  vehicleType?: string | null
+  deviceId?: string | null
+  appVersion?: string | null
+  isSuspended?: boolean
+  isLocked?: boolean
   assignedOrders?: Prisma.OrderUncheckedCreateNestedManyWithoutTechnicianInput
   locations?: Prisma.TechnicianLocationUncheckedCreateNestedManyWithoutTechnicianInput
   earnings?: Prisma.TechnicianEarningsUncheckedCreateNestedManyWithoutTechnicianInput
   availability?: Prisma.TechnicianAvailabilityUncheckedCreateNestedManyWithoutTechnicianInput
   reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutTechnicianInput
+  telemetry?: Prisma.TechnicianTelemetryUncheckedCreateNestedManyWithoutTechnicianInput
+  remoteCommands?: Prisma.RemoteCommandUncheckedCreateNestedManyWithoutTechnicianInput
+  inventory?: Prisma.TechnicianInventoryUncheckedCreateNestedManyWithoutTechnicianInput
 }
 
 export type TechnicianCreateOrConnectWithoutUserInput = {
@@ -780,11 +1203,27 @@ export type TechnicianUpdateWithoutUserInput = {
   serviceAreas?: Prisma.TechnicianUpdateserviceAreasInput | string[]
   idDocumentUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profilePhotoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batteryLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  networkStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  speed?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  heading?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cashInHand?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  completionRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isSuspended?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   assignedOrders?: Prisma.OrderUpdateManyWithoutTechnicianNestedInput
   locations?: Prisma.TechnicianLocationUpdateManyWithoutTechnicianNestedInput
   earnings?: Prisma.TechnicianEarningsUpdateManyWithoutTechnicianNestedInput
   availability?: Prisma.TechnicianAvailabilityUpdateManyWithoutTechnicianNestedInput
   reviews?: Prisma.ReviewUpdateManyWithoutTechnicianNestedInput
+  telemetry?: Prisma.TechnicianTelemetryUpdateManyWithoutTechnicianNestedInput
+  remoteCommands?: Prisma.RemoteCommandUpdateManyWithoutTechnicianNestedInput
+  inventory?: Prisma.TechnicianInventoryUpdateManyWithoutTechnicianNestedInput
 }
 
 export type TechnicianUncheckedUpdateWithoutUserInput = {
@@ -800,11 +1239,27 @@ export type TechnicianUncheckedUpdateWithoutUserInput = {
   serviceAreas?: Prisma.TechnicianUpdateserviceAreasInput | string[]
   idDocumentUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profilePhotoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batteryLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  networkStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  speed?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  heading?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cashInHand?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  completionRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isSuspended?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   assignedOrders?: Prisma.OrderUncheckedUpdateManyWithoutTechnicianNestedInput
   locations?: Prisma.TechnicianLocationUncheckedUpdateManyWithoutTechnicianNestedInput
   earnings?: Prisma.TechnicianEarningsUncheckedUpdateManyWithoutTechnicianNestedInput
   availability?: Prisma.TechnicianAvailabilityUncheckedUpdateManyWithoutTechnicianNestedInput
   reviews?: Prisma.ReviewUncheckedUpdateManyWithoutTechnicianNestedInput
+  telemetry?: Prisma.TechnicianTelemetryUncheckedUpdateManyWithoutTechnicianNestedInput
+  remoteCommands?: Prisma.RemoteCommandUncheckedUpdateManyWithoutTechnicianNestedInput
+  inventory?: Prisma.TechnicianInventoryUncheckedUpdateManyWithoutTechnicianNestedInput
 }
 
 export type TechnicianCreateWithoutAssignedOrdersInput = {
@@ -820,11 +1275,27 @@ export type TechnicianCreateWithoutAssignedOrdersInput = {
   serviceAreas?: Prisma.TechnicianCreateserviceAreasInput | string[]
   idDocumentUrl?: string | null
   profilePhotoUrl?: string | null
+  batteryLevel?: number | null
+  networkStatus?: string | null
+  speed?: number | null
+  heading?: number | null
+  cashInHand?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: number | null
+  completionRate?: number | null
+  vehicleType?: string | null
+  deviceId?: string | null
+  appVersion?: string | null
+  isSuspended?: boolean
+  isLocked?: boolean
   user: Prisma.UserCreateNestedOneWithoutTechnicianInput
   locations?: Prisma.TechnicianLocationCreateNestedManyWithoutTechnicianInput
   earnings?: Prisma.TechnicianEarningsCreateNestedManyWithoutTechnicianInput
   availability?: Prisma.TechnicianAvailabilityCreateNestedManyWithoutTechnicianInput
   reviews?: Prisma.ReviewCreateNestedManyWithoutTechnicianInput
+  telemetry?: Prisma.TechnicianTelemetryCreateNestedManyWithoutTechnicianInput
+  remoteCommands?: Prisma.RemoteCommandCreateNestedManyWithoutTechnicianInput
+  inventory?: Prisma.TechnicianInventoryCreateNestedManyWithoutTechnicianInput
 }
 
 export type TechnicianUncheckedCreateWithoutAssignedOrdersInput = {
@@ -841,10 +1312,26 @@ export type TechnicianUncheckedCreateWithoutAssignedOrdersInput = {
   serviceAreas?: Prisma.TechnicianCreateserviceAreasInput | string[]
   idDocumentUrl?: string | null
   profilePhotoUrl?: string | null
+  batteryLevel?: number | null
+  networkStatus?: string | null
+  speed?: number | null
+  heading?: number | null
+  cashInHand?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: number | null
+  completionRate?: number | null
+  vehicleType?: string | null
+  deviceId?: string | null
+  appVersion?: string | null
+  isSuspended?: boolean
+  isLocked?: boolean
   locations?: Prisma.TechnicianLocationUncheckedCreateNestedManyWithoutTechnicianInput
   earnings?: Prisma.TechnicianEarningsUncheckedCreateNestedManyWithoutTechnicianInput
   availability?: Prisma.TechnicianAvailabilityUncheckedCreateNestedManyWithoutTechnicianInput
   reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutTechnicianInput
+  telemetry?: Prisma.TechnicianTelemetryUncheckedCreateNestedManyWithoutTechnicianInput
+  remoteCommands?: Prisma.RemoteCommandUncheckedCreateNestedManyWithoutTechnicianInput
+  inventory?: Prisma.TechnicianInventoryUncheckedCreateNestedManyWithoutTechnicianInput
 }
 
 export type TechnicianCreateOrConnectWithoutAssignedOrdersInput = {
@@ -876,11 +1363,27 @@ export type TechnicianUpdateWithoutAssignedOrdersInput = {
   serviceAreas?: Prisma.TechnicianUpdateserviceAreasInput | string[]
   idDocumentUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profilePhotoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batteryLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  networkStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  speed?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  heading?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cashInHand?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  completionRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isSuspended?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   user?: Prisma.UserUpdateOneRequiredWithoutTechnicianNestedInput
   locations?: Prisma.TechnicianLocationUpdateManyWithoutTechnicianNestedInput
   earnings?: Prisma.TechnicianEarningsUpdateManyWithoutTechnicianNestedInput
   availability?: Prisma.TechnicianAvailabilityUpdateManyWithoutTechnicianNestedInput
   reviews?: Prisma.ReviewUpdateManyWithoutTechnicianNestedInput
+  telemetry?: Prisma.TechnicianTelemetryUpdateManyWithoutTechnicianNestedInput
+  remoteCommands?: Prisma.RemoteCommandUpdateManyWithoutTechnicianNestedInput
+  inventory?: Prisma.TechnicianInventoryUpdateManyWithoutTechnicianNestedInput
 }
 
 export type TechnicianUncheckedUpdateWithoutAssignedOrdersInput = {
@@ -897,10 +1400,26 @@ export type TechnicianUncheckedUpdateWithoutAssignedOrdersInput = {
   serviceAreas?: Prisma.TechnicianUpdateserviceAreasInput | string[]
   idDocumentUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profilePhotoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batteryLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  networkStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  speed?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  heading?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cashInHand?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  completionRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isSuspended?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   locations?: Prisma.TechnicianLocationUncheckedUpdateManyWithoutTechnicianNestedInput
   earnings?: Prisma.TechnicianEarningsUncheckedUpdateManyWithoutTechnicianNestedInput
   availability?: Prisma.TechnicianAvailabilityUncheckedUpdateManyWithoutTechnicianNestedInput
   reviews?: Prisma.ReviewUncheckedUpdateManyWithoutTechnicianNestedInput
+  telemetry?: Prisma.TechnicianTelemetryUncheckedUpdateManyWithoutTechnicianNestedInput
+  remoteCommands?: Prisma.RemoteCommandUncheckedUpdateManyWithoutTechnicianNestedInput
+  inventory?: Prisma.TechnicianInventoryUncheckedUpdateManyWithoutTechnicianNestedInput
 }
 
 export type TechnicianCreateWithoutLocationsInput = {
@@ -916,11 +1435,27 @@ export type TechnicianCreateWithoutLocationsInput = {
   serviceAreas?: Prisma.TechnicianCreateserviceAreasInput | string[]
   idDocumentUrl?: string | null
   profilePhotoUrl?: string | null
+  batteryLevel?: number | null
+  networkStatus?: string | null
+  speed?: number | null
+  heading?: number | null
+  cashInHand?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: number | null
+  completionRate?: number | null
+  vehicleType?: string | null
+  deviceId?: string | null
+  appVersion?: string | null
+  isSuspended?: boolean
+  isLocked?: boolean
   user: Prisma.UserCreateNestedOneWithoutTechnicianInput
   assignedOrders?: Prisma.OrderCreateNestedManyWithoutTechnicianInput
   earnings?: Prisma.TechnicianEarningsCreateNestedManyWithoutTechnicianInput
   availability?: Prisma.TechnicianAvailabilityCreateNestedManyWithoutTechnicianInput
   reviews?: Prisma.ReviewCreateNestedManyWithoutTechnicianInput
+  telemetry?: Prisma.TechnicianTelemetryCreateNestedManyWithoutTechnicianInput
+  remoteCommands?: Prisma.RemoteCommandCreateNestedManyWithoutTechnicianInput
+  inventory?: Prisma.TechnicianInventoryCreateNestedManyWithoutTechnicianInput
 }
 
 export type TechnicianUncheckedCreateWithoutLocationsInput = {
@@ -937,10 +1472,26 @@ export type TechnicianUncheckedCreateWithoutLocationsInput = {
   serviceAreas?: Prisma.TechnicianCreateserviceAreasInput | string[]
   idDocumentUrl?: string | null
   profilePhotoUrl?: string | null
+  batteryLevel?: number | null
+  networkStatus?: string | null
+  speed?: number | null
+  heading?: number | null
+  cashInHand?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: number | null
+  completionRate?: number | null
+  vehicleType?: string | null
+  deviceId?: string | null
+  appVersion?: string | null
+  isSuspended?: boolean
+  isLocked?: boolean
   assignedOrders?: Prisma.OrderUncheckedCreateNestedManyWithoutTechnicianInput
   earnings?: Prisma.TechnicianEarningsUncheckedCreateNestedManyWithoutTechnicianInput
   availability?: Prisma.TechnicianAvailabilityUncheckedCreateNestedManyWithoutTechnicianInput
   reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutTechnicianInput
+  telemetry?: Prisma.TechnicianTelemetryUncheckedCreateNestedManyWithoutTechnicianInput
+  remoteCommands?: Prisma.RemoteCommandUncheckedCreateNestedManyWithoutTechnicianInput
+  inventory?: Prisma.TechnicianInventoryUncheckedCreateNestedManyWithoutTechnicianInput
 }
 
 export type TechnicianCreateOrConnectWithoutLocationsInput = {
@@ -972,11 +1523,27 @@ export type TechnicianUpdateWithoutLocationsInput = {
   serviceAreas?: Prisma.TechnicianUpdateserviceAreasInput | string[]
   idDocumentUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profilePhotoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batteryLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  networkStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  speed?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  heading?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cashInHand?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  completionRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isSuspended?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   user?: Prisma.UserUpdateOneRequiredWithoutTechnicianNestedInput
   assignedOrders?: Prisma.OrderUpdateManyWithoutTechnicianNestedInput
   earnings?: Prisma.TechnicianEarningsUpdateManyWithoutTechnicianNestedInput
   availability?: Prisma.TechnicianAvailabilityUpdateManyWithoutTechnicianNestedInput
   reviews?: Prisma.ReviewUpdateManyWithoutTechnicianNestedInput
+  telemetry?: Prisma.TechnicianTelemetryUpdateManyWithoutTechnicianNestedInput
+  remoteCommands?: Prisma.RemoteCommandUpdateManyWithoutTechnicianNestedInput
+  inventory?: Prisma.TechnicianInventoryUpdateManyWithoutTechnicianNestedInput
 }
 
 export type TechnicianUncheckedUpdateWithoutLocationsInput = {
@@ -993,10 +1560,26 @@ export type TechnicianUncheckedUpdateWithoutLocationsInput = {
   serviceAreas?: Prisma.TechnicianUpdateserviceAreasInput | string[]
   idDocumentUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profilePhotoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batteryLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  networkStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  speed?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  heading?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cashInHand?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  completionRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isSuspended?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   assignedOrders?: Prisma.OrderUncheckedUpdateManyWithoutTechnicianNestedInput
   earnings?: Prisma.TechnicianEarningsUncheckedUpdateManyWithoutTechnicianNestedInput
   availability?: Prisma.TechnicianAvailabilityUncheckedUpdateManyWithoutTechnicianNestedInput
   reviews?: Prisma.ReviewUncheckedUpdateManyWithoutTechnicianNestedInput
+  telemetry?: Prisma.TechnicianTelemetryUncheckedUpdateManyWithoutTechnicianNestedInput
+  remoteCommands?: Prisma.RemoteCommandUncheckedUpdateManyWithoutTechnicianNestedInput
+  inventory?: Prisma.TechnicianInventoryUncheckedUpdateManyWithoutTechnicianNestedInput
 }
 
 export type TechnicianCreateWithoutEarningsInput = {
@@ -1012,11 +1595,27 @@ export type TechnicianCreateWithoutEarningsInput = {
   serviceAreas?: Prisma.TechnicianCreateserviceAreasInput | string[]
   idDocumentUrl?: string | null
   profilePhotoUrl?: string | null
+  batteryLevel?: number | null
+  networkStatus?: string | null
+  speed?: number | null
+  heading?: number | null
+  cashInHand?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: number | null
+  completionRate?: number | null
+  vehicleType?: string | null
+  deviceId?: string | null
+  appVersion?: string | null
+  isSuspended?: boolean
+  isLocked?: boolean
   user: Prisma.UserCreateNestedOneWithoutTechnicianInput
   assignedOrders?: Prisma.OrderCreateNestedManyWithoutTechnicianInput
   locations?: Prisma.TechnicianLocationCreateNestedManyWithoutTechnicianInput
   availability?: Prisma.TechnicianAvailabilityCreateNestedManyWithoutTechnicianInput
   reviews?: Prisma.ReviewCreateNestedManyWithoutTechnicianInput
+  telemetry?: Prisma.TechnicianTelemetryCreateNestedManyWithoutTechnicianInput
+  remoteCommands?: Prisma.RemoteCommandCreateNestedManyWithoutTechnicianInput
+  inventory?: Prisma.TechnicianInventoryCreateNestedManyWithoutTechnicianInput
 }
 
 export type TechnicianUncheckedCreateWithoutEarningsInput = {
@@ -1033,10 +1632,26 @@ export type TechnicianUncheckedCreateWithoutEarningsInput = {
   serviceAreas?: Prisma.TechnicianCreateserviceAreasInput | string[]
   idDocumentUrl?: string | null
   profilePhotoUrl?: string | null
+  batteryLevel?: number | null
+  networkStatus?: string | null
+  speed?: number | null
+  heading?: number | null
+  cashInHand?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: number | null
+  completionRate?: number | null
+  vehicleType?: string | null
+  deviceId?: string | null
+  appVersion?: string | null
+  isSuspended?: boolean
+  isLocked?: boolean
   assignedOrders?: Prisma.OrderUncheckedCreateNestedManyWithoutTechnicianInput
   locations?: Prisma.TechnicianLocationUncheckedCreateNestedManyWithoutTechnicianInput
   availability?: Prisma.TechnicianAvailabilityUncheckedCreateNestedManyWithoutTechnicianInput
   reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutTechnicianInput
+  telemetry?: Prisma.TechnicianTelemetryUncheckedCreateNestedManyWithoutTechnicianInput
+  remoteCommands?: Prisma.RemoteCommandUncheckedCreateNestedManyWithoutTechnicianInput
+  inventory?: Prisma.TechnicianInventoryUncheckedCreateNestedManyWithoutTechnicianInput
 }
 
 export type TechnicianCreateOrConnectWithoutEarningsInput = {
@@ -1068,11 +1683,27 @@ export type TechnicianUpdateWithoutEarningsInput = {
   serviceAreas?: Prisma.TechnicianUpdateserviceAreasInput | string[]
   idDocumentUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profilePhotoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batteryLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  networkStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  speed?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  heading?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cashInHand?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  completionRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isSuspended?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   user?: Prisma.UserUpdateOneRequiredWithoutTechnicianNestedInput
   assignedOrders?: Prisma.OrderUpdateManyWithoutTechnicianNestedInput
   locations?: Prisma.TechnicianLocationUpdateManyWithoutTechnicianNestedInput
   availability?: Prisma.TechnicianAvailabilityUpdateManyWithoutTechnicianNestedInput
   reviews?: Prisma.ReviewUpdateManyWithoutTechnicianNestedInput
+  telemetry?: Prisma.TechnicianTelemetryUpdateManyWithoutTechnicianNestedInput
+  remoteCommands?: Prisma.RemoteCommandUpdateManyWithoutTechnicianNestedInput
+  inventory?: Prisma.TechnicianInventoryUpdateManyWithoutTechnicianNestedInput
 }
 
 export type TechnicianUncheckedUpdateWithoutEarningsInput = {
@@ -1089,10 +1720,26 @@ export type TechnicianUncheckedUpdateWithoutEarningsInput = {
   serviceAreas?: Prisma.TechnicianUpdateserviceAreasInput | string[]
   idDocumentUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profilePhotoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batteryLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  networkStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  speed?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  heading?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cashInHand?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  completionRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isSuspended?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   assignedOrders?: Prisma.OrderUncheckedUpdateManyWithoutTechnicianNestedInput
   locations?: Prisma.TechnicianLocationUncheckedUpdateManyWithoutTechnicianNestedInput
   availability?: Prisma.TechnicianAvailabilityUncheckedUpdateManyWithoutTechnicianNestedInput
   reviews?: Prisma.ReviewUncheckedUpdateManyWithoutTechnicianNestedInput
+  telemetry?: Prisma.TechnicianTelemetryUncheckedUpdateManyWithoutTechnicianNestedInput
+  remoteCommands?: Prisma.RemoteCommandUncheckedUpdateManyWithoutTechnicianNestedInput
+  inventory?: Prisma.TechnicianInventoryUncheckedUpdateManyWithoutTechnicianNestedInput
 }
 
 export type TechnicianCreateWithoutAvailabilityInput = {
@@ -1108,11 +1755,27 @@ export type TechnicianCreateWithoutAvailabilityInput = {
   serviceAreas?: Prisma.TechnicianCreateserviceAreasInput | string[]
   idDocumentUrl?: string | null
   profilePhotoUrl?: string | null
+  batteryLevel?: number | null
+  networkStatus?: string | null
+  speed?: number | null
+  heading?: number | null
+  cashInHand?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: number | null
+  completionRate?: number | null
+  vehicleType?: string | null
+  deviceId?: string | null
+  appVersion?: string | null
+  isSuspended?: boolean
+  isLocked?: boolean
   user: Prisma.UserCreateNestedOneWithoutTechnicianInput
   assignedOrders?: Prisma.OrderCreateNestedManyWithoutTechnicianInput
   locations?: Prisma.TechnicianLocationCreateNestedManyWithoutTechnicianInput
   earnings?: Prisma.TechnicianEarningsCreateNestedManyWithoutTechnicianInput
   reviews?: Prisma.ReviewCreateNestedManyWithoutTechnicianInput
+  telemetry?: Prisma.TechnicianTelemetryCreateNestedManyWithoutTechnicianInput
+  remoteCommands?: Prisma.RemoteCommandCreateNestedManyWithoutTechnicianInput
+  inventory?: Prisma.TechnicianInventoryCreateNestedManyWithoutTechnicianInput
 }
 
 export type TechnicianUncheckedCreateWithoutAvailabilityInput = {
@@ -1129,10 +1792,26 @@ export type TechnicianUncheckedCreateWithoutAvailabilityInput = {
   serviceAreas?: Prisma.TechnicianCreateserviceAreasInput | string[]
   idDocumentUrl?: string | null
   profilePhotoUrl?: string | null
+  batteryLevel?: number | null
+  networkStatus?: string | null
+  speed?: number | null
+  heading?: number | null
+  cashInHand?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: number | null
+  completionRate?: number | null
+  vehicleType?: string | null
+  deviceId?: string | null
+  appVersion?: string | null
+  isSuspended?: boolean
+  isLocked?: boolean
   assignedOrders?: Prisma.OrderUncheckedCreateNestedManyWithoutTechnicianInput
   locations?: Prisma.TechnicianLocationUncheckedCreateNestedManyWithoutTechnicianInput
   earnings?: Prisma.TechnicianEarningsUncheckedCreateNestedManyWithoutTechnicianInput
   reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutTechnicianInput
+  telemetry?: Prisma.TechnicianTelemetryUncheckedCreateNestedManyWithoutTechnicianInput
+  remoteCommands?: Prisma.RemoteCommandUncheckedCreateNestedManyWithoutTechnicianInput
+  inventory?: Prisma.TechnicianInventoryUncheckedCreateNestedManyWithoutTechnicianInput
 }
 
 export type TechnicianCreateOrConnectWithoutAvailabilityInput = {
@@ -1164,11 +1843,27 @@ export type TechnicianUpdateWithoutAvailabilityInput = {
   serviceAreas?: Prisma.TechnicianUpdateserviceAreasInput | string[]
   idDocumentUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profilePhotoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batteryLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  networkStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  speed?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  heading?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cashInHand?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  completionRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isSuspended?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   user?: Prisma.UserUpdateOneRequiredWithoutTechnicianNestedInput
   assignedOrders?: Prisma.OrderUpdateManyWithoutTechnicianNestedInput
   locations?: Prisma.TechnicianLocationUpdateManyWithoutTechnicianNestedInput
   earnings?: Prisma.TechnicianEarningsUpdateManyWithoutTechnicianNestedInput
   reviews?: Prisma.ReviewUpdateManyWithoutTechnicianNestedInput
+  telemetry?: Prisma.TechnicianTelemetryUpdateManyWithoutTechnicianNestedInput
+  remoteCommands?: Prisma.RemoteCommandUpdateManyWithoutTechnicianNestedInput
+  inventory?: Prisma.TechnicianInventoryUpdateManyWithoutTechnicianNestedInput
 }
 
 export type TechnicianUncheckedUpdateWithoutAvailabilityInput = {
@@ -1185,10 +1880,26 @@ export type TechnicianUncheckedUpdateWithoutAvailabilityInput = {
   serviceAreas?: Prisma.TechnicianUpdateserviceAreasInput | string[]
   idDocumentUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profilePhotoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batteryLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  networkStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  speed?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  heading?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cashInHand?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  completionRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isSuspended?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   assignedOrders?: Prisma.OrderUncheckedUpdateManyWithoutTechnicianNestedInput
   locations?: Prisma.TechnicianLocationUncheckedUpdateManyWithoutTechnicianNestedInput
   earnings?: Prisma.TechnicianEarningsUncheckedUpdateManyWithoutTechnicianNestedInput
   reviews?: Prisma.ReviewUncheckedUpdateManyWithoutTechnicianNestedInput
+  telemetry?: Prisma.TechnicianTelemetryUncheckedUpdateManyWithoutTechnicianNestedInput
+  remoteCommands?: Prisma.RemoteCommandUncheckedUpdateManyWithoutTechnicianNestedInput
+  inventory?: Prisma.TechnicianInventoryUncheckedUpdateManyWithoutTechnicianNestedInput
 }
 
 export type TechnicianCreateWithoutReviewsInput = {
@@ -1204,11 +1915,27 @@ export type TechnicianCreateWithoutReviewsInput = {
   serviceAreas?: Prisma.TechnicianCreateserviceAreasInput | string[]
   idDocumentUrl?: string | null
   profilePhotoUrl?: string | null
+  batteryLevel?: number | null
+  networkStatus?: string | null
+  speed?: number | null
+  heading?: number | null
+  cashInHand?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: number | null
+  completionRate?: number | null
+  vehicleType?: string | null
+  deviceId?: string | null
+  appVersion?: string | null
+  isSuspended?: boolean
+  isLocked?: boolean
   user: Prisma.UserCreateNestedOneWithoutTechnicianInput
   assignedOrders?: Prisma.OrderCreateNestedManyWithoutTechnicianInput
   locations?: Prisma.TechnicianLocationCreateNestedManyWithoutTechnicianInput
   earnings?: Prisma.TechnicianEarningsCreateNestedManyWithoutTechnicianInput
   availability?: Prisma.TechnicianAvailabilityCreateNestedManyWithoutTechnicianInput
+  telemetry?: Prisma.TechnicianTelemetryCreateNestedManyWithoutTechnicianInput
+  remoteCommands?: Prisma.RemoteCommandCreateNestedManyWithoutTechnicianInput
+  inventory?: Prisma.TechnicianInventoryCreateNestedManyWithoutTechnicianInput
 }
 
 export type TechnicianUncheckedCreateWithoutReviewsInput = {
@@ -1225,10 +1952,26 @@ export type TechnicianUncheckedCreateWithoutReviewsInput = {
   serviceAreas?: Prisma.TechnicianCreateserviceAreasInput | string[]
   idDocumentUrl?: string | null
   profilePhotoUrl?: string | null
+  batteryLevel?: number | null
+  networkStatus?: string | null
+  speed?: number | null
+  heading?: number | null
+  cashInHand?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: number | null
+  completionRate?: number | null
+  vehicleType?: string | null
+  deviceId?: string | null
+  appVersion?: string | null
+  isSuspended?: boolean
+  isLocked?: boolean
   assignedOrders?: Prisma.OrderUncheckedCreateNestedManyWithoutTechnicianInput
   locations?: Prisma.TechnicianLocationUncheckedCreateNestedManyWithoutTechnicianInput
   earnings?: Prisma.TechnicianEarningsUncheckedCreateNestedManyWithoutTechnicianInput
   availability?: Prisma.TechnicianAvailabilityUncheckedCreateNestedManyWithoutTechnicianInput
+  telemetry?: Prisma.TechnicianTelemetryUncheckedCreateNestedManyWithoutTechnicianInput
+  remoteCommands?: Prisma.RemoteCommandUncheckedCreateNestedManyWithoutTechnicianInput
+  inventory?: Prisma.TechnicianInventoryUncheckedCreateNestedManyWithoutTechnicianInput
 }
 
 export type TechnicianCreateOrConnectWithoutReviewsInput = {
@@ -1260,11 +2003,27 @@ export type TechnicianUpdateWithoutReviewsInput = {
   serviceAreas?: Prisma.TechnicianUpdateserviceAreasInput | string[]
   idDocumentUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profilePhotoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batteryLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  networkStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  speed?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  heading?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cashInHand?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  completionRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isSuspended?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   user?: Prisma.UserUpdateOneRequiredWithoutTechnicianNestedInput
   assignedOrders?: Prisma.OrderUpdateManyWithoutTechnicianNestedInput
   locations?: Prisma.TechnicianLocationUpdateManyWithoutTechnicianNestedInput
   earnings?: Prisma.TechnicianEarningsUpdateManyWithoutTechnicianNestedInput
   availability?: Prisma.TechnicianAvailabilityUpdateManyWithoutTechnicianNestedInput
+  telemetry?: Prisma.TechnicianTelemetryUpdateManyWithoutTechnicianNestedInput
+  remoteCommands?: Prisma.RemoteCommandUpdateManyWithoutTechnicianNestedInput
+  inventory?: Prisma.TechnicianInventoryUpdateManyWithoutTechnicianNestedInput
 }
 
 export type TechnicianUncheckedUpdateWithoutReviewsInput = {
@@ -1281,10 +2040,506 @@ export type TechnicianUncheckedUpdateWithoutReviewsInput = {
   serviceAreas?: Prisma.TechnicianUpdateserviceAreasInput | string[]
   idDocumentUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profilePhotoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batteryLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  networkStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  speed?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  heading?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cashInHand?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  completionRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isSuspended?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   assignedOrders?: Prisma.OrderUncheckedUpdateManyWithoutTechnicianNestedInput
   locations?: Prisma.TechnicianLocationUncheckedUpdateManyWithoutTechnicianNestedInput
   earnings?: Prisma.TechnicianEarningsUncheckedUpdateManyWithoutTechnicianNestedInput
   availability?: Prisma.TechnicianAvailabilityUncheckedUpdateManyWithoutTechnicianNestedInput
+  telemetry?: Prisma.TechnicianTelemetryUncheckedUpdateManyWithoutTechnicianNestedInput
+  remoteCommands?: Prisma.RemoteCommandUncheckedUpdateManyWithoutTechnicianNestedInput
+  inventory?: Prisma.TechnicianInventoryUncheckedUpdateManyWithoutTechnicianNestedInput
+}
+
+export type TechnicianCreateWithoutTelemetryInput = {
+  id?: string
+  status?: $Enums.TechnicianStatus
+  available?: boolean
+  rating?: number | null
+  latitude?: number | null
+  longitude?: number | null
+  lastActive?: Date | string | null
+  experienceYears?: number | null
+  specialization?: string | null
+  serviceAreas?: Prisma.TechnicianCreateserviceAreasInput | string[]
+  idDocumentUrl?: string | null
+  profilePhotoUrl?: string | null
+  batteryLevel?: number | null
+  networkStatus?: string | null
+  speed?: number | null
+  heading?: number | null
+  cashInHand?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: number | null
+  completionRate?: number | null
+  vehicleType?: string | null
+  deviceId?: string | null
+  appVersion?: string | null
+  isSuspended?: boolean
+  isLocked?: boolean
+  user: Prisma.UserCreateNestedOneWithoutTechnicianInput
+  assignedOrders?: Prisma.OrderCreateNestedManyWithoutTechnicianInput
+  locations?: Prisma.TechnicianLocationCreateNestedManyWithoutTechnicianInput
+  earnings?: Prisma.TechnicianEarningsCreateNestedManyWithoutTechnicianInput
+  availability?: Prisma.TechnicianAvailabilityCreateNestedManyWithoutTechnicianInput
+  reviews?: Prisma.ReviewCreateNestedManyWithoutTechnicianInput
+  remoteCommands?: Prisma.RemoteCommandCreateNestedManyWithoutTechnicianInput
+  inventory?: Prisma.TechnicianInventoryCreateNestedManyWithoutTechnicianInput
+}
+
+export type TechnicianUncheckedCreateWithoutTelemetryInput = {
+  id?: string
+  userId: string
+  status?: $Enums.TechnicianStatus
+  available?: boolean
+  rating?: number | null
+  latitude?: number | null
+  longitude?: number | null
+  lastActive?: Date | string | null
+  experienceYears?: number | null
+  specialization?: string | null
+  serviceAreas?: Prisma.TechnicianCreateserviceAreasInput | string[]
+  idDocumentUrl?: string | null
+  profilePhotoUrl?: string | null
+  batteryLevel?: number | null
+  networkStatus?: string | null
+  speed?: number | null
+  heading?: number | null
+  cashInHand?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: number | null
+  completionRate?: number | null
+  vehicleType?: string | null
+  deviceId?: string | null
+  appVersion?: string | null
+  isSuspended?: boolean
+  isLocked?: boolean
+  assignedOrders?: Prisma.OrderUncheckedCreateNestedManyWithoutTechnicianInput
+  locations?: Prisma.TechnicianLocationUncheckedCreateNestedManyWithoutTechnicianInput
+  earnings?: Prisma.TechnicianEarningsUncheckedCreateNestedManyWithoutTechnicianInput
+  availability?: Prisma.TechnicianAvailabilityUncheckedCreateNestedManyWithoutTechnicianInput
+  reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutTechnicianInput
+  remoteCommands?: Prisma.RemoteCommandUncheckedCreateNestedManyWithoutTechnicianInput
+  inventory?: Prisma.TechnicianInventoryUncheckedCreateNestedManyWithoutTechnicianInput
+}
+
+export type TechnicianCreateOrConnectWithoutTelemetryInput = {
+  where: Prisma.TechnicianWhereUniqueInput
+  create: Prisma.XOR<Prisma.TechnicianCreateWithoutTelemetryInput, Prisma.TechnicianUncheckedCreateWithoutTelemetryInput>
+}
+
+export type TechnicianUpsertWithoutTelemetryInput = {
+  update: Prisma.XOR<Prisma.TechnicianUpdateWithoutTelemetryInput, Prisma.TechnicianUncheckedUpdateWithoutTelemetryInput>
+  create: Prisma.XOR<Prisma.TechnicianCreateWithoutTelemetryInput, Prisma.TechnicianUncheckedCreateWithoutTelemetryInput>
+  where?: Prisma.TechnicianWhereInput
+}
+
+export type TechnicianUpdateToOneWithWhereWithoutTelemetryInput = {
+  where?: Prisma.TechnicianWhereInput
+  data: Prisma.XOR<Prisma.TechnicianUpdateWithoutTelemetryInput, Prisma.TechnicianUncheckedUpdateWithoutTelemetryInput>
+}
+
+export type TechnicianUpdateWithoutTelemetryInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTechnicianStatusFieldUpdateOperationsInput | $Enums.TechnicianStatus
+  available?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  rating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lastActive?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  experienceYears?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  specialization?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  serviceAreas?: Prisma.TechnicianUpdateserviceAreasInput | string[]
+  idDocumentUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePhotoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batteryLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  networkStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  speed?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  heading?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cashInHand?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  completionRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isSuspended?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  user?: Prisma.UserUpdateOneRequiredWithoutTechnicianNestedInput
+  assignedOrders?: Prisma.OrderUpdateManyWithoutTechnicianNestedInput
+  locations?: Prisma.TechnicianLocationUpdateManyWithoutTechnicianNestedInput
+  earnings?: Prisma.TechnicianEarningsUpdateManyWithoutTechnicianNestedInput
+  availability?: Prisma.TechnicianAvailabilityUpdateManyWithoutTechnicianNestedInput
+  reviews?: Prisma.ReviewUpdateManyWithoutTechnicianNestedInput
+  remoteCommands?: Prisma.RemoteCommandUpdateManyWithoutTechnicianNestedInput
+  inventory?: Prisma.TechnicianInventoryUpdateManyWithoutTechnicianNestedInput
+}
+
+export type TechnicianUncheckedUpdateWithoutTelemetryInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTechnicianStatusFieldUpdateOperationsInput | $Enums.TechnicianStatus
+  available?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  rating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lastActive?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  experienceYears?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  specialization?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  serviceAreas?: Prisma.TechnicianUpdateserviceAreasInput | string[]
+  idDocumentUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePhotoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batteryLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  networkStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  speed?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  heading?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cashInHand?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  completionRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isSuspended?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  assignedOrders?: Prisma.OrderUncheckedUpdateManyWithoutTechnicianNestedInput
+  locations?: Prisma.TechnicianLocationUncheckedUpdateManyWithoutTechnicianNestedInput
+  earnings?: Prisma.TechnicianEarningsUncheckedUpdateManyWithoutTechnicianNestedInput
+  availability?: Prisma.TechnicianAvailabilityUncheckedUpdateManyWithoutTechnicianNestedInput
+  reviews?: Prisma.ReviewUncheckedUpdateManyWithoutTechnicianNestedInput
+  remoteCommands?: Prisma.RemoteCommandUncheckedUpdateManyWithoutTechnicianNestedInput
+  inventory?: Prisma.TechnicianInventoryUncheckedUpdateManyWithoutTechnicianNestedInput
+}
+
+export type TechnicianCreateWithoutRemoteCommandsInput = {
+  id?: string
+  status?: $Enums.TechnicianStatus
+  available?: boolean
+  rating?: number | null
+  latitude?: number | null
+  longitude?: number | null
+  lastActive?: Date | string | null
+  experienceYears?: number | null
+  specialization?: string | null
+  serviceAreas?: Prisma.TechnicianCreateserviceAreasInput | string[]
+  idDocumentUrl?: string | null
+  profilePhotoUrl?: string | null
+  batteryLevel?: number | null
+  networkStatus?: string | null
+  speed?: number | null
+  heading?: number | null
+  cashInHand?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: number | null
+  completionRate?: number | null
+  vehicleType?: string | null
+  deviceId?: string | null
+  appVersion?: string | null
+  isSuspended?: boolean
+  isLocked?: boolean
+  user: Prisma.UserCreateNestedOneWithoutTechnicianInput
+  assignedOrders?: Prisma.OrderCreateNestedManyWithoutTechnicianInput
+  locations?: Prisma.TechnicianLocationCreateNestedManyWithoutTechnicianInput
+  earnings?: Prisma.TechnicianEarningsCreateNestedManyWithoutTechnicianInput
+  availability?: Prisma.TechnicianAvailabilityCreateNestedManyWithoutTechnicianInput
+  reviews?: Prisma.ReviewCreateNestedManyWithoutTechnicianInput
+  telemetry?: Prisma.TechnicianTelemetryCreateNestedManyWithoutTechnicianInput
+  inventory?: Prisma.TechnicianInventoryCreateNestedManyWithoutTechnicianInput
+}
+
+export type TechnicianUncheckedCreateWithoutRemoteCommandsInput = {
+  id?: string
+  userId: string
+  status?: $Enums.TechnicianStatus
+  available?: boolean
+  rating?: number | null
+  latitude?: number | null
+  longitude?: number | null
+  lastActive?: Date | string | null
+  experienceYears?: number | null
+  specialization?: string | null
+  serviceAreas?: Prisma.TechnicianCreateserviceAreasInput | string[]
+  idDocumentUrl?: string | null
+  profilePhotoUrl?: string | null
+  batteryLevel?: number | null
+  networkStatus?: string | null
+  speed?: number | null
+  heading?: number | null
+  cashInHand?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: number | null
+  completionRate?: number | null
+  vehicleType?: string | null
+  deviceId?: string | null
+  appVersion?: string | null
+  isSuspended?: boolean
+  isLocked?: boolean
+  assignedOrders?: Prisma.OrderUncheckedCreateNestedManyWithoutTechnicianInput
+  locations?: Prisma.TechnicianLocationUncheckedCreateNestedManyWithoutTechnicianInput
+  earnings?: Prisma.TechnicianEarningsUncheckedCreateNestedManyWithoutTechnicianInput
+  availability?: Prisma.TechnicianAvailabilityUncheckedCreateNestedManyWithoutTechnicianInput
+  reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutTechnicianInput
+  telemetry?: Prisma.TechnicianTelemetryUncheckedCreateNestedManyWithoutTechnicianInput
+  inventory?: Prisma.TechnicianInventoryUncheckedCreateNestedManyWithoutTechnicianInput
+}
+
+export type TechnicianCreateOrConnectWithoutRemoteCommandsInput = {
+  where: Prisma.TechnicianWhereUniqueInput
+  create: Prisma.XOR<Prisma.TechnicianCreateWithoutRemoteCommandsInput, Prisma.TechnicianUncheckedCreateWithoutRemoteCommandsInput>
+}
+
+export type TechnicianUpsertWithoutRemoteCommandsInput = {
+  update: Prisma.XOR<Prisma.TechnicianUpdateWithoutRemoteCommandsInput, Prisma.TechnicianUncheckedUpdateWithoutRemoteCommandsInput>
+  create: Prisma.XOR<Prisma.TechnicianCreateWithoutRemoteCommandsInput, Prisma.TechnicianUncheckedCreateWithoutRemoteCommandsInput>
+  where?: Prisma.TechnicianWhereInput
+}
+
+export type TechnicianUpdateToOneWithWhereWithoutRemoteCommandsInput = {
+  where?: Prisma.TechnicianWhereInput
+  data: Prisma.XOR<Prisma.TechnicianUpdateWithoutRemoteCommandsInput, Prisma.TechnicianUncheckedUpdateWithoutRemoteCommandsInput>
+}
+
+export type TechnicianUpdateWithoutRemoteCommandsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTechnicianStatusFieldUpdateOperationsInput | $Enums.TechnicianStatus
+  available?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  rating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lastActive?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  experienceYears?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  specialization?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  serviceAreas?: Prisma.TechnicianUpdateserviceAreasInput | string[]
+  idDocumentUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePhotoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batteryLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  networkStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  speed?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  heading?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cashInHand?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  completionRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isSuspended?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  user?: Prisma.UserUpdateOneRequiredWithoutTechnicianNestedInput
+  assignedOrders?: Prisma.OrderUpdateManyWithoutTechnicianNestedInput
+  locations?: Prisma.TechnicianLocationUpdateManyWithoutTechnicianNestedInput
+  earnings?: Prisma.TechnicianEarningsUpdateManyWithoutTechnicianNestedInput
+  availability?: Prisma.TechnicianAvailabilityUpdateManyWithoutTechnicianNestedInput
+  reviews?: Prisma.ReviewUpdateManyWithoutTechnicianNestedInput
+  telemetry?: Prisma.TechnicianTelemetryUpdateManyWithoutTechnicianNestedInput
+  inventory?: Prisma.TechnicianInventoryUpdateManyWithoutTechnicianNestedInput
+}
+
+export type TechnicianUncheckedUpdateWithoutRemoteCommandsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTechnicianStatusFieldUpdateOperationsInput | $Enums.TechnicianStatus
+  available?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  rating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lastActive?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  experienceYears?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  specialization?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  serviceAreas?: Prisma.TechnicianUpdateserviceAreasInput | string[]
+  idDocumentUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePhotoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batteryLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  networkStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  speed?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  heading?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cashInHand?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  completionRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isSuspended?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  assignedOrders?: Prisma.OrderUncheckedUpdateManyWithoutTechnicianNestedInput
+  locations?: Prisma.TechnicianLocationUncheckedUpdateManyWithoutTechnicianNestedInput
+  earnings?: Prisma.TechnicianEarningsUncheckedUpdateManyWithoutTechnicianNestedInput
+  availability?: Prisma.TechnicianAvailabilityUncheckedUpdateManyWithoutTechnicianNestedInput
+  reviews?: Prisma.ReviewUncheckedUpdateManyWithoutTechnicianNestedInput
+  telemetry?: Prisma.TechnicianTelemetryUncheckedUpdateManyWithoutTechnicianNestedInput
+  inventory?: Prisma.TechnicianInventoryUncheckedUpdateManyWithoutTechnicianNestedInput
+}
+
+export type TechnicianCreateWithoutInventoryInput = {
+  id?: string
+  status?: $Enums.TechnicianStatus
+  available?: boolean
+  rating?: number | null
+  latitude?: number | null
+  longitude?: number | null
+  lastActive?: Date | string | null
+  experienceYears?: number | null
+  specialization?: string | null
+  serviceAreas?: Prisma.TechnicianCreateserviceAreasInput | string[]
+  idDocumentUrl?: string | null
+  profilePhotoUrl?: string | null
+  batteryLevel?: number | null
+  networkStatus?: string | null
+  speed?: number | null
+  heading?: number | null
+  cashInHand?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: number | null
+  completionRate?: number | null
+  vehicleType?: string | null
+  deviceId?: string | null
+  appVersion?: string | null
+  isSuspended?: boolean
+  isLocked?: boolean
+  user: Prisma.UserCreateNestedOneWithoutTechnicianInput
+  assignedOrders?: Prisma.OrderCreateNestedManyWithoutTechnicianInput
+  locations?: Prisma.TechnicianLocationCreateNestedManyWithoutTechnicianInput
+  earnings?: Prisma.TechnicianEarningsCreateNestedManyWithoutTechnicianInput
+  availability?: Prisma.TechnicianAvailabilityCreateNestedManyWithoutTechnicianInput
+  reviews?: Prisma.ReviewCreateNestedManyWithoutTechnicianInput
+  telemetry?: Prisma.TechnicianTelemetryCreateNestedManyWithoutTechnicianInput
+  remoteCommands?: Prisma.RemoteCommandCreateNestedManyWithoutTechnicianInput
+}
+
+export type TechnicianUncheckedCreateWithoutInventoryInput = {
+  id?: string
+  userId: string
+  status?: $Enums.TechnicianStatus
+  available?: boolean
+  rating?: number | null
+  latitude?: number | null
+  longitude?: number | null
+  lastActive?: Date | string | null
+  experienceYears?: number | null
+  specialization?: string | null
+  serviceAreas?: Prisma.TechnicianCreateserviceAreasInput | string[]
+  idDocumentUrl?: string | null
+  profilePhotoUrl?: string | null
+  batteryLevel?: number | null
+  networkStatus?: string | null
+  speed?: number | null
+  heading?: number | null
+  cashInHand?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: number | null
+  completionRate?: number | null
+  vehicleType?: string | null
+  deviceId?: string | null
+  appVersion?: string | null
+  isSuspended?: boolean
+  isLocked?: boolean
+  assignedOrders?: Prisma.OrderUncheckedCreateNestedManyWithoutTechnicianInput
+  locations?: Prisma.TechnicianLocationUncheckedCreateNestedManyWithoutTechnicianInput
+  earnings?: Prisma.TechnicianEarningsUncheckedCreateNestedManyWithoutTechnicianInput
+  availability?: Prisma.TechnicianAvailabilityUncheckedCreateNestedManyWithoutTechnicianInput
+  reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutTechnicianInput
+  telemetry?: Prisma.TechnicianTelemetryUncheckedCreateNestedManyWithoutTechnicianInput
+  remoteCommands?: Prisma.RemoteCommandUncheckedCreateNestedManyWithoutTechnicianInput
+}
+
+export type TechnicianCreateOrConnectWithoutInventoryInput = {
+  where: Prisma.TechnicianWhereUniqueInput
+  create: Prisma.XOR<Prisma.TechnicianCreateWithoutInventoryInput, Prisma.TechnicianUncheckedCreateWithoutInventoryInput>
+}
+
+export type TechnicianUpsertWithoutInventoryInput = {
+  update: Prisma.XOR<Prisma.TechnicianUpdateWithoutInventoryInput, Prisma.TechnicianUncheckedUpdateWithoutInventoryInput>
+  create: Prisma.XOR<Prisma.TechnicianCreateWithoutInventoryInput, Prisma.TechnicianUncheckedCreateWithoutInventoryInput>
+  where?: Prisma.TechnicianWhereInput
+}
+
+export type TechnicianUpdateToOneWithWhereWithoutInventoryInput = {
+  where?: Prisma.TechnicianWhereInput
+  data: Prisma.XOR<Prisma.TechnicianUpdateWithoutInventoryInput, Prisma.TechnicianUncheckedUpdateWithoutInventoryInput>
+}
+
+export type TechnicianUpdateWithoutInventoryInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTechnicianStatusFieldUpdateOperationsInput | $Enums.TechnicianStatus
+  available?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  rating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lastActive?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  experienceYears?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  specialization?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  serviceAreas?: Prisma.TechnicianUpdateserviceAreasInput | string[]
+  idDocumentUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePhotoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batteryLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  networkStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  speed?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  heading?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cashInHand?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  completionRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isSuspended?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  user?: Prisma.UserUpdateOneRequiredWithoutTechnicianNestedInput
+  assignedOrders?: Prisma.OrderUpdateManyWithoutTechnicianNestedInput
+  locations?: Prisma.TechnicianLocationUpdateManyWithoutTechnicianNestedInput
+  earnings?: Prisma.TechnicianEarningsUpdateManyWithoutTechnicianNestedInput
+  availability?: Prisma.TechnicianAvailabilityUpdateManyWithoutTechnicianNestedInput
+  reviews?: Prisma.ReviewUpdateManyWithoutTechnicianNestedInput
+  telemetry?: Prisma.TechnicianTelemetryUpdateManyWithoutTechnicianNestedInput
+  remoteCommands?: Prisma.RemoteCommandUpdateManyWithoutTechnicianNestedInput
+}
+
+export type TechnicianUncheckedUpdateWithoutInventoryInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTechnicianStatusFieldUpdateOperationsInput | $Enums.TechnicianStatus
+  available?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  rating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lastActive?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  experienceYears?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  specialization?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  serviceAreas?: Prisma.TechnicianUpdateserviceAreasInput | string[]
+  idDocumentUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePhotoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batteryLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  networkStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  speed?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  heading?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cashInHand?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  walletBalance?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  completionRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isSuspended?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  assignedOrders?: Prisma.OrderUncheckedUpdateManyWithoutTechnicianNestedInput
+  locations?: Prisma.TechnicianLocationUncheckedUpdateManyWithoutTechnicianNestedInput
+  earnings?: Prisma.TechnicianEarningsUncheckedUpdateManyWithoutTechnicianNestedInput
+  availability?: Prisma.TechnicianAvailabilityUncheckedUpdateManyWithoutTechnicianNestedInput
+  reviews?: Prisma.ReviewUncheckedUpdateManyWithoutTechnicianNestedInput
+  telemetry?: Prisma.TechnicianTelemetryUncheckedUpdateManyWithoutTechnicianNestedInput
+  remoteCommands?: Prisma.RemoteCommandUncheckedUpdateManyWithoutTechnicianNestedInput
 }
 
 
@@ -1298,6 +2553,9 @@ export type TechnicianCountOutputType = {
   earnings: number
   availability: number
   reviews: number
+  telemetry: number
+  remoteCommands: number
+  inventory: number
 }
 
 export type TechnicianCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1306,6 +2564,9 @@ export type TechnicianCountOutputTypeSelect<ExtArgs extends runtime.Types.Extens
   earnings?: boolean | TechnicianCountOutputTypeCountEarningsArgs
   availability?: boolean | TechnicianCountOutputTypeCountAvailabilityArgs
   reviews?: boolean | TechnicianCountOutputTypeCountReviewsArgs
+  telemetry?: boolean | TechnicianCountOutputTypeCountTelemetryArgs
+  remoteCommands?: boolean | TechnicianCountOutputTypeCountRemoteCommandsArgs
+  inventory?: boolean | TechnicianCountOutputTypeCountInventoryArgs
 }
 
 /**
@@ -1353,6 +2614,27 @@ export type TechnicianCountOutputTypeCountReviewsArgs<ExtArgs extends runtime.Ty
   where?: Prisma.ReviewWhereInput
 }
 
+/**
+ * TechnicianCountOutputType without action
+ */
+export type TechnicianCountOutputTypeCountTelemetryArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TechnicianTelemetryWhereInput
+}
+
+/**
+ * TechnicianCountOutputType without action
+ */
+export type TechnicianCountOutputTypeCountRemoteCommandsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.RemoteCommandWhereInput
+}
+
+/**
+ * TechnicianCountOutputType without action
+ */
+export type TechnicianCountOutputTypeCountInventoryArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TechnicianInventoryWhereInput
+}
+
 
 export type TechnicianSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1368,12 +2650,28 @@ export type TechnicianSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   serviceAreas?: boolean
   idDocumentUrl?: boolean
   profilePhotoUrl?: boolean
+  batteryLevel?: boolean
+  networkStatus?: boolean
+  speed?: boolean
+  heading?: boolean
+  cashInHand?: boolean
+  walletBalance?: boolean
+  acceptanceRate?: boolean
+  completionRate?: boolean
+  vehicleType?: boolean
+  deviceId?: boolean
+  appVersion?: boolean
+  isSuspended?: boolean
+  isLocked?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   assignedOrders?: boolean | Prisma.Technician$assignedOrdersArgs<ExtArgs>
   locations?: boolean | Prisma.Technician$locationsArgs<ExtArgs>
   earnings?: boolean | Prisma.Technician$earningsArgs<ExtArgs>
   availability?: boolean | Prisma.Technician$availabilityArgs<ExtArgs>
   reviews?: boolean | Prisma.Technician$reviewsArgs<ExtArgs>
+  telemetry?: boolean | Prisma.Technician$telemetryArgs<ExtArgs>
+  remoteCommands?: boolean | Prisma.Technician$remoteCommandsArgs<ExtArgs>
+  inventory?: boolean | Prisma.Technician$inventoryArgs<ExtArgs>
   _count?: boolean | Prisma.TechnicianCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["technician"]>
 
@@ -1391,6 +2689,19 @@ export type TechnicianSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   serviceAreas?: boolean
   idDocumentUrl?: boolean
   profilePhotoUrl?: boolean
+  batteryLevel?: boolean
+  networkStatus?: boolean
+  speed?: boolean
+  heading?: boolean
+  cashInHand?: boolean
+  walletBalance?: boolean
+  acceptanceRate?: boolean
+  completionRate?: boolean
+  vehicleType?: boolean
+  deviceId?: boolean
+  appVersion?: boolean
+  isSuspended?: boolean
+  isLocked?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["technician"]>
 
@@ -1408,6 +2719,19 @@ export type TechnicianSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   serviceAreas?: boolean
   idDocumentUrl?: boolean
   profilePhotoUrl?: boolean
+  batteryLevel?: boolean
+  networkStatus?: boolean
+  speed?: boolean
+  heading?: boolean
+  cashInHand?: boolean
+  walletBalance?: boolean
+  acceptanceRate?: boolean
+  completionRate?: boolean
+  vehicleType?: boolean
+  deviceId?: boolean
+  appVersion?: boolean
+  isSuspended?: boolean
+  isLocked?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["technician"]>
 
@@ -1425,9 +2749,22 @@ export type TechnicianSelectScalar = {
   serviceAreas?: boolean
   idDocumentUrl?: boolean
   profilePhotoUrl?: boolean
+  batteryLevel?: boolean
+  networkStatus?: boolean
+  speed?: boolean
+  heading?: boolean
+  cashInHand?: boolean
+  walletBalance?: boolean
+  acceptanceRate?: boolean
+  completionRate?: boolean
+  vehicleType?: boolean
+  deviceId?: boolean
+  appVersion?: boolean
+  isSuspended?: boolean
+  isLocked?: boolean
 }
 
-export type TechnicianOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "status" | "available" | "rating" | "latitude" | "longitude" | "lastActive" | "experienceYears" | "specialization" | "serviceAreas" | "idDocumentUrl" | "profilePhotoUrl", ExtArgs["result"]["technician"]>
+export type TechnicianOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "status" | "available" | "rating" | "latitude" | "longitude" | "lastActive" | "experienceYears" | "specialization" | "serviceAreas" | "idDocumentUrl" | "profilePhotoUrl" | "batteryLevel" | "networkStatus" | "speed" | "heading" | "cashInHand" | "walletBalance" | "acceptanceRate" | "completionRate" | "vehicleType" | "deviceId" | "appVersion" | "isSuspended" | "isLocked", ExtArgs["result"]["technician"]>
 export type TechnicianInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   assignedOrders?: boolean | Prisma.Technician$assignedOrdersArgs<ExtArgs>
@@ -1435,6 +2772,9 @@ export type TechnicianInclude<ExtArgs extends runtime.Types.Extensions.InternalA
   earnings?: boolean | Prisma.Technician$earningsArgs<ExtArgs>
   availability?: boolean | Prisma.Technician$availabilityArgs<ExtArgs>
   reviews?: boolean | Prisma.Technician$reviewsArgs<ExtArgs>
+  telemetry?: boolean | Prisma.Technician$telemetryArgs<ExtArgs>
+  remoteCommands?: boolean | Prisma.Technician$remoteCommandsArgs<ExtArgs>
+  inventory?: boolean | Prisma.Technician$inventoryArgs<ExtArgs>
   _count?: boolean | Prisma.TechnicianCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type TechnicianIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1453,6 +2793,9 @@ export type $TechnicianPayload<ExtArgs extends runtime.Types.Extensions.Internal
     earnings: Prisma.$TechnicianEarningsPayload<ExtArgs>[]
     availability: Prisma.$TechnicianAvailabilityPayload<ExtArgs>[]
     reviews: Prisma.$ReviewPayload<ExtArgs>[]
+    telemetry: Prisma.$TechnicianTelemetryPayload<ExtArgs>[]
+    remoteCommands: Prisma.$RemoteCommandPayload<ExtArgs>[]
+    inventory: Prisma.$TechnicianInventoryPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1468,6 +2811,19 @@ export type $TechnicianPayload<ExtArgs extends runtime.Types.Extensions.Internal
     serviceAreas: string[]
     idDocumentUrl: string | null
     profilePhotoUrl: string | null
+    batteryLevel: number | null
+    networkStatus: string | null
+    speed: number | null
+    heading: number | null
+    cashInHand: runtime.Decimal | null
+    walletBalance: runtime.Decimal | null
+    acceptanceRate: number | null
+    completionRate: number | null
+    vehicleType: string | null
+    deviceId: string | null
+    appVersion: string | null
+    isSuspended: boolean
+    isLocked: boolean
   }, ExtArgs["result"]["technician"]>
   composites: {}
 }
@@ -1868,6 +3224,9 @@ export interface Prisma__TechnicianClient<T, Null = never, ExtArgs extends runti
   earnings<T extends Prisma.Technician$earningsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Technician$earningsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TechnicianEarningsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   availability<T extends Prisma.Technician$availabilityArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Technician$availabilityArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TechnicianAvailabilityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   reviews<T extends Prisma.Technician$reviewsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Technician$reviewsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ReviewPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  telemetry<T extends Prisma.Technician$telemetryArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Technician$telemetryArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TechnicianTelemetryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  remoteCommands<T extends Prisma.Technician$remoteCommandsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Technician$remoteCommandsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RemoteCommandPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  inventory<T extends Prisma.Technician$inventoryArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Technician$inventoryArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TechnicianInventoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1910,6 +3269,19 @@ export interface TechnicianFieldRefs {
   readonly serviceAreas: Prisma.FieldRef<"Technician", 'String[]'>
   readonly idDocumentUrl: Prisma.FieldRef<"Technician", 'String'>
   readonly profilePhotoUrl: Prisma.FieldRef<"Technician", 'String'>
+  readonly batteryLevel: Prisma.FieldRef<"Technician", 'Int'>
+  readonly networkStatus: Prisma.FieldRef<"Technician", 'String'>
+  readonly speed: Prisma.FieldRef<"Technician", 'Float'>
+  readonly heading: Prisma.FieldRef<"Technician", 'Float'>
+  readonly cashInHand: Prisma.FieldRef<"Technician", 'Decimal'>
+  readonly walletBalance: Prisma.FieldRef<"Technician", 'Decimal'>
+  readonly acceptanceRate: Prisma.FieldRef<"Technician", 'Float'>
+  readonly completionRate: Prisma.FieldRef<"Technician", 'Float'>
+  readonly vehicleType: Prisma.FieldRef<"Technician", 'String'>
+  readonly deviceId: Prisma.FieldRef<"Technician", 'String'>
+  readonly appVersion: Prisma.FieldRef<"Technician", 'String'>
+  readonly isSuspended: Prisma.FieldRef<"Technician", 'Boolean'>
+  readonly isLocked: Prisma.FieldRef<"Technician", 'Boolean'>
 }
     
 
@@ -2428,6 +3800,78 @@ export type Technician$reviewsArgs<ExtArgs extends runtime.Types.Extensions.Inte
   take?: number
   skip?: number
   distinct?: Prisma.ReviewScalarFieldEnum | Prisma.ReviewScalarFieldEnum[]
+}
+
+/**
+ * Technician.telemetry
+ */
+export type Technician$telemetryArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the TechnicianTelemetry
+   */
+  select?: Prisma.TechnicianTelemetrySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the TechnicianTelemetry
+   */
+  omit?: Prisma.TechnicianTelemetryOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TechnicianTelemetryInclude<ExtArgs> | null
+  where?: Prisma.TechnicianTelemetryWhereInput
+  orderBy?: Prisma.TechnicianTelemetryOrderByWithRelationInput | Prisma.TechnicianTelemetryOrderByWithRelationInput[]
+  cursor?: Prisma.TechnicianTelemetryWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TechnicianTelemetryScalarFieldEnum | Prisma.TechnicianTelemetryScalarFieldEnum[]
+}
+
+/**
+ * Technician.remoteCommands
+ */
+export type Technician$remoteCommandsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the RemoteCommand
+   */
+  select?: Prisma.RemoteCommandSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the RemoteCommand
+   */
+  omit?: Prisma.RemoteCommandOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RemoteCommandInclude<ExtArgs> | null
+  where?: Prisma.RemoteCommandWhereInput
+  orderBy?: Prisma.RemoteCommandOrderByWithRelationInput | Prisma.RemoteCommandOrderByWithRelationInput[]
+  cursor?: Prisma.RemoteCommandWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.RemoteCommandScalarFieldEnum | Prisma.RemoteCommandScalarFieldEnum[]
+}
+
+/**
+ * Technician.inventory
+ */
+export type Technician$inventoryArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the TechnicianInventory
+   */
+  select?: Prisma.TechnicianInventorySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the TechnicianInventory
+   */
+  omit?: Prisma.TechnicianInventoryOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TechnicianInventoryInclude<ExtArgs> | null
+  where?: Prisma.TechnicianInventoryWhereInput
+  orderBy?: Prisma.TechnicianInventoryOrderByWithRelationInput | Prisma.TechnicianInventoryOrderByWithRelationInput[]
+  cursor?: Prisma.TechnicianInventoryWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TechnicianInventoryScalarFieldEnum | Prisma.TechnicianInventoryScalarFieldEnum[]
 }
 
 /**

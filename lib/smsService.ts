@@ -67,7 +67,7 @@ export async function sendWhatsApp(
         }
 
         return { success: true, url: result.url }
-    } catch (error) {
+    } catch {
         return { success: false, error: "Failed to send message" }
     }
 }

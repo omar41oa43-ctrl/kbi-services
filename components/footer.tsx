@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { Phone, Mail, MapPin, MessageCircle, ArrowRight, Instagram } from "lucide-react"
 import { FaTiktok } from "react-icons/fa6"
@@ -19,7 +18,6 @@ export function Footer({ contact }: FooterProps) {
   const isAr = lang === "ar"
   const t = useT()
   const pathname = usePathname()
-  const [mounted, setMounted] = useState(false)
   const googleReviewUrl = "https://g.page/r/CWG_uPaqr-MjEAI/review"
   const socialItems = [
     {
@@ -62,25 +60,25 @@ export function Footer({ contact }: FooterProps) {
     <footer className="relative pt-20 pb-10 overflow-hidden">
 
       <div className="container mx-auto px-6 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 mb-20" dir="ltr">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 mb-20 justify-items-center items-center text-center w-full" style={{ textAlign: "center" }}>
           {/* Brand Column (4 cols) */}
-          <div className="lg:col-span-4 lg:col-start-1 flex flex-col items-start text-start">
+          <div className="lg:col-span-4 w-full flex flex-col items-center justify-center text-center mx-auto" style={{ textAlign: "center" }}>
             <Link href="/" className="inline-block mb-6 group relative">
               <div className="absolute -inset-4 bg-gradient-to-r from-cyan-500/20 to-blue-600/20 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
-              <div className="relative text-5xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-cyan-100 group-hover:from-cyan-400 group-hover:via-blue-400 group-hover:to-purple-500 transition-all duration-300">
+              <div className="relative text-5xl font-bold tracking-tighter text-foreground group-hover:text-cyan-500 transition-all duration-300">
                 KBI<span className="text-cyan-500 group-hover:text-blue-400 transition-colors">.</span>
               </div>
             </Link>
 
-            <div className="ps-4 border-s-2 border-white/10 mb-8 hover:border-cyan-500/50 transition-colors duration-300">
-              <p className="text-white/60 leading-relaxed max-w-sm text-start" suppressHydrationWarning>
+            <div className="px-4 mb-8 w-full flex justify-center">
+              <p className="text-muted-foreground leading-relaxed max-w-sm text-center mx-auto" style={{ textAlign: "center" }} suppressHydrationWarning>
                 {(isAr ? (contact.footerTextAr || contact.footerText) : contact.footerText) || (isAr
                   ? "شريكك التقني الموثوق للإصلاح الميداني في أبوظبي. متخصصون في صيانة الهواتف، الحواسيب، الطابعات والشبكات."
                   : "Your trusted technical partner for on-site repairs in Abu Dhabi. Experts in mobile, laptop, printer, and network maintenance.")}
               </p>
             </div>
 
-            <div className="flex items-center justify-start gap-3">
+            <div className="flex items-center justify-center gap-3 w-full">
               {socialItems.filter((item) => item.show).map((item, i) => (
                 <a
                   key={i}
@@ -88,7 +86,7 @@ export function Footer({ contact }: FooterProps) {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={item.ariaLabel}
-                  className="group relative w-12 h-12 rounded-2xl bg-white/5 ring-1 ring-white/10 flex items-center justify-center text-white/70 transition-all duration-300 hover:bg-white/10 hover:ring-white/20 hover:shadow-[0_16px_40px_-24px_rgba(6,182,212,0.7)]"
+                  className="group relative w-12 h-12 rounded-2xl bg-black/5 dark:bg-white/5 ring-1 ring-black/10 dark:ring-white/10 flex items-center justify-center text-foreground/70 dark:text-white/70 transition-all duration-300 hover:bg-black/10 dark:hover:bg-white/10 hover:ring-black/20 dark:hover:ring-white/20 shadow-xs"
                 >
                   <span className="absolute -inset-px rounded-2xl bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-70" />
                   <item.icon className="w-5 h-5 relative z-10" />
@@ -98,12 +96,14 @@ export function Footer({ contact }: FooterProps) {
           </div>
 
           {/* Quick Links (3 cols) */}
-          <div className="lg:col-span-3 lg:col-start-5" dir={isAr ? "rtl" : "ltr"}>
-            <h4 className="font-bold text-white mb-8 relative inline-block text-start">
-              {t("Quick Links")}
-              <span className="absolute -bottom-2 start-0 w-1/2 h-1 bg-cyan-500 rounded-full" />
-            </h4>
-            <ul className="space-y-4">
+          <div className="lg:col-span-3 w-full flex flex-col items-center justify-center text-center mx-auto" style={{ textAlign: "center" }}>
+            <div className="flex flex-col items-center justify-center mb-8 w-full">
+              <h4 className="font-bold text-foreground text-lg tracking-wide text-center w-full" style={{ textAlign: "center" }}>
+                {t("Quick Links")}
+              </h4>
+              <div className="mt-2.5 w-12 h-1 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full shadow-[0_0_12px_rgba(6,182,212,0.5)] mx-auto" />
+            </div>
+            <ul className="space-y-4 w-full flex flex-col items-center justify-center text-center" style={{ textAlign: "center" }}>
               {[
                 { key: "Services", href: "/services" },
                 { key: "Book Now", href: "/book" },
@@ -111,37 +111,41 @@ export function Footer({ contact }: FooterProps) {
                 { key: "About", href: "/about" },
                 { key: "Contact", href: "/contact" },
               ].map((item) => (
-                <li key={item.key}>
+                <li key={item.key} className="w-full flex justify-center text-center" style={{ textAlign: "center" }}>
                   <Link
                     href={item.href}
-                    className="text-white/60 hover:text-cyan-400 transition-colors flex items-center gap-2 group justify-start text-start"
+                    className="text-muted-foreground hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors flex items-center justify-center gap-2 group text-center mx-auto"
+                    style={{ textAlign: "center" }}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover:bg-cyan-400 transition-colors" />
-                    {t(item.key)}
+                    <span className="w-1.5 h-1.5 rounded-full bg-foreground/20 dark:bg-white/20 group-hover:bg-cyan-500 transition-colors shrink-0" />
+                    <span>{t(item.key)}</span>
                   </Link>
                 </li>
               ))}
-              <li>
-                  <a
-                    href={googleReviewUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-white/60 hover:text-cyan-400 transition-colors flex items-center gap-2 group justify-start text-start"
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover:bg-cyan-400 transition-colors" />
-                    {t("Rate us on Google")}
-                  </a>
-                </li>
+              <li className="w-full flex justify-center text-center" style={{ textAlign: "center" }}>
+                <a
+                  href={googleReviewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors flex items-center justify-center gap-2 group text-center mx-auto"
+                  style={{ textAlign: "center" }}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-foreground/20 dark:bg-white/20 group-hover:bg-cyan-500 transition-colors shrink-0" />
+                  <span>{t("Rate us on Google")}</span>
+                </a>
+              </li>
             </ul>
           </div>
 
           {/* Services (3 cols) */}
-          <div className="lg:col-span-3 lg:col-start-8" dir={isAr ? "rtl" : "ltr"}>
-            <h4 className="font-bold text-white mb-8 relative inline-block text-start">
-              {t("Services")}
-              <span className="absolute -bottom-2 start-0 w-1/2 h-1 bg-blue-500 rounded-full" />
-            </h4>
-            <ul className="space-y-4">
+          <div className="lg:col-span-3 w-full flex flex-col items-center justify-center text-center mx-auto" style={{ textAlign: "center" }}>
+            <div className="flex flex-col items-center justify-center mb-8 w-full">
+              <h4 className="font-bold text-foreground text-lg tracking-wide text-center w-full" style={{ textAlign: "center" }}>
+                {t("Services")}
+              </h4>
+              <div className="mt-2.5 w-12 h-1 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full shadow-[0_0_12px_rgba(59,130,246,0.5)] mx-auto" />
+            </div>
+            <ul className="space-y-4 w-full flex flex-col items-center justify-center text-center" style={{ textAlign: "center" }}>
               {[
                 { key: "Mobile Phone Repair", slug: "mobile" },
                 { key: "Laptop Repair", slug: "laptop" },
@@ -149,13 +153,14 @@ export function Footer({ contact }: FooterProps) {
                 { key: "CCTV Installation", slug: "cctv" },
                 { key: "Gaming Console Repair", slug: "gaming" },
               ].map((service, i) => (
-                <li key={i}>
+                <li key={i} className="w-full flex justify-center text-center" style={{ textAlign: "center" }}>
                   <a
                     href={`/services#${service.slug}`}
-                    className="text-white/60 hover:text-blue-400 transition-colors flex items-center gap-2 group justify-start text-start"
+                    className="text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center justify-center gap-2 group text-center mx-auto"
+                    style={{ textAlign: "center" }}
                   >
-                    <ArrowRight className="w-3 h-3 opacity-0 -ml-3 group-hover:opacity-100 group-hover:ml-0 rtl:rotate-180 transition-all duration-300 text-blue-400" />
-                    {t(service.key)}
+                    <ArrowRight className="w-3 h-3 opacity-0 -ml-3 group-hover:opacity-100 group-hover:ml-0 rtl:rotate-180 transition-all duration-300 text-blue-500 shrink-0" />
+                    <span>{t(service.key)}</span>
                   </a>
                 </li>
               ))}
@@ -163,28 +168,30 @@ export function Footer({ contact }: FooterProps) {
           </div>
 
           {/* Contact (2 cols) */}
-          <div className="lg:col-span-2 lg:col-start-11" dir={isAr ? "rtl" : "ltr"}>
-            <h4 className="font-bold text-white mb-8 relative inline-block text-start">
-              {t("Contact")}
-              <span className="absolute -bottom-2 start-0 w-1/2 h-1 bg-purple-500 rounded-full" />
-            </h4>
-            <ul className="space-y-6">
-              <li className="flex items-start gap-4 text-start">
-                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center shrink-0">
-                  <Phone className="w-4 h-4 text-cyan-400" />
+          <div className="lg:col-span-2 w-full flex flex-col items-center justify-center text-center mx-auto" style={{ textAlign: "center" }}>
+            <div className="flex flex-col items-center justify-center mb-8 w-full">
+              <h4 className="font-bold text-foreground text-lg tracking-wide text-center w-full" style={{ textAlign: "center" }}>
+                {t("Contact")}
+              </h4>
+              <div className="mt-2.5 w-12 h-1 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full shadow-[0_0_12px_rgba(168,85,247,0.5)] mx-auto" />
+            </div>
+            <ul className="space-y-6 w-full flex flex-col items-center justify-center text-center" style={{ textAlign: "center" }}>
+              <li className="w-full flex flex-col items-center justify-center text-center gap-2" style={{ textAlign: "center" }}>
+                <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center shrink-0">
+                  <Phone className="w-4 h-4 text-cyan-500 dark:text-cyan-400" />
                 </div>
-                <div>
-                  <p className="text-xs text-white/40 uppercase tracking-wider mb-1">{t("Hotline 24/7")}</p>
-                  <a href={`tel:${contact.phone}`} dir="ltr" className="text-white font-semibold hover:underline">{contact.phoneDisplay}</a>
+                <div className="text-center" style={{ textAlign: "center" }}>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1 text-center" style={{ textAlign: "center" }}>{t("Hotline 24/7")}</p>
+                  <a href={`tel:${contact.phone}`} dir="ltr" className="text-foreground font-semibold hover:underline text-center">{contact.phoneDisplay}</a>
                 </div>
               </li>
-              <li className="flex items-start gap-4 text-start">
-                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center shrink-0">
-                  <MapPin className="w-4 h-4 text-purple-400" />
+              <li className="w-full flex flex-col items-center justify-center text-center gap-2" style={{ textAlign: "center" }}>
+                <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center shrink-0">
+                  <MapPin className="w-4 h-4 text-purple-500 dark:text-purple-400" />
                 </div>
-                <div>
-                  <p className="text-xs text-white/40 uppercase tracking-wider mb-1">{t("Location")}</p>
-                  <p className="text-white font-semibold">{t((isAr && contact.addressAr) ? contact.addressAr : contact.address)}</p>
+                <div className="text-center" style={{ textAlign: "center" }}>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1 text-center" style={{ textAlign: "center" }}>{t("Location")}</p>
+                  <p className="text-foreground font-semibold text-center" style={{ textAlign: "center" }}>{t((isAr && contact.addressAr) ? contact.addressAr : contact.address)}</p>
                 </div>
               </li>
             </ul>
@@ -192,8 +199,8 @@ export function Footer({ contact }: FooterProps) {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6 relative" dir="ltr">
-          <p className="text-white/40 text-sm">
+        <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-6 relative" dir="ltr">
+          <p className="text-muted-foreground text-sm">
             © {new Date().getFullYear()} {t("KBI Repair Services")}. {t("All rights reserved.")}
           </p>
 
@@ -205,7 +212,7 @@ export function Footer({ contact }: FooterProps) {
                 text="KBI*TECHNOLOGY*KBI*TECHNOLOGY*"
                 onHover="speedUp"
                 spinDuration={20}
-                className="w-20 h-20 md:w-24 md:h-24 text-cyan-400"
+                className="w-20 h-20 md:w-24 md:h-24 text-cyan-500 dark:text-cyan-400"
               />
               <div className="absolute inset-0 flex items-center justify-center">
                 <div
@@ -233,17 +240,14 @@ export function Footer({ contact }: FooterProps) {
                   >
                     <div className="absolute left-1/2 top-0 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-400 opacity-90 shadow-[0_0_8px_rgba(59,130,246,0.7)]" />
                   </div>
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_14px_rgba(255,255,255,0.9)]" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-cyan-500 dark:bg-white shadow-[0_0_14px_rgba(255,255,255,0.9)]" />
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="flex gap-6 text-sm text-white/40">
-            <Link href="/privacy" className="hover:text-white transition-colors">
-              {t("Privacy Policy")}
-            </Link>
-            <Link href={isAr ? "/terms?lang=ar" : "/terms"} className="hover:text-white transition-colors">
+          <div className="flex gap-6 text-sm text-muted-foreground">
+            <Link href={isAr ? "/terms?lang=ar" : "/terms"} className="hover:text-foreground transition-colors">
               {t("Terms & Conditions")}
             </Link>
           </div>

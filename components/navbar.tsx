@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState } from "react"
 import { motion, useScroll, useMotionValueEvent } from "framer-motion"
 import { Phone, MessageCircle, Wrench, CalendarDays, Search, Mail, Home, Building2 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -9,6 +9,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { useLanguage, useT } from "@/components/language-provider"
 import { WhatsAppChatbot } from "@/components/whatsapp-chatbot"
 import { Button } from "@/components/ui/button"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 import { SiteContact } from "@/lib/site-contact"
 
@@ -55,21 +56,21 @@ export function Navbar({ contact }: NavbarProps) {
 
   const desktopLogo = (
     <Link href="/" className="relative z-50 hidden md:flex" dir="ltr">
-      <span className="text-xl md:text-2xl font-bold tracking-tighter text-white">
-        KBI<span className="text-cyan-400">.</span>
+      <span className="text-xl md:text-2xl font-bold tracking-tighter text-foreground dark:text-white">
+        KBI<span className="text-cyan-500 dark:text-cyan-400">.</span>
       </span>
     </Link>
   )
 
   const languageSwitcher = (
-    <div className="flex items-center gap-1 rounded-2xl border border-white/10 bg-white/5 p-1">
+    <div className="flex items-center gap-1 rounded-2xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 p-1">
       <button
         onClick={() => setLang("en")}
         aria-label="Switch to English"
         aria-pressed={lang === "en"}
         className={cn(
           "px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-300",
-          lang === "en" ? "bg-cyan-500 text-black shadow-[0_0_15px_-3px_rgba(6,182,212,0.5)]" : "text-white/50 hover:text-white"
+          lang === "en" ? "bg-cyan-500 text-black shadow-[0_0_15px_-3px_rgba(6,182,212,0.5)]" : "text-foreground/60 dark:text-white/50 hover:text-foreground dark:hover:text-white"
         )}
       >
         EN
@@ -80,7 +81,7 @@ export function Navbar({ contact }: NavbarProps) {
         aria-pressed={lang === "ar"}
         className={cn(
           "px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-300",
-          lang === "ar" ? "bg-cyan-500 text-black shadow-[0_0_15px_-3px_rgba(6,182,212,0.5)]" : "text-white/50 hover:text-white"
+          lang === "ar" ? "bg-cyan-500 text-black shadow-[0_0_15px_-3px_rgba(6,182,212,0.5)]" : "text-foreground/60 dark:text-white/50 hover:text-foreground dark:hover:text-white"
         )}
       >
         AR
@@ -125,10 +126,11 @@ export function Navbar({ contact }: NavbarProps) {
           dir="ltr"
         >
 
-          {/* Mobile left-side: language button */}
-          <div className="flex items-center gap-3 relative">
-            <div className="md:hidden">
+          {/* Mobile left-side: language button & theme toggle */}
+          <div className="flex items-center gap-2 relative">
+            <div className="md:hidden flex items-center gap-1.5">
               {languageSwitcher}
+              <ThemeToggle />
             </div>
             {desktopLogo}
           </div>
@@ -136,8 +138,8 @@ export function Navbar({ contact }: NavbarProps) {
           {/* Mobile centered logo */}
           <div className="md:hidden absolute left-1/2 -translate-x-1/2 z-50" dir="ltr">
             <Link href="/" className="relative">
-              <span className="text-xl font-bold tracking-tighter text-white">
-                KBI<span className="text-cyan-400">.</span>
+              <span className="text-xl font-bold tracking-tighter text-foreground dark:text-white">
+                KBI<span className="text-cyan-500 dark:text-cyan-400">.</span>
               </span>
             </Link>
           </div>
@@ -154,8 +156,8 @@ export function Navbar({ contact }: NavbarProps) {
                       className={cn(
                         "text-[13px] xl:text-sm font-medium transition-all duration-300 relative py-2 px-3 rounded-xl flex items-center gap-2 group",
                         active 
-                          ? "text-cyan-400 bg-white/5 shadow-[0_0_15px_-3px_rgba(6,182,212,0.1)]" 
-                          : "text-white/70 hover:text-white hover:bg-white/5"
+                          ? "text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 dark:bg-white/5 shadow-xs" 
+                          : "text-foreground/80 dark:text-white/70 hover:text-foreground dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5"
                       )}
                     >
                       <span suppressHydrationWarning className="relative z-10">{link.name}</span>
@@ -194,6 +196,7 @@ export function Navbar({ contact }: NavbarProps) {
                 <span className="hidden xl:inline" suppressHydrationWarning>{t("Call Now")}</span>
               </a>
             </Button>
+            <ThemeToggle />
             {languageSwitcher}
           </div>
 
@@ -227,9 +230,9 @@ export function Navbar({ contact }: NavbarProps) {
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   >
                     <div className={cn("apple-nav-item", active ? "apple-nav-item-active" : "apple-nav-item-inactive")}>
-                      <Icon className={cn("icon w-6 h-6")} />
+                      <Icon className={cn("icon w-5 h-5")} />
                     </div>
-                    <span className="block mt-1 text-[10px] sm:text-[12px] font-semibold tracking-tight text-white/70 truncate w-full text-center" suppressHydrationWarning>
+                    <span className="block mt-1 text-[10px] sm:text-[11px] font-semibold tracking-tight text-foreground/80 dark:text-white/80 truncate w-full text-center" suppressHydrationWarning>
                       {t(item.label)}
                     </span>
                   </motion.div>

@@ -3,7 +3,7 @@ import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { GlassCard } from "@/components/ui/glass-card"
-import { MapPin, Clock, CheckCircle, Star, Phone, ShieldCheck } from "lucide-react"
+import { MapPin, Clock, Star, ShieldCheck } from "lucide-react"
 
 interface Props {
     params: Promise<{ slug: string }>
@@ -38,7 +38,7 @@ export default async function LocationPage({ params }: Props) {
     }
 
     return (
-        <main className="min-h-screen bg-black text-white pt-24 pb-12">
+        <main className="adaptive-theme-page min-h-screen bg-black text-white pt-24 pb-12">
             {/* Hero Section */}
             <section className="container mx-auto px-6 mb-16">
                 <div className="max-w-4xl mx-auto text-center">

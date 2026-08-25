@@ -241,9 +241,9 @@ export function PartsInventory({ isAdmin = true }: { isAdmin?: boolean }) {
     }
 
     const getStockStatus = (part: Part) => {
-        if (part.quantity === 0) return { color: "bg-red-500/20 text-red-400", label: "Out of Stock" }
-        if (part.quantity <= part.minStock) return { color: "bg-yellow-500/20 text-yellow-400", label: "Low Stock" }
-        return { color: "bg-green-500/20 text-green-400", label: "In Stock" }
+        if (part.quantity === 0) return { color: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20", label: "Out of Stock" }
+        if (part.quantity <= part.minStock) return { color: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20", label: "Low Stock" }
+        return { color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20", label: "In Stock" }
     }
 
     // Stats
@@ -252,13 +252,23 @@ export function PartsInventory({ isAdmin = true }: { isAdmin?: boolean }) {
     const lowStockCount = parts.filter(p => p.quantity <= p.minStock && p.quantity > 0).length
     const outOfStockCount = parts.filter(p => p.quantity === 0).length
 
-    if (loading) {
+    if (loading && parts.length === 0) {
         return (
-            <Card className="bg-white/5 border-white/10">
-                <CardContent className="p-8 text-center text-white/50">
-                    Loading inventory...
-                </CardContent>
-            </Card>
+            <div className="space-y-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {[1, 2, 3, 4].map(i => (
+                        <Card key={i} className="bg-card border-border shadow-xs animate-pulse">
+                            <CardContent className="pt-6 h-24" />
+                        </Card>
+                    ))}
+                </div>
+                <Card className="bg-card border-border shadow-xs animate-pulse">
+                    <CardContent className="p-8 text-center text-muted-foreground flex items-center justify-center gap-2">
+                        <Package className="w-5 h-5 animate-spin text-cyan-500" />
+                        <span>Loading spare parts inventory...</span>
+                    </CardContent>
+                </Card>
+            </div>
         )
     }
 
@@ -266,57 +276,57 @@ export function PartsInventory({ isAdmin = true }: { isAdmin?: boolean }) {
         <div className="space-y-6">
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="bg-white/5 border-white/10">
+                <Card className="bg-card border-border shadow-xs">
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-cyan-500/20 rounded-lg">
-                                <Package className="w-5 h-5 text-cyan-400" />
+                            <div className="p-2.5 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 rounded-xl">
+                                <Package className="w-5 h-5" />
                             </div>
                             <div>
-                                <p className="text-sm text-white/60">Total Parts</p>
-                                <p className="text-2xl font-bold text-white">{totalParts}</p>
+                                <p className="text-xs font-medium text-muted-foreground">Total Parts</p>
+                                <p className="text-2xl font-bold text-foreground">{totalParts}</p>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white/5 border-white/10">
+                <Card className="bg-card border-border shadow-xs">
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-green-500/20 rounded-lg">
-                                <CheckCircle className="w-5 h-5 text-green-400" />
+                            <div className="p-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                                <CheckCircle className="w-5 h-5" />
                             </div>
                             <div>
-                                <p className="text-sm text-white/60">Inventory Value</p>
-                                <p className="text-2xl font-bold text-white">{totalValue.toLocaleString()} AED</p>
+                                <p className="text-xs font-medium text-muted-foreground">Inventory Value</p>
+                                <p className="text-2xl font-bold text-foreground">{totalValue.toLocaleString()} AED</p>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white/5 border-white/10">
+                <Card className="bg-card border-border shadow-xs">
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-yellow-500/20 rounded-lg">
-                                <AlertTriangle className="w-5 h-5 text-yellow-400" />
+                            <div className="p-2.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl">
+                                <AlertTriangle className="w-5 h-5" />
                             </div>
                             <div>
-                                <p className="text-sm text-white/60">Low Stock</p>
-                                <p className="text-2xl font-bold text-white">{lowStockCount}</p>
+                                <p className="text-xs font-medium text-muted-foreground">Low Stock</p>
+                                <p className="text-2xl font-bold text-foreground">{lowStockCount}</p>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white/5 border-white/10">
+                <Card className="bg-card border-border shadow-xs">
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-red-500/20 rounded-lg">
-                                <AlertTriangle className="w-5 h-5 text-red-400" />
+                            <div className="p-2.5 bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-xl">
+                                <AlertTriangle className="w-5 h-5" />
                             </div>
                             <div>
-                                <p className="text-sm text-white/60">Out of Stock</p>
-                                <p className="text-2xl font-bold text-white">{outOfStockCount}</p>
+                                <p className="text-xs font-medium text-muted-foreground">Out of Stock</p>
+                                <p className="text-2xl font-bold text-foreground">{outOfStockCount}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -324,24 +334,24 @@ export function PartsInventory({ isAdmin = true }: { isAdmin?: boolean }) {
             </div>
 
             {/* Filters */}
-            <Card className="bg-white/5 border-white/10">
+            <Card className="bg-card border-border shadow-xs">
                 <CardContent className="p-4">
                     <div className="flex flex-wrap gap-4">
                         <div className="relative flex-1 min-w-[200px]">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input
                                 placeholder="Search parts by name, SKU, or brand..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className="pl-9 bg-white/5 border-white/10 text-white"
+                                className="pl-9 bg-background border-input text-foreground placeholder:text-muted-foreground"
                             />
                         </div>
 
                         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                            <SelectTrigger className="w-[150px] bg-white/5 border-white/10 text-white">
+                            <SelectTrigger className="w-[150px] bg-background border-input text-foreground font-medium">
                                 <SelectValue placeholder="Category" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-popover border-border text-popover-foreground">
                                 <SelectItem value="all">All Categories</SelectItem>
                                 {CATEGORIES.map(cat => (
                                     <SelectItem key={cat} value={cat}>{cat}</SelectItem>
@@ -350,10 +360,10 @@ export function PartsInventory({ isAdmin = true }: { isAdmin?: boolean }) {
                         </Select>
 
                         <Select value={brandFilter} onValueChange={setBrandFilter}>
-                            <SelectTrigger className="w-[130px] bg-white/5 border-white/10 text-white">
+                            <SelectTrigger className="w-[130px] bg-background border-input text-foreground font-medium">
                                 <SelectValue placeholder="Brand" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-popover border-border text-popover-foreground">
                                 <SelectItem value="all">All Brands</SelectItem>
                                 {BRANDS.map(brand => (
                                     <SelectItem key={brand} value={brand}>{brand}</SelectItem>
@@ -362,10 +372,10 @@ export function PartsInventory({ isAdmin = true }: { isAdmin?: boolean }) {
                         </Select>
 
                         <Select value={stockFilter} onValueChange={(v) => setStockFilter(v as any)}>
-                            <SelectTrigger className="w-[130px] bg-white/5 border-white/10 text-white">
+                            <SelectTrigger className="w-[130px] bg-background border-input text-foreground font-medium">
                                 <SelectValue placeholder="Stock" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-popover border-border text-popover-foreground">
                                 <SelectItem value="all">All Stock</SelectItem>
                                 <SelectItem value="low">Low Stock</SelectItem>
                                 <SelectItem value="out">Out of Stock</SelectItem>
@@ -375,30 +385,30 @@ export function PartsInventory({ isAdmin = true }: { isAdmin?: boolean }) {
                         {isAdmin && (
                             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                                 <DialogTrigger asChild>
-                                    <Button onClick={() => { resetForm(); setEditingPart(null); }} className="bg-cyan-500 hover:bg-cyan-400">
+                                    <Button onClick={() => { resetForm(); setEditingPart(null); }} className="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold shadow-xs">
                                         <Plus className="w-4 h-4 mr-2" /> Add Part
                                     </Button>
                                 </DialogTrigger>
-                                <DialogContent className="bg-zinc-900 border-white/10 text-white max-w-lg max-h-[90vh] overflow-y-auto">
+                                <DialogContent className="bg-card border-border text-foreground max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
                                     <DialogHeader>
-                                        <DialogTitle>{editingPart ? "Edit Part" : "Add New Part"}</DialogTitle>
+                                        <DialogTitle className="text-foreground">{editingPart ? "Edit Part" : "Add New Part"}</DialogTitle>
                                     </DialogHeader>
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <label className="text-sm text-white/60">Part Name *</label>
+                                                <label className="text-xs font-semibold text-muted-foreground block mb-1">Part Name *</label>
                                                 <Input
                                                     value={formData.name}
                                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                                    className="bg-white/5 border-white/10"
+                                                    className="bg-background border-input text-foreground"
                                                 />
                                             </div>
                                             <div>
-                                                <label className="text-sm text-white/60">SKU</label>
+                                                <label className="text-xs font-semibold text-muted-foreground block mb-1">SKU</label>
                                                 <Input
                                                     value={formData.sku}
                                                     onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                                                    className="bg-white/5 border-white/10"
+                                                    className="bg-background border-input text-foreground"
                                                     placeholder="e.g. IP13-SCR-001"
                                                 />
                                             </div>
@@ -406,12 +416,12 @@ export function PartsInventory({ isAdmin = true }: { isAdmin?: boolean }) {
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <label className="text-sm text-white/60">Category</label>
+                                                <label className="text-xs font-semibold text-muted-foreground block mb-1">Category</label>
                                                 <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
-                                                    <SelectTrigger className="bg-white/5 border-white/10">
+                                                    <SelectTrigger className="bg-background border-input text-foreground">
                                                         <SelectValue />
                                                     </SelectTrigger>
-                                                    <SelectContent>
+                                                    <SelectContent className="bg-popover border-border text-popover-foreground">
                                                         {CATEGORIES.map(cat => (
                                                             <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                                                         ))}
@@ -419,12 +429,12 @@ export function PartsInventory({ isAdmin = true }: { isAdmin?: boolean }) {
                                                 </Select>
                                             </div>
                                             <div>
-                                                <label className="text-sm text-white/60">Brand</label>
+                                                <label className="text-xs font-semibold text-muted-foreground block mb-1">Brand</label>
                                                 <Select value={formData.brand} onValueChange={(v) => setFormData({ ...formData, brand: v })}>
-                                                    <SelectTrigger className="bg-white/5 border-white/10">
+                                                    <SelectTrigger className="bg-background border-input text-foreground">
                                                         <SelectValue />
                                                     </SelectTrigger>
-                                                    <SelectContent>
+                                                    <SelectContent className="bg-popover border-border text-popover-foreground">
                                                         {BRANDS.map(brand => (
                                                             <SelectItem key={brand} value={brand}>{brand}</SelectItem>
                                                         ))}
@@ -434,89 +444,90 @@ export function PartsInventory({ isAdmin = true }: { isAdmin?: boolean }) {
                                         </div>
 
                                         <div>
-                                            <label className="text-sm text-white/60">Compatible Devices (comma separated)</label>
+                                            <label className="text-xs font-semibold text-muted-foreground block mb-1">Compatible Devices (comma separated)</label>
                                             <Input
                                                 value={formData.compatibleDevices}
                                                 onChange={(e) => setFormData({ ...formData, compatibleDevices: e.target.value })}
-                                                className="bg-white/5 border-white/10"
+                                                className="bg-background border-input text-foreground"
                                                 placeholder="e.g. iPhone 13, iPhone 13 Pro"
                                             />
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <label className="text-sm text-white/60">Quantity</label>
+                                                <label className="text-xs font-semibold text-muted-foreground block mb-1">Quantity</label>
                                                 <Input
                                                     type="number"
                                                     value={formData.quantity}
-                                                    onChange={(e) => setFormData({ ...formData, quantity: Number(e.target.value) })}
-                                                    className="bg-white/5 border-white/10"
+                                                    onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
+                                                    className="bg-background border-input text-foreground"
                                                 />
                                             </div>
                                             <div>
-                                                <label className="text-sm text-white/60">Min Stock Alert</label>
+                                                <label className="text-xs font-semibold text-muted-foreground block mb-1">Min Stock Alert</label>
                                                 <Input
                                                     type="number"
                                                     value={formData.minStock}
-                                                    onChange={(e) => setFormData({ ...formData, minStock: Number(e.target.value) })}
-                                                    className="bg-white/5 border-white/10"
+                                                    onChange={(e) => setFormData({ ...formData, minStock: parseInt(e.target.value) || 0 })}
+                                                    className="bg-background border-input text-foreground"
                                                 />
                                             </div>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <label className="text-sm text-white/60">Cost (AED)</label>
-                                                <Input
-                                                    type="number"
-                                                    value={formData.cost}
-                                                    onChange={(e) => setFormData({ ...formData, cost: Number(e.target.value) })}
-                                                    className="bg-white/5 border-white/10"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="text-sm text-white/60">Sell Price (AED)</label>
+                                                <label className="text-xs font-semibold text-muted-foreground block mb-1">Selling Price (AED)</label>
                                                 <Input
                                                     type="number"
                                                     value={formData.price}
-                                                    onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
-                                                    className="bg-white/5 border-white/10"
+                                                    onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                                                    className="bg-background border-input text-foreground"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-muted-foreground block mb-1">Cost Price (AED)</label>
+                                                <Input
+                                                    type="number"
+                                                    value={formData.cost}
+                                                    onChange={(e) => setFormData({ ...formData, cost: parseFloat(e.target.value) || 0 })}
+                                                    className="bg-background border-input text-foreground"
                                                 />
                                             </div>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <label className="text-sm text-white/60">Storage Location</label>
+                                                <label className="text-xs font-semibold text-muted-foreground block mb-1">Storage Location</label>
                                                 <Input
                                                     value={formData.location}
                                                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                                    className="bg-white/5 border-white/10"
-                                                    placeholder="e.g. Shelf A-1"
+                                                    className="bg-background border-input text-foreground"
+                                                    placeholder="e.g. Shelf A-3"
                                                 />
                                             </div>
                                             <div>
-                                                <label className="text-sm text-white/60">Supplier</label>
+                                                <label className="text-xs font-semibold text-muted-foreground block mb-1">Supplier</label>
                                                 <Input
                                                     value={formData.supplier}
                                                     onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-                                                    className="bg-white/5 border-white/10"
+                                                    className="bg-background border-input text-foreground"
+                                                    placeholder="e.g. OEM Parts Direct"
                                                 />
                                             </div>
                                         </div>
 
                                         <div>
-                                            <label className="text-sm text-white/60">Description</label>
+                                            <label className="text-xs font-semibold text-muted-foreground block mb-1">Description</label>
                                             <Input
                                                 value={formData.description}
                                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                                className="bg-white/5 border-white/10"
+                                                className="bg-background border-input text-foreground"
                                             />
                                         </div>
                                     </div>
                                     <DialogFooter>
                                         <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-                                        <Button className="bg-cyan-500 hover:bg-cyan-400" onClick={handleAddPart}>
+                                        <Button className="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold" onClick={handleAddPart}>
                                             {editingPart ? "Update" : "Add"} Part
                                         </Button>
                                     </DialogFooter>
@@ -528,18 +539,18 @@ export function PartsInventory({ isAdmin = true }: { isAdmin?: boolean }) {
             </Card>
 
             {/* Parts List */}
-            <Card className="bg-white/5 border-white/10">
+            <Card className="bg-card border-border shadow-xs">
                 <CardHeader>
-                    <CardTitle className="text-white flex items-center justify-between">
-                        <span className="flex items-center gap-2">
-                            <Package className="w-5 h-5 text-cyan-400" />
+                    <CardTitle className="text-foreground flex items-center justify-between">
+                        <span className="flex items-center gap-2 text-base font-bold">
+                            <Package className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
                             Parts Inventory ({filteredParts.length})
                         </span>
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
                     {filteredParts.length === 0 ? (
-                        <div className="text-center py-8 text-white/40">
+                        <div className="text-center py-8 text-muted-foreground text-sm">
                             {parts.length === 0 ? "No parts in inventory yet" : "No parts match your filters"}
                         </div>
                     ) : (
@@ -547,26 +558,32 @@ export function PartsInventory({ isAdmin = true }: { isAdmin?: boolean }) {
                             {filteredParts.map((part) => {
                                 const status = getStockStatus(part)
                                 return (
-                                    <div key={part.id} className="flex items-center gap-4 p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
-                                        <div className="w-12 h-12 rounded-lg bg-cyan-500/10 flex items-center justify-center shrink-0">
-                                            <Package className="w-6 h-6 text-cyan-400" />
+                                    <div key={part.id} className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 hover:border-cyan-500/40 hover:bg-slate-100/80 dark:hover:bg-white/10 transition-colors shadow-2xs">
+                                        <div className="w-12 h-12 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0">
+                                            <Package className="w-6 h-6" />
                                         </div>
 
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-1">
-                                                <h4 className="font-medium text-white truncate">{part.name}</h4>
-                                                <Badge variant="outline" className="text-xs bg-white/5 border-white/10">
+                                                <h4 className="font-bold text-foreground text-sm truncate">{part.name}</h4>
+                                                <Badge variant="outline" className="text-xs bg-background/80 border-border text-foreground font-mono">
                                                     {part.sku || "No SKU"}
                                                 </Badge>
                                             </div>
-                                            <div className="flex flex-wrap gap-2 text-xs text-white/50">
-                                                <span>{part.category}</span>
+                                            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                                                <span className="font-medium text-foreground/80">{part.category}</span>
                                                 <span>•</span>
                                                 <span>{part.brand}</span>
                                                 {part.location && (
                                                     <>
                                                         <span>•</span>
-                                                        <span>📍 {part.location}</span>
+                                                        <span className="text-foreground/70">📍 {part.location}</span>
+                                                    </>
+                                                )}
+                                                {part.price > 0 && (
+                                                    <>
+                                                        <span>•</span>
+                                                        <span className="font-semibold text-cyan-600 dark:text-cyan-400">{part.price} AED</span>
                                                     </>
                                                 )}
                                             </div>
@@ -574,24 +591,24 @@ export function PartsInventory({ isAdmin = true }: { isAdmin?: boolean }) {
 
                                         <div className="flex items-center gap-4">
                                             <div className="text-right">
-                                                <p className="text-lg font-bold text-white">{part.quantity}</p>
-                                                <Badge className={cn("text-xs", status.color)}>{status.label}</Badge>
+                                                <p className="text-lg font-bold text-foreground">{part.quantity}</p>
+                                                <Badge className={cn("text-xs font-semibold", status.color)}>{status.label}</Badge>
                                             </div>
 
                                             <div className="flex items-center gap-1">
                                                 <Button
-                                                    variant="ghost"
+                                                    variant="outline"
                                                     size="icon-sm"
                                                     onClick={() => handleUpdateQuantity(part.id, -1)}
-                                                    className="text-white/60 hover:text-white"
+                                                    className="h-8 w-8 text-foreground hover:bg-slate-200 dark:hover:bg-white/10"
                                                 >
                                                     -
                                                 </Button>
                                                 <Button
-                                                    variant="ghost"
+                                                    variant="outline"
                                                     size="icon-sm"
                                                     onClick={() => handleUpdateQuantity(part.id, 1)}
-                                                    className="text-white/60 hover:text-white"
+                                                    className="h-8 w-8 text-foreground hover:bg-slate-200 dark:hover:bg-white/10"
                                                 >
                                                     +
                                                 </Button>
@@ -603,7 +620,7 @@ export function PartsInventory({ isAdmin = true }: { isAdmin?: boolean }) {
                                                         variant="ghost"
                                                         size="icon-sm"
                                                         onClick={() => handleEdit(part)}
-                                                        className="text-white/60 hover:text-cyan-400"
+                                                        className="h-8 w-8 text-muted-foreground hover:text-cyan-600 dark:hover:text-cyan-400"
                                                     >
                                                         <Edit className="w-4 h-4" />
                                                     </Button>
@@ -611,7 +628,7 @@ export function PartsInventory({ isAdmin = true }: { isAdmin?: boolean }) {
                                                         variant="ghost"
                                                         size="icon-sm"
                                                         onClick={() => handleDelete(part.id)}
-                                                        className="text-white/60 hover:text-red-400"
+                                                        className="h-8 w-8 text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
                                                     </Button>

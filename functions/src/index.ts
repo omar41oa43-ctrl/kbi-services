@@ -194,23 +194,29 @@ export const technicianRespondToOffer = onCall(async (request) => {
   }
 
   const ref = db.collection("service_requests").doc(requestId)
-  const snap = await ref.get()
-  if (!snap.exists) throw new HttpsError("not-found", "Request not found")
-  const sr = snap.data() as any
-  const offers = uniqueStrings(Array.isArray(sr.offers) ? sr.offers : [])
-  if (!offers.includes(uid) && String(sr.technicianId || "") !== uid) {
-    throw new HttpsError("permission-denied", "Not assigned")
-  }
-
   const now = Timestamp.now()
   if (decision === "accept") {
-    await ref.update({
-      status: "accepted",
-      technicianId: uid,
-      offers: [],
-      updatedAt: now,
+    await db.runTransaction(async (transaction) => {
+      const snap = await transaction.get(ref)
+      if (!snap.exists) throw new HttpsError("not-found", "Request not found")
+      const sr = snap.data() as any
+      const offers = uniqueStrings(Array.isArray(sr.offers) ? sr.offers : [])
+      if (String(sr.status || "").toLowerCase() !== "assigned" || !offers.includes(uid) || sr.technicianId) {
+        throw new HttpsError("aborted", "This offer is no longer available")
+      }
+
+      transaction.update(ref, {
+        status: "accepted",
+        technicianId: uid,
+        offers: [],
+        updatedAt: now,
+      })
+      transaction.set(
+        db.collection("technicians").doc(uid),
+        { activeJobs: FieldValue.arrayUnion(requestId), updatedAt: now },
+        { merge: true },
+      )
     })
-    await db.collection("technicians").doc(uid).set({ activeJobs: FieldValue.arrayUnion(requestId), updatedAt: now }, { merge: true })
     await writeAuditLog({
       actorUid: uid,
       actorRole: "technician",
@@ -228,10 +234,19 @@ export const technicianRespondToOffer = onCall(async (request) => {
     return { ok: true, status: "accepted" }
   }
 
-  await ref.update({
-    offers: FieldValue.arrayRemove(uid),
-    updatedAt: now,
-    lastOfferedTo: FieldValue.arrayUnion(uid),
+  await db.runTransaction(async (transaction) => {
+    const snap = await transaction.get(ref)
+    if (!snap.exists) throw new HttpsError("not-found", "Request not found")
+    const sr = snap.data() as any
+    const offers = uniqueStrings(Array.isArray(sr.offers) ? sr.offers : [])
+    if (String(sr.status || "").toLowerCase() !== "assigned" || !offers.includes(uid) || sr.technicianId) {
+      throw new HttpsError("aborted", "This offer is no longer available")
+    }
+    transaction.update(ref, {
+      offers: FieldValue.arrayRemove(uid),
+      updatedAt: now,
+      lastOfferedTo: FieldValue.arrayUnion(uid),
+    })
   })
   await writeAuditLog({
     actorUid: uid,

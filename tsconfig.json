@@ -37,7 +37,8 @@
   ],
   "exclude": [
     "node_modules",
-    "New Folder With Items",
-    "functions"
+    "functions",
+    "kbi_technician_app",
+    "kbi_technician_app*"
   ]
 }

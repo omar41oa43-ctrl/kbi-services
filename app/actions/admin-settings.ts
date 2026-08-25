@@ -22,7 +22,7 @@ export async function getSiteSettingsAction() {
         const value = {}
         ;(globalThis as any)[cacheKey] = { value, ts: now, failedTs: 0 }
         return value
-    } catch (error: any) {
+    } catch {
         const cacheKey = "__kbi_site_settings_v1"
         const now = Date.now()
         const cached = (globalThis as any)[cacheKey] as { value: any; ts: number; failedTs?: number } | undefined
@@ -65,7 +65,7 @@ export async function getSiteConfigAction() {
         const value = {}
         ;(globalThis as any)[cacheKey] = { value, ts: now, failedTs: 0 }
         return value
-    } catch (error: any) {
+    } catch {
         const cacheKey = "__kbi_site_config_v1"
         const now = Date.now()
         const cached = (globalThis as any)[cacheKey] as { value: any; ts: number; failedTs?: number } | undefined
@@ -105,7 +105,15 @@ export async function updateContactSettingsAction(data: any, idToken: string) {
 // User Management
 export async function getUsersAction() {
     try {
-        const snap = await adminDb.collection("users").orderBy("createdAt", "desc").get()
+        const cacheKey = "__kbi_admin_users_v1"
+        const now = Date.now()
+        const ttlMs = 60 * 1000 // 60s cache
+        const cached = (globalThis as any)[cacheKey] as { value: any; ts: number } | undefined
+        if (cached && now - cached.ts < ttlMs && cached.value?.length) {
+            return cached.value
+        }
+
+        const snap = await adminDb.collection("users").orderBy("createdAt", "desc").limit(200).get()
         const serializeDate = (d: any) => {
             if (!d) return null
             if (typeof d.toDate === "function") return d.toDate().toISOString()
@@ -122,7 +130,7 @@ export async function getUsersAction() {
             }
             return null
         }
-        return snap.docs.map((doc: any) => {
+        const users = snap.docs.map((doc: any) => {
             const data = doc.data() as any
             return {
                 uid: doc.id,
@@ -136,7 +144,10 @@ export async function getUsersAction() {
                 updatedAt: serializeDate(data.updatedAt)
             }
         })
-    } catch (error: any) {
+
+        ;(globalThis as any)[cacheKey] = { value: users, ts: now }
+        return users
+    } catch {
         return []
     }
 }

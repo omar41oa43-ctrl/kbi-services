@@ -1,18 +1,20 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { authenticateTechnician, findPrismaTechnician } from '@/lib/api-auth'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    // In a real app, you'd get the technician ID from the authenticated user
-    // For now, we'll use a mock ID
-    const mockTechnicianId = "tech-1"
+    const identity = await authenticateTechnician(request)
+    if (!identity) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    const technician = await findPrismaTechnician(identity)
+    if (!technician) return NextResponse.json({ success: false, error: 'Technician profile not found' }, { status: 404 })
     
     const jobs = await prisma.order.findMany({
       where: {
         OR: [
           { status: "PENDING" },
           { status: "REVIEWING" },
-          { technicianId: mockTechnicianId }
+          { technicianId: technician.id }
         ]
       },
       include: {

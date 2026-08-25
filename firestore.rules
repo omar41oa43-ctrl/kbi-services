@@ -5,103 +5,213 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function userDoc() {
-      return signedIn()
-        ? get(/databases/$(database)/documents/users/$(request.auth.uid))
-        : null;
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
     }
 
-    function role() {
-      return (signedIn() && userDoc().exists && "role" in userDoc().data) ? userDoc().data.role : "";
+    function getUserRole() {
+      return request.auth.token.role != null
+        ? request.auth.token.role
+        : (exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+            : 'CUSTOMER');
+    }
+
+    function isSuperAdmin() {
+      return signedIn() && (
+        (request.auth.token.keys().hasAny(['admin']) && request.auth.token.admin == true)
+        || getUserRole() in ['SUPER_ADMIN', 'super_admin']
+      );
     }
 
     function isAdmin() {
-      return signedIn() && (role() == "admin" || role() == "super_admin");
+      return signedIn() && (
+        isSuperAdmin()
+        || getUserRole() in ['ADMIN', 'admin', 'OPERATIONS_MANAGER', 'operations_manager']
+      );
     }
 
-    function techDoc(uid) {
-      return get(/databases/$(database)/documents/technicians/$(uid));
+    function isDispatcher() {
+      return signedIn() && (
+        isAdmin()
+        || getUserRole() in ['DISPATCHER', 'dispatcher']
+      );
     }
 
-    function techActive(uid) {
-      return signedIn()
-        && techDoc(uid).exists
-        && techDoc(uid).data.isApproved == true
-        && techDoc(uid).data.isActive == true
-        && techDoc(uid).data.subscriptionStatus == "active";
+    function isSupport() {
+      return signedIn() && (
+        isAdmin()
+        || getUserRole() in ['SUPPORT', 'support', 'CUSTOMER_SUPPORT', 'customer_support']
+      );
     }
 
-    function isTechActive() {
-      return signedIn() && techActive(request.auth.uid);
+    function isCompany() {
+      return signedIn() && getUserRole() in ['COMPANY', 'company', 'CORPORATE', 'corporate'];
+    }
+
+    function isTechnician() {
+      return signedIn() && getUserRole() in ['TECHNICIAN', 'technician', 'tech'];
+    }
+
+    function isApprovedTechnician(uid) {
+      return isTechnician() && isOwner(uid)
+        && exists(/databases/$(database)/documents/technicians/$(uid))
+        && get(/databases/$(database)/documents/technicians/$(uid)).data.status in ['APPROVED', 'approved']
+        && get(/databases/$(database)/documents/technicians/$(uid)).data.isSuspended != true
+        && get(/databases/$(database)/documents/technicians/$(uid)).data.isLocked != true
+        && get(/databases/$(database)/documents/technicians/$(uid)).data.appAccessEnabled != false;
+    }
+
+    function assignedToMe() {
+      return signedIn() && (
+        resource.data.assignedTechnician == request.auth.uid
+        || resource.data.assignedTechnicianId == request.auth.uid
+        || resource.data.technicianId == request.auth.uid
+        || resource.data.techId == request.auth.uid
+      );
     }
 
     match /users/{uid} {
-      allow read: if signedIn() && (isAdmin() || request.auth.uid == uid);
-      allow create: if signedIn() && request.auth.uid == uid;
-      allow update: if signedIn() && (isAdmin() || request.auth.uid == uid);
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid)
+        && request.resource.data.role == 'technician';
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'email', 'full_name', 'name', 'phone', 'profile_photo', 'updatedAt', 'role', 'fcmToken', 'fcmTokens'
+        ]);
       allow delete: if isAdmin();
     }
 
-    match /technician_requests/{id} {
-      allow create: if signedIn() && request.auth.uid == id;
-      allow read: if isAdmin() || (signedIn() && request.auth.uid == id);
-      allow update: if isAdmin() || (signedIn() && request.auth.uid == id);
+    match /technician_requests/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create, update: if isOwner(uid)
+        && request.resource.data.userId == request.auth.uid;
       allow delete: if isAdmin();
     }
 
     match /technicians/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if (isOwner(uid) || isAdmin());
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'uid', 'email', 'full_name', 'name', 'phone', 'whatsapp', 'profile_photo', 'language',
+          'languages', 'service_areas', 'skills', 'vehicle', 'availability',
+          'available', 'isAvailable', 'online', 'isOnline', 'isTrackingActive',
+          'notificationsEnabled', 'fcmToken', 'fcmTokens', 'location', 'latitude', 'longitude',
+          'locationUpdatedAt', 'batteryLevel', 'networkStatus', 'speed', 'heading',
+          'locationPermission', 'lastActive', 'updatedAt',
+          'currentJob', 'currentOrder', 'current_job', 'current_order', 'status',
+          'activeJob', 'activeOrderId', 'accountType', 'documents', 'experience',
+          'experience_main_skill', 'emirate', 'area', 'trade_license_number',
+          'owner_name', 'number_of_technicians', 'areas_covered', 'company_name'
+        ])
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'isApproved', 'subscriptionStatus'
+        ]);
+      allow delete: if isAdmin();
+    }
+
+    match /bookings/{bookingId} {
+      allow read, create, update: if signedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /orders/{orderId} {
+      allow read, create, update: if signedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /parts/{partId} {
       allow read: if signedIn();
-      allow create: if isAdmin();
-      allow update: if isAdmin() || (signedIn() && request.auth.uid == uid);
-      allow delete: if isAdmin();
+      allow update: if signedIn();
+      allow create, delete: if isAdmin();
     }
 
-    match /subscriptions/{id} {
-      allow read: if isAdmin() || (signedIn() && request.auth.uid == resource.data.techId);
-      allow create: if isAdmin();
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
-    }
-
-    match /service_requests/{id} {
-      function isAssignedTech() {
-        return signedIn()
-          && (
-            (resource.data.assignedTo is list && resource.data.assignedTo.hasAny([request.auth.uid]))
-            || (resource.data.offers is list && resource.data.offers.hasAny([request.auth.uid]))
-            || (resource.data.technicianId == request.auth.uid)
-          );
-      }
-
-      allow create: if isAdmin();
+    match /devices/{deviceId} {
       allow read: if signedIn();
-      allow update: if isAdmin() || (isTechActive() && isAssignedTech());
-      allow delete: if isAdmin();
+      allow write: if isAdmin();
     }
 
-    match /payments/{id} {
+    match /brands/{brandId} {
       allow read: if signedIn();
-      allow create: if isAdmin();
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow write: if isAdmin();
     }
 
-    match /audit_logs/{id} {
-      allow read: if isAdmin();
-      allow create: if isAdmin();
-      allow update: if false;
-      allow delete: if false;
+    match /models/{modelId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
     }
 
-    match /notifications/{id} {
+    match /issues/{issueId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /job_history/{entryId} {
+      allow read: if isAdmin() || (signedIn()
+        && get(/databases/$(database)/documents/bookings/$(resource.data.bookingId))
+          .data.assignedTechnician == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    match /payments/{paymentId} {
+      allow read: if isAdmin() || (signedIn() && resource.data.techId == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isAdmin() || (signedIn() && (resource.data.userId == request.auth.uid || resource.data.technicianId == request.auth.uid));
+      allow update: if signedIn()
+        && (resource.data.userId == request.auth.uid || resource.data.technicianId == request.auth.uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+      allow create, delete: if isAdmin();
+    }
+
+    match /activation_requests/{requestId} {
       allow read: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
-      allow create: if isAdmin();
-      allow update: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isOwner(requestId)
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.keys().hasOnly([
+          'userId', 'status', 'channel', 'createdAt', 'updatedAt'
+        ]);
+      allow update: if isOwner(requestId)
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'userId', 'status', 'channel', 'createdAt', 'updatedAt'
+        ]);
       allow delete: if isAdmin();
+    }
+
+    match /password_reset_requests/{requestId} {
+      allow read, delete: if isAdmin();
+      allow create: if request.resource.data.keys().hasOnly([
+          'email', 'status', 'source', 'requestedAt', 'updatedAt', 'requestCount'
+        ])
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 5
+        && request.resource.data.email.size() <= 320
+        && request.resource.data.status == 'pending'
+        && request.resource.data.source == 'technician_app'
+        && request.resource.data.requestedAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.requestCount == 1;
+      allow update: if isAdmin() || (
+        request.resource.data.email == resource.data.email
+        && request.resource.data.source == 'technician_app'
+        && request.resource.data.status == 'pending'
+        && request.resource.data.requestedAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.requestCount == resource.data.requestCount + 1
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status', 'requestedAt', 'updatedAt', 'requestCount'
+        ])
+      );
     }
 
     match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if isAdmin();
     }
   }
 }

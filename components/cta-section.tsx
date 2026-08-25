@@ -22,8 +22,8 @@ export function CTASection() {
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-transparent to-blue-500/10 pointer-events-none" />
 
           <div className="relative z-10" suppressHydrationWarning>
-            <h2 className="text-3xl md:text-5xl font-bold mb-4">{t("Ready to Fix Your Device?")}</h2>
-            <p className="text-xl text-white/60 mb-8 max-w-2xl mx-auto">
+            <h2 className="text-3xl md:text-5xl font-extrabold mb-4 text-foreground">{t("Ready to Fix Your Device?")}</h2>
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
               {t("Book a technician now and get your device repaired at your doorstep. Fast, reliable, and guaranteed.")}
             </p>
 

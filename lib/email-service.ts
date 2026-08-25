@@ -37,7 +37,7 @@ export async function sendEmail({ to, subject, text, html }: EmailOptions) {
             html,
         })
 
-        console.log("Email sent: %s", info.messageId)
+        console.warn("Email sent: %s", info.messageId)
         return { success: true, id: info.messageId }
     } catch (error: any) {
         console.error("Error sending email:", error)

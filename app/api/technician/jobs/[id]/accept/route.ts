@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { authenticateTechnician, findPrismaTechnician } from '@/lib/api-auth'
 
 export async function POST(
   request: Request,
@@ -7,23 +8,32 @@ export async function POST(
 ) {
   const { id } = await params
   try {
-    const mockTechnicianId = "tech-1" // Replace with authenticated user ID in production
+    const identity = await authenticateTechnician(request)
+    if (!identity) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    const technician = await findPrismaTechnician(identity)
+    if (!technician) return NextResponse.json({ success: false, error: 'Technician profile not found' }, { status: 404 })
 
-    const job = await prisma.order.update({
-      where: { id },
-      data: {
-        status: "ASSIGNED",
-        technicianId: mockTechnicianId,
+    const claimed = await prisma.order.updateMany({
+      where: {
+        id,
+        technicianId: null,
+        status: { in: ['PENDING', 'REVIEWING'] },
       },
+      data: { status: 'ASSIGNED', technicianId: technician.id },
     })
+    if (claimed.count !== 1) {
+      return NextResponse.json({ success: false, error: 'Job is no longer available' }, { status: 409 })
+    }
 
     await prisma.orderStatusHistory.create({
       data: {
         orderId: id,
         status: "ASSIGNED",
-        changedBy: mockTechnicianId,
+        changedBy: identity.uid,
       },
     })
+
+    const job = await prisma.order.findUniqueOrThrow({ where: { id } })
 
     return NextResponse.json({ success: true, job })
   } catch (error) {

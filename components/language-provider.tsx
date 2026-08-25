@@ -5,6 +5,21 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react"
 type Lang = "en" | "ar"
 
 const LanguageContext = createContext<{ lang: Lang; setLang: (_lang: Lang) => void }>({ lang: "en", setLang: () => { } })
+const ENGLISH_COPY: Record<string, string> = {
+  "Corporate hero description": "Reliable on-site repair and maintenance for your company devices, delivered directly at your workplace across the UAE.",
+  "Critical industries description": "Specialized field-service infrastructure for organizations where downtime is not an option.",
+  "Corporate form description": "Tell us what your organization needs and our corporate team will contact you within 30 minutes.",
+  "Corporate CTA description": "Upgrade to priority on-site maintenance with certified technicians, secure handling, and clear service-level commitments.",
+  "Dedicated Account Manager Desc": "One dedicated contact who understands your sites, assets, and service history.",
+  "Priority Service Desc": "Fast-track dispatch and repair scheduling for business-critical requests.",
+  "On-Site Repairs Desc": "Certified technicians come directly to your workplace, reducing downtime and transport risk.",
+  "Maintenance Contracts Desc": "Flexible monthly and annual plans designed around your fleet and operating hours.",
+  "Asset Reporting Desc": "Clear reports covering device condition, faults, repairs, and recommended next actions.",
+  "Data Security Desc": "Strict handling protocols protect company devices and sensitive business information.",
+  "Our Mission Desc": "Deliver fast, reliable on-site repairs that save customers time and keep their technology working.",
+  "Customer First Desc": "We put customer satisfaction first through clear communication, respectful service, and dependable support.",
+  "Quality Guarantee Desc": "We use original or high-quality parts and back eligible repairs with a clear service warranty.",
+}
 const DICTIONARY: Record<string, string> = {
   "Need Help?": "هل تحتاج إلى مساعدة؟",
   "Chat with us on WhatsApp for quick assistance with your booking!": "تواصل معنا عبر واتساب للحصول على مساعدة سريعة مع الحجز!",
@@ -992,5 +1007,5 @@ export function useLanguage() {
 
 export function useT() {
   const { lang } = useLanguage()
-  return (key: string) => (lang === "ar" ? DICTIONARY[key] || key : key)
+  return (key: string) => (lang === "ar" ? DICTIONARY[key] || key : ENGLISH_COPY[key] || key)
 }

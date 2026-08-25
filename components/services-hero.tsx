@@ -21,11 +21,11 @@ export function ServicesHero() {
             {t("Professional Repair Services")}
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight">
-            {t("Our")} <span className="text-cyan-400">{t("Services")}</span>
+          <h1 className="text-5xl md:text-7xl font-extrabold text-foreground mb-6 tracking-tight">
+            {t("Our")} <span className="text-cyan-500 dark:text-cyan-400">{t("Services")}</span>
           </h1>
 
-          <p className="text-lg md:text-xl text-white/60 max-w-2xl mx-auto leading-relaxed" suppressHydrationWarning>
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed" suppressHydrationWarning>
             {t("Professional on-site repair for all your devices. Choose your device below to see the services we offer and brands we support.")}
           </p>
         </motion.div>

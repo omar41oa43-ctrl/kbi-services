@@ -1,45 +1,10 @@
 "use server"
 
 import { adminDb } from "@/lib/firebase-admin"
-import { verifyTechnician } from "@/lib/server-auth"
-
-// Mock data for dev mode
-const mockDashboardData = {
-    stats: {
-        totalOrders: 1248,
-        inProgress: 42,
-        completed: 987,
-        overdue: 3,
-        todayOrders: 38,
-        totalTechs: 7,
-        totalDevices: 156,
-        corpRequests: 12,
-        totalRevenue: 54320,
-        avgTicket: 435,
-        lowStockCount: 2
-    },
-    chartData: [
-        { name: "Mon", orders: 120 },
-        { name: "Tue", orders: 180 },
-        { name: "Wed", orders: 210 },
-        { name: "Thu", orders: 150 },
-        { name: "Fri", orders: 200 },
-        { name: "Sat", orders: 180 },
-        { name: "Sun", orders: 110 },
-    ],
-    lowStockItems: [
-        { id: "1", name: "iPhone Screen", quantity: 3, min: 10 },
-        { id: "2", name: "USB-C Charger", quantity: 4, min: 20 }
-    ]
-};
-
-const mockTechPerformance = [
-    { id: "1", name: "John Doe", jobsCompleted: 156, avgRating: 4.8, avgRepairTime: 45, revenueGenerated: 12500, activeJobs: 5 },
-    { id: "2", name: "Sarah Smith", jobsCompleted: 123, avgRating: 4.9, avgRepairTime: 38, revenueGenerated: 9800, activeJobs: 3 },
-];
+import { verifyAdmin } from "@/lib/server-auth"
 
 export async function getDashboardStatsAction(idToken?: string) {
-    const auth = await verifyTechnician(idToken || "")
+    const auth = await verifyAdmin(idToken || "")
     if (!auth) return { stats: {} }
 
     // Check if Firebase is ready (using isFirebaseReady like in server-auth)
@@ -50,9 +15,7 @@ export async function getDashboardStatsAction(idToken?: string) {
     } catch {
         isFirebaseOk = false;
     }
-    if (!isFirebaseOk && process.env.NODE_ENV === "development") {
-        return mockDashboardData;
-    }
+    if (!isFirebaseOk) return { stats: {}, chartData: [], lowStockItems: [], error: "Firebase Admin is not configured." }
 
     const cacheKey = "__kbi_admin_dashboard_v1"
     const nowMs = Date.now()
@@ -176,9 +139,6 @@ export async function getDashboardStatsAction(idToken?: string) {
         return value
     } catch (error: any) {
         console.error("[Dashboard Action] Error:", error)
-        if (process.env.NODE_ENV === "development") {
-            return mockDashboardData;
-        }
         const cached2 = (globalThis as any)[cacheKey] as { value: any; ts: number; failedTs?: number } | undefined
         if (cached2) {
             ;(globalThis as any)[cacheKey] = { value: cached2.value, ts: cached2.ts || nowMs, failedTs: Date.now() }
@@ -190,8 +150,10 @@ export async function getDashboardStatsAction(idToken?: string) {
     }
 }
 
-export async function getTechnicianPerformanceAction(timeRange: "week" | "month" | "all") {
-    // Check if Firebase is ready for dev mode mock
+export async function getTechnicianPerformanceAction(timeRange: "week" | "month" | "all", idToken?: string) {
+    const auth = await verifyAdmin(idToken || "")
+    if (!auth) return []
+
     let isFirebaseOk = false;
     try {
         adminDb.collection("orders").doc("test");
@@ -199,9 +161,7 @@ export async function getTechnicianPerformanceAction(timeRange: "week" | "month"
     } catch {
         isFirebaseOk = false;
     }
-    if (!isFirebaseOk && process.env.NODE_ENV === "development") {
-        return mockTechPerformance;
-    }
+    if (!isFirebaseOk) return []
 
     const cacheKey = `__kbi_admin_tech_perf_v2_${timeRange}`
     const nowMs = Date.now()
@@ -284,9 +244,6 @@ export async function getTechnicianPerformanceAction(timeRange: "week" | "month"
         ;(globalThis as any)[cacheKey] = { value: techStats, ts: nowMs, failedTs: 0 }
         return techStats
     } catch {
-        if (process.env.NODE_ENV === "development") {
-            return mockTechPerformance;
-        }
         const cached2 = (globalThis as any)[cacheKey] as { value: any[]; ts: number; failedTs?: number } | undefined
         if (cached2) {
             ;(globalThis as any)[cacheKey] = { value: cached2.value || [], ts: cached2.ts || nowMs, failedTs: nowMs }

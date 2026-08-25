@@ -1,30 +1,30 @@
 "use server"
 
-export async function checkEnvServer() {
-    const key = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-    const dbUrl = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
+import { getAdminAuth } from "@/lib/firebase-admin"
+import { verifyAdmin, UserRoles } from "@/lib/server-auth"
 
-    let status = "Missing";
-    let parseResult = "N/A";
+export async function checkEnvServer(idToken: string) {
+  const actor = await verifyAdmin(idToken)
+  if (!actor || actor.role !== UserRoles.SUPER_ADMIN) return { error: "Unauthorized" }
 
-    if (key) {
-        status = `Present (Length: ${key.length})`;
-        try {
-            const parsed = JSON.parse(key);
-            parseResult = `Valid JSON. Project ID: ${parsed.project_id}. Private Key starts with: ${parsed.private_key?.substring(0, 20)}...`;
-        } catch (e: any) {
-            parseResult = `Invalid JSON: ${e.message}`;
-        }
-    }
+  let firebaseAdminReady = false
+  try {
+    await getAdminAuth().listUsers(1)
+    firebaseAdminReady = true
+  } catch {
+    firebaseAdminReady = false
+  }
 
-    // Also check if admin is initialized
-    const admin = (await import("firebase-admin")).default;
-    const appCount = admin.apps.length;
-
-    return {
-        keyStatus: status,
-        parseResult,
-        appCount,
-        nodeEnv: process.env.NODE_ENV
-    };
+  return {
+    firebaseAdminReady,
+    serviceAccountConfigured: Boolean(
+      process.env.FIREBASE_SERVICE_ACCOUNT_JSON
+      || process.env.FIREBASE_SERVICE_ACCOUNT_KEY
+      || (process.env.FIREBASE_ADMIN_CLIENT_EMAIL && process.env.FIREBASE_ADMIN_PRIVATE_KEY),
+    ),
+    projectConfigured: Boolean(
+      process.env.FIREBASE_ADMIN_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    ),
+    nodeEnv: process.env.NODE_ENV,
+  }
 }

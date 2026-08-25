@@ -168,7 +168,7 @@ export async function getUserData(uid: string): Promise<User | null> {
             uid: userDoc.id,
             ...userDoc.data(),
         } as User;
-    } catch (error: any) {
+    } catch {
         return null;
     }
 }

@@ -205,8 +205,16 @@ export async function deleteIssueAction(id: string, idToken: string) {
 // --- PARTS ---
 export async function getPartsAction() {
     try {
-        const snap = await adminDb.collection("parts").orderBy("name").get()
-        return snap.docs.map((doc: any) => {
+        const cacheKey = "__kbi_admin_inv_parts_v1"
+        const now = Date.now()
+        const ttlMs = 45 * 1000
+        const backoffMs = 5 * 60 * 1000
+        const cached = (globalThis as any)[cacheKey] as { value: any[]; ts: number; failedTs?: number } | undefined
+        if (cached?.failedTs && now - cached.failedTs < backoffMs) return cached.value || []
+        if (cached && now - cached.ts < ttlMs) return cached.value
+
+        const snap = await adminDb.collection("parts").limit(1000).get()
+        const value = snap.docs.map((doc: any) => {
             const data = doc.data()
             return {
                 id: doc.id,
@@ -215,7 +223,18 @@ export async function getPartsAction() {
                 updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : data.updatedAt
             }
         })
-    } catch (e: any) { console.error(e); return [] }
+        ;(globalThis as any)[cacheKey] = { value, ts: now, failedTs: 0 }
+        return value
+    } catch (e: any) {
+        const cacheKey = "__kbi_admin_inv_parts_v1"
+        const now = Date.now()
+        const cached = (globalThis as any)[cacheKey] as { value: any[]; ts: number; failedTs?: number } | undefined
+        if (cached) {
+            ;(globalThis as any)[cacheKey] = { value: cached.value || [], ts: cached.ts || now, failedTs: now }
+            return cached.value || []
+        }
+        return []
+    }
 }
 
 export async function addPartAction(data: any) {
@@ -225,6 +244,7 @@ export async function addPartAction(data: any) {
             createdAt: new Date(),
             updatedAt: new Date()
         })
+        delete (globalThis as any)["__kbi_admin_inv_parts_v1"]
         return { success: true }
     } catch (e: any) { return { error: e.message } }
 }
@@ -235,6 +255,7 @@ export async function updatePartAction(id: string, data: any) {
             ...data,
             updatedAt: new Date()
         })
+        delete (globalThis as any)["__kbi_admin_inv_parts_v1"]
         return { success: true }
     } catch (e: any) { return { error: e.message } }
 }
@@ -242,6 +263,7 @@ export async function updatePartAction(id: string, data: any) {
 export async function deletePartAction(id: string) {
     try {
         await adminDb.collection("parts").doc(id).delete()
+        delete (globalThis as any)["__kbi_admin_inv_parts_v1"]
         return { success: true }
     } catch (e: any) { return { error: e.message } }
 }
@@ -256,6 +278,7 @@ export async function updatePartStockAction(id: string, delta: number) {
             const newQty = Math.max(0, current + delta)
             t.update(ref, { quantity: newQty, updatedAt: new Date() })
         })
+        delete (globalThis as any)["__kbi_admin_inv_parts_v1"]
         return { success: true }
     } catch (e: any) { return { error: e.message } }
 }

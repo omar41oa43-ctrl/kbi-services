@@ -2,11 +2,17 @@
 
 import { adminDb } from "@/lib/firebase-admin"
 import { FieldValue } from "firebase-admin/firestore"
+import { verifyAdmin } from "@/lib/server-auth"
+
+async function requireAdmin(idToken: string) {
+    if (!await verifyAdmin(idToken)) throw new Error("Unauthorized")
+}
 
 // --- CONTACT MESSAGES ---
 
-export async function getMessagesAction() {
+export async function getMessagesAction(idToken: string) {
     try {
+        await requireAdmin(idToken)
         const snap = await adminDb.collection("messages").orderBy("createdAt", "desc").get()
         return snap.docs.map((doc: any) => ({
             id: doc.id,
@@ -14,13 +20,14 @@ export async function getMessagesAction() {
             // Ensure dates are serializable
             createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : doc.data().createdAt
         }))
-    } catch (error: any) {
+    } catch {
         return []
     }
 }
 
-export async function markMessageReadAction(id: string) {
+export async function markMessageReadAction(id: string, idToken: string) {
     try {
+        await requireAdmin(idToken)
         await adminDb.collection("messages").doc(id).update({ status: "Read" })
         return { success: true }
     } catch (error: any) {
@@ -28,8 +35,9 @@ export async function markMessageReadAction(id: string) {
     }
 }
 
-export async function deleteMessageAction(id: string) {
+export async function deleteMessageAction(id: string, idToken: string) {
     try {
+        await requireAdmin(idToken)
         await adminDb.collection("messages").doc(id).delete()
         return { success: true }
     } catch (error: any) {
@@ -39,8 +47,9 @@ export async function deleteMessageAction(id: string) {
 
 // --- TECH REQUESTS ---
 
-export async function getTechRequestsAction() {
+export async function getTechRequestsAction(idToken: string) {
     try {
+        await requireAdmin(idToken)
         const snap = await adminDb.collection("tech_requests").orderBy("createdAt", "desc").get()
         return snap.docs.map((doc: any) => {
             const data = doc.data()
@@ -51,13 +60,15 @@ export async function getTechRequestsAction() {
                 updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : data.updatedAt
             }
         })
-    } catch (error: any) {
+    } catch {
         return []
     }
 }
 
-export async function approveRequestAction(requestId: string, adminNote?: string) {
+export async function approveRequestAction(requestId: string, idToken: string, adminNote?: string) {
     try {
+        const actor = await verifyAdmin(idToken)
+        if (!actor) throw new Error("Unauthorized")
         const ref = adminDb.collection("tech_requests").doc(requestId)
         const docSnap = await ref.get()
         if (!docSnap.exists) throw new Error("Request not found")
@@ -69,7 +80,7 @@ export async function approveRequestAction(requestId: string, adminNote?: string
             adminNotes: adminNote || null,
             history: FieldValue.arrayUnion({
                 action: "approved",
-                by: "admin",
+                by: actor.uid,
                 at: new Date(),
                 note: adminNote || null
             })
@@ -114,8 +125,10 @@ export async function approveRequestAction(requestId: string, adminNote?: string
     }
 }
 
-export async function rejectRequestAction(requestId: string, adminNote?: string) {
+export async function rejectRequestAction(requestId: string, idToken: string, adminNote?: string) {
     try {
+        const actor = await verifyAdmin(idToken)
+        if (!actor) throw new Error("Unauthorized")
         const ref = adminDb.collection("tech_requests").doc(requestId)
         const docSnap = await ref.get()
         if (!docSnap.exists) throw new Error("Request not found")
@@ -127,7 +140,7 @@ export async function rejectRequestAction(requestId: string, adminNote?: string)
             adminNotes: adminNote || null,
             history: FieldValue.arrayUnion({
                 action: "rejected",
-                by: "admin",
+                by: actor.uid,
                 at: new Date(),
                 note: adminNote || null
             })
@@ -150,8 +163,11 @@ export async function rejectRequestAction(requestId: string, adminNote?: string)
     }
 }
 
-export async function updateRequestPriceAction(requestId: string, newPrice: number) {
+export async function updateRequestPriceAction(requestId: string, newPrice: number, idToken: string) {
     try {
+        const actor = await verifyAdmin(idToken)
+        if (!actor) throw new Error("Unauthorized")
+        if (!Number.isFinite(newPrice) || newPrice < 0) throw new Error("Invalid price")
         const ref = adminDb.collection("tech_requests").doc(requestId)
         const snap = await ref.get()
         const data = snap.data() as any
@@ -163,11 +179,11 @@ export async function updateRequestPriceAction(requestId: string, newPrice: numb
                 oldPrice: data.estimatedPrice,
                 newPrice,
                 changedAt: new Date(),
-                changedBy: "admin"
+                changedBy: actor.uid
             }),
             history: FieldValue.arrayUnion({
                 action: "price_updated",
-                by: "admin",
+                by: actor.uid,
                 at: new Date(),
                 note: `AED ${data.estimatedPrice} -> AED ${newPrice}`
             })

@@ -1,0 +1,9 @@
+{
+  "name": "kbi-firebase-messaging-worker",
+  "private": true,
+  "scripts": {
+    "build": "esbuild firebase-messaging-sw.js --outfile=../../web/firebase-messaging-sw.js --bundle --minify --format=esm"
+  },
+  "dependencies": { "firebase": "^12.0.0" },
+  "devDependencies": { "esbuild": "^0.25.0" }
+}

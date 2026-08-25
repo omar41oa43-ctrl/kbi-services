@@ -179,7 +179,7 @@ export function SlidingLogoMarquee({
            cursor: pointer;
            transition: transform 0.2s ease;
            pointer-events: auto;
-           color: white;
+           color: currentColor;
          }
          .sliding-marquee-item:hover { transform: scale(1.05); }
          .sliding-marquee-item svg { height: 65%; }
@@ -229,7 +229,7 @@ export function SlidingLogoMarquee({
 
           {showControls && (
             <button
-              className="absolute right-4 bottom-4 z-10 bg-white/10 border border-white/20 rounded-full p-2"
+              className="absolute right-4 bottom-4 z-10 bg-background/80 hover:bg-background border border-border text-foreground rounded-full p-2 shadow-xs transition-colors"
               onClick={togglePlayState}
               aria-label={isPlaying ? "Pause" : "Play"}
             >

@@ -26,19 +26,19 @@ export function Services() {
   }
 
   const colorMap: Record<string, { bg: string; border: string; text: string }> = {
-    mobile: { bg: "bg-cyan-500/10", border: "border-cyan-500/30", text: "text-cyan-400" },
-    laptop: { bg: "bg-blue-500/10", border: "border-blue-500/30", text: "text-blue-400" },
-    pc: { bg: "bg-cyan-500/10", border: "border-cyan-500/30", text: "text-cyan-400" },
-    printer: { bg: "bg-teal-500/10", border: "border-teal-500/30", text: "text-teal-400" },
-    monitor: { bg: "bg-indigo-500/10", border: "border-indigo-500/30", text: "text-indigo-400" },
-    tv: { bg: "bg-purple-500/10", border: "border-purple-500/30", text: "text-purple-400" },
-    "apple-watch": { bg: "bg-pink-500/10", border: "border-pink-500/30", text: "text-pink-400" },
-    gaming: { bg: "bg-red-500/10", border: "border-red-500/30", text: "text-red-400" },
-    cctv: { bg: "bg-orange-500/10", border: "border-orange-500/30", text: "text-orange-400" },
-    "tv-install": { bg: "bg-green-500/10", border: "border-green-500/30", text: "text-green-400" },
-    tablet: { bg: "bg-blue-500/10", border: "border-blue-500/30", text: "text-blue-400" },
-    networking: { bg: "bg-cyan-500/10", border: "border-cyan-500/30", text: "text-cyan-400" },
-    "tech-support": { bg: "bg-cyan-500/10", border: "border-cyan-500/30", text: "text-cyan-400" },
+    mobile: { bg: "bg-cyan-500/10", border: "border-cyan-500/30", text: "text-cyan-700 dark:text-cyan-400" },
+    laptop: { bg: "bg-blue-500/10", border: "border-blue-500/30", text: "text-blue-700 dark:text-blue-400" },
+    pc: { bg: "bg-cyan-500/10", border: "border-cyan-500/30", text: "text-cyan-700 dark:text-cyan-400" },
+    printer: { bg: "bg-teal-500/10", border: "border-teal-500/30", text: "text-teal-700 dark:text-teal-400" },
+    monitor: { bg: "bg-indigo-500/10", border: "border-indigo-500/30", text: "text-indigo-700 dark:text-indigo-400" },
+    tv: { bg: "bg-purple-500/10", border: "border-purple-500/30", text: "text-purple-700 dark:text-purple-400" },
+    "apple-watch": { bg: "bg-pink-500/10", border: "border-pink-500/30", text: "text-pink-700 dark:text-pink-400" },
+    gaming: { bg: "bg-red-500/10", border: "border-red-500/30", text: "text-red-700 dark:text-red-400" },
+    cctv: { bg: "bg-orange-500/10", border: "border-orange-500/30", text: "text-orange-700 dark:text-orange-400" },
+    "tv-install": { bg: "bg-green-500/10", border: "border-green-500/30", text: "text-green-700 dark:text-green-400" },
+    tablet: { bg: "bg-blue-500/10", border: "border-blue-500/30", text: "text-blue-700 dark:text-blue-400" },
+    networking: { bg: "bg-cyan-500/10", border: "border-cyan-500/30", text: "text-cyan-700 dark:text-cyan-400" },
+    "tech-support": { bg: "bg-cyan-500/10", border: "border-cyan-500/30", text: "text-cyan-700 dark:text-cyan-400" },
   }
 
   return (
@@ -50,10 +50,10 @@ export function Services() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">
+          <h2 className="text-3xl md:text-5xl font-bold mb-6 text-foreground">
             {t("Our Services")}
           </h2>
-          <p className="text-lg text-white/70 max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             {t("Professional on-site repair and maintenance services for all your devices")}
           </p>
         </motion.div>
@@ -72,24 +72,26 @@ export function Services() {
                 className="group"
               >
                 <Link href={`/book?device=${device.id}`}>
-                  <div className={`h-full p-6 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 ${colors.bg} border-2 border-transparent hover:${colors.border}`}>
-                    <div className={`p-4 rounded-2xl ${colors.bg} mb-4 inline-block`}>
-                      <div className={colors.text}>
-                        {iconMap[device.icon] || <Smartphone className="w-6 h-6" />}
+                  <div className={`h-full p-6 rounded-3xl bg-card border border-border/80 hover:border-cyan-500/50 shadow-sm hover:shadow-xl transition-all duration-300 ${colors.bg} flex flex-col items-center text-center justify-between`}>
+                    <div className="flex flex-col items-center text-center w-full">
+                      <div className={`p-4 rounded-2xl ${colors.bg} mb-4 flex items-center justify-center mx-auto`}>
+                        <div className={colors.text}>
+                          {iconMap[device.icon] || <Smartphone className="w-6 h-6" />}
+                        </div>
                       </div>
+                      <h3 className="text-xl font-bold mb-2 text-center w-full text-foreground">
+                        {isAr ? t(device.name) : device.name}
+                      </h3>
+                      <p className="text-muted-foreground text-sm mb-4 text-center max-w-xs mx-auto">
+                        {device.issues.slice(0, 3).map((issue, i) => (
+                          <span key={i}>
+                            {isAr ? t(issue) : issue}
+                            {i < 2 && ", "}
+                          </span>
+                        ))}
+                      </p>
                     </div>
-                    <h3 className="text-xl font-semibold mb-2">
-                      {isAr ? t(device.name) : device.name}
-                    </h3>
-                    <p className="text-white/60 text-sm mb-4">
-                      {device.issues.slice(0, 3).map((issue, i) => (
-                        <span key={i}>
-                          {isAr ? t(issue) : issue}
-                          {i < 2 && ", "}
-                        </span>
-                      ))}
-                    </p>
-                    <div className={`flex items-center gap-2 ${colors.text} font-semibold text-sm group-hover:gap-3 transition-all`}>
+                    <div className={`flex items-center justify-center gap-2 ${colors.text} font-semibold text-sm group-hover:gap-3 transition-all mx-auto`}>
                       {t("Book Now")}
                       {isAr ? <ArrowRight className="w-4 h-4 rotate-180" /> : <ArrowRight className="w-4 h-4" />}
                     </div>
@@ -108,7 +110,7 @@ export function Services() {
         >
           <Link
             href="/services"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 font-semibold"
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-card border border-border hover:bg-muted text-foreground transition-all duration-300 font-semibold shadow-sm"
           >
             {t("View All Services")}
             {isAr ? <ArrowRight className="w-5 h-5 rotate-180" /> : <ArrowRight className="w-5 h-5" />}

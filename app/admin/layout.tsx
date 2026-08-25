@@ -1,341 +1,290 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
+import { onAuthStateChanged, signOut, type User } from "firebase/auth"
+import { AlertTriangle, Languages, Loader2, Search } from "lucide-react"
+import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+
+import { getUserRoleAction } from "@/app/actions/admin-auth"
 import { AdminAppSidebar } from "@/components/admin/admin-app-sidebar"
 import { useLanguage, useT } from "@/components/language-provider"
-import { onAuthStateChanged, signOut } from "firebase/auth"
-import { auth } from "@/firebase/authClient"
-import { Loader2, ShieldCheck, AlertTriangle, Download, LayoutDashboard, ShoppingCart, Users, Package, Settings as SettingsIcon } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { NotificationBell } from "@/components/notification-bell"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { LogOut } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { getUserRoleAction } from "@/app/actions/admin-auth"
-import Link from "next/link"
-import Dock from "@/components/ui/dock"
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Separator } from "@/components/ui/separator"
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { auth } from "@/firebase/authClient"
+import { cn } from "@/lib/utils"
 
-type BeforeInstallPromptEvent = Event & {
-  prompt: () => Promise<void>
-  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>
+const pageNames: Array<[string, string]> = [
+  ["/admin/settings/security", "Security"],
+  ["/admin/inbox/corporate", "Corporate Requests"],
+  ["/admin/analytics", "Analytics"],
+  ["/admin/tracking", "Live Tracking"],
+  ["/admin/requests", "Technician Requests"],
+  ["/admin/subscriptions", "Technician Operations"],
+  ["/admin/technicians", "Technicians"],
+  ["/admin/inventory", "Inventory"],
+  ["/admin/settings", "Settings"],
+  ["/admin/orders", "Orders"],
+  ["/admin", "Dashboard"],
+]
+
+function AccessCard({
+  title,
+  description,
+  actionLabel,
+}: {
+  title: string
+  description: string
+  actionLabel: string
+}) {
+  return (
+    <div className="flex min-h-svh items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Alert>
+            <AlertTriangle />
+            <AlertTitle>Admin access required</AlertTitle>
+            <AlertDescription>Sign in with a verified KBI administrator account.</AlertDescription>
+          </Alert>
+        </CardContent>
+        <CardFooter>
+          <Button asChild className="w-full"><Link href="/admin/login">{actionLabel}</Link></Button>
+        </CardFooter>
+      </Card>
+    </div>
+  )
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { lang, setLang } = useLanguage()
   const t = useT()
-  const isAr = lang === "ar"
   const pathname = usePathname()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
-  const navigatingRef = useRef(false)
-  const [role, setRole] = useState<string | null>(null)
+  const [user, setUser] = useState<User | null>(null)
+  const [role, setRole] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("kbi_admin_role")
+    }
+    return null
+  })
   const [roleLoading, setRoleLoading] = useState(false)
   const [online, setOnline] = useState(true)
-  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
-  const [isInstalled, setIsInstalled] = useState(false)
-  const [isInstalling, setIsInstalling] = useState(false)
+  const [globalSearch, setGlobalSearch] = useState("")
+  const globalSearchRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
+    let active = true
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (!active) return
       setUser(currentUser)
       setLoading(false)
-      if (currentUser?.uid) {
-        setRoleLoading(true)
 
-        // Sync token to cookie for server-side middleware verification
-        currentUser.getIdToken().then((token) => {
-          const secureFlag = (typeof window !== 'undefined' && window.location.protocol === 'https:') ? 'Secure;' : ''
-          document.cookie = `kbi_admin_token=${token}; path=/; max-age=3600; ${secureFlag} SameSite=Strict`
-        }).catch(() => {})
-
-        // Timeout race to prevent hanging
-        const rolePromise = getUserRoleAction(currentUser.uid, currentUser.email)
-        const timeoutPromise = new Promise<null>(resolve => setTimeout(() => resolve(null), 5000))
-
-        Promise.race([rolePromise, timeoutPromise])
-          .then((r: any) => {
-            if (navigatingRef.current) return // Component is likely unmounting or navigating
-            const resolvedRole = r?.role || null
-            setRole(resolvedRole)
-
-            const masterEmails = (process.env.NEXT_PUBLIC_MASTER_ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase())
-            const isMaster = masterEmails.includes(currentUser.email || "") || currentUser.uid === process.env.NEXT_PUBLIC_MASTER_ADMIN_UID
-            if (!isMaster && resolvedRole !== "admin" && resolvedRole !== "super_admin" && resolvedRole !== "technician") {
-              signOut(auth).catch(() => {})
-            }
-          })
-          .catch(() => {
-            if (navigatingRef.current) return
-            setRole(null)
-          })
-          .finally(() => {
-            if (navigatingRef.current) return
-            setRoleLoading(false)
-          })
-      } else {
-        // Clear token cookie
-        document.cookie = "kbi_admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+      if (!currentUser) {
         setRole(null)
+        if (typeof window !== "undefined") sessionStorage.removeItem("kbi_admin_role")
         setRoleLoading(false)
+        return
       }
+
+      const cachedRole = typeof window !== "undefined" ? sessionStorage.getItem("kbi_admin_role") : null
+      if (!cachedRole) {
+        setRoleLoading(true)
+      }
+
+      currentUser.getIdToken()
+        .then((token) => getUserRoleAction(token))
+        .then((result) => {
+          if (!active) return
+          const nextRole = result?.role || null
+          setRole(nextRole)
+          if (typeof window !== "undefined") {
+            if (nextRole) sessionStorage.setItem("kbi_admin_role", nextRole)
+            else sessionStorage.removeItem("kbi_admin_role")
+          }
+          if (nextRole !== "admin" && nextRole !== "super_admin") signOut(auth).catch(() => undefined)
+        })
+        .catch(() => {
+          if (active && !cachedRole) setRole(null)
+        })
+        .finally(() => {
+          if (active) setRoleLoading(false)
+        })
     })
 
     return () => {
+      active = false
       unsubscribe()
-      navigatingRef.current = true
     }
   }, [])
 
   useEffect(() => {
-    if (navigatingRef.current) return
-    if (loading) return
-    if (pathname !== "/admin/login") return
-    if (!user) return
-    if (roleLoading) return
-    if (role === "admin" || role === "super_admin") {
-      navigatingRef.current = true
-      // Only redirect if explicitly on login and NOT already navigating
-      if (pathname === "/admin/login") {
-        router.replace("/admin")
+    const focusSearch = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault()
+        globalSearchRef.current?.focus()
       }
     }
-  }, [loading, user, roleLoading, role, pathname, router])
-
-  useEffect(() => {
-    const update = () => setOnline(typeof navigator !== "undefined" ? navigator.onLine : true)
-    update()
-    window.addEventListener("online", update)
-    window.addEventListener("offline", update)
-    return () => {
-      window.removeEventListener("online", update)
-      window.removeEventListener("offline", update)
-    }
+    window.addEventListener("keydown", focusSearch)
+    return () => window.removeEventListener("keydown", focusSearch)
   }, [])
 
   useEffect(() => {
-    if (typeof window === "undefined") return
-
-    const media = window.matchMedia("(display-mode: standalone)")
-    const updateInstalled = () => setIsInstalled(media.matches || !!(window.navigator as Navigator & { standalone?: boolean }).standalone)
-
-    updateInstalled()
-    media.addEventListener?.("change", updateInstalled)
-
-    const onBeforeInstallPrompt = (event: Event) => {
-      event.preventDefault()
-      setInstallPrompt(event as BeforeInstallPromptEvent)
-    }
-
-    const onAppInstalled = () => {
-      setIsInstalled(true)
-      setInstallPrompt(null)
-    }
-
-    window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt)
-    window.addEventListener("appinstalled", onAppInstalled)
-
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/admin-sw.js", { scope: "/admin/" }).catch(() => { })
-    }
-
+    const updateStatus = () => setOnline(navigator.onLine)
+    updateStatus()
+    window.addEventListener("online", updateStatus)
+    window.addEventListener("offline", updateStatus)
     return () => {
-      media.removeEventListener?.("change", updateInstalled)
-      window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt)
-      window.removeEventListener("appinstalled", onAppInstalled)
+      window.removeEventListener("online", updateStatus)
+      window.removeEventListener("offline", updateStatus)
     }
   }, [])
 
-  const handleInstallApp = async () => {
-    if (!installPrompt || isInstalling) return
+  const pageName = useMemo(
+    () => pageNames.find(([path]) => path === "/admin" ? pathname === path : pathname.startsWith(path))?.[1] || "Admin",
+    [pathname],
+  )
 
-    setIsInstalling(true)
-    try {
-      await installPrompt.prompt()
-      const choice = await installPrompt.userChoice
-      if (choice.outcome === "accepted") {
-        setIsInstalled(true)
-      }
-      setInstallPrompt(null)
-    } finally {
-      setIsInstalling(false)
+  const submitGlobalSearch = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const query = globalSearch.trim()
+    const destination = query ? `/admin/orders?q=${encodeURIComponent(query)}` : "/admin/orders"
+    if (pathname.startsWith("/admin/orders")) {
+      window.history.replaceState(window.history.state, "", destination)
+      window.dispatchEvent(new CustomEvent("kbi:order-search", { detail: query }))
+    } else {
+      router.push(destination)
     }
+  }
+
+  const updateGlobalSearch = (value: string) => {
+    setGlobalSearch(value)
+    if (!pathname.startsWith("/admin/orders")) return
+    const query = value.trim()
+    const destination = query ? `/admin/orders?q=${encodeURIComponent(query)}` : "/admin/orders"
+    window.history.replaceState(window.history.state, "", destination)
+    window.dispatchEvent(new CustomEvent("kbi:order-search", { detail: query }))
   }
 
   if (loading || (user && roleLoading && pathname !== "/admin/login")) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center text-white">
-        <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
-      </div>
-    )
+    return <div className="flex min-h-svh items-center justify-center bg-background"><Loader2 className="size-6 animate-spin" /></div>
   }
 
-  // If on login page, render without sidebar
   if (pathname === "/admin/login") {
-    return <div className={cn("min-h-screen bg-black", isAr && "[direction:rtl]")}>{children}</div>
+    return <div className={cn("min-h-svh bg-background", lang === "ar" && "[direction:rtl]")}>{children}</div>
   }
 
-  const getMasterAdmins = () => {
-    const envEmails = process.env.NEXT_PUBLIC_MASTER_ADMIN_EMAILS || ""
-    return envEmails.split(",").map(e => e.trim().toLowerCase()).filter(Boolean)
-  }
-  const getMasterUid = () => {
-    return process.env.NEXT_PUBLIC_MASTER_ADMIN_UID || ""
-  }
-  const isMasterAdmin = getMasterAdmins().includes(user?.email || "") || user?.uid === getMasterUid()
-  const isTechnician = role === "technician"
-
-  if (!user && pathname !== "/admin/login") {
-    return (
-      <div className={cn("min-h-screen relative flex items-center justify-center p-6 overflow-hidden bg-black", isAr && "[direction:rtl]")}>
-        {/* Animated gradient background - no image needed */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(6,182,212,0.15),transparent_50%),radial-gradient(ellipse_at_bottom,rgba(139,92,246,0.1),transparent_50%)] animate-pulse" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:32px_32px]" />
-        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-        
-        <div className="relative z-10 max-w-md w-full rounded-3xl border border-white/20 bg-black/40 backdrop-blur-xl p-8 text-center shadow-2xl">
-          <div className="text-3xl mb-4">🚫</div>
-          <div className="text-2xl font-bold text-white mb-2">{t("Not an admin? Nice try 😄")}</div>
-          <div className="mt-2 text-sm text-white/70 mb-8">{t("Please sign in to continue.")}</div>
-          <Link
-            href="/admin/login"
-            className="w-full inline-flex items-center justify-center rounded-2xl bg-cyan-500 px-6 py-3 text-black font-bold hover:bg-cyan-400 transition-all active:scale-95 shadow-[0_0_20px_-5px_rgba(6,182,212,0.5)]"
-          >
-            {t("Go to Login")}
-          </Link>
-        </div>
-      </div>
-    )
+  if (!user) {
+    return <AccessCard title={t("Sign in required")} description={t("Your admin session is not active.")} actionLabel={t("Go to login")} />
   }
 
-  if (user && !isMasterAdmin && !roleLoading && role !== "admin" && role !== "super_admin" && role !== "technician" && pathname !== "/admin/login") {
-    return (
-      <div className={cn("min-h-screen relative flex items-center justify-center p-6 overflow-hidden bg-black", isAr && "[direction:rtl]")}>
-        {/* Animated gradient background */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(239,68,68,0.12),transparent_50%),radial-gradient(ellipse_at_bottom,rgba(139,92,246,0.08),transparent_50%)] animate-pulse" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:32px_32px]" />
-        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-
-        <div className="relative z-10 max-w-md w-full rounded-3xl border border-white/20 bg-black/40 backdrop-blur-xl p-8 text-center shadow-2xl">
-          <div className="text-3xl mb-4">🚫</div>
-          <div className="text-2xl font-bold text-white mb-2">{t("Not an admin? Nice try 😄")}</div>
-          <div className="mt-2 text-sm text-white/70 mb-8">{t("Your account does not have admin access.")}</div>
-          <Link
-            href="/admin/login"
-            className="w-full inline-flex items-center justify-center rounded-2xl bg-cyan-500 px-6 py-3 text-black font-bold hover:bg-cyan-400 transition-all active:scale-95 shadow-[0_0_20px_-5px_rgba(6,182,212,0.5)]"
-          >
-            {t("Back to Login")}
-          </Link>
-        </div>
-      </div>
-    )
+  if (role !== "admin" && role !== "super_admin") {
+    return <AccessCard title={t("Access denied")} description={t("This account does not have administrator access.")} actionLabel={t("Back to login")} />
   }
-
-  const side = isAr ? "right" : "left"
-
-  const dockItems = [
-    { icon: <LayoutDashboard size={20} />, label: t("Dashboard"), onClick: () => router.push("/admin") },
-    { icon: <ShoppingCart size={20} />, label: t("Orders"), onClick: () => router.push("/admin/orders") },
-    { icon: <Package size={20} />, label: t("Inventory"), onClick: () => router.push("/admin/inventory") },
-    { icon: <SettingsIcon size={20} />, label: t("Settings"), onClick: () => router.push("/admin/settings") },
-  ]
 
   return (
-    <div className={cn("min-h-screen bg-black text-white", isAr && "[direction:rtl]")}>
-      <SidebarProvider defaultOpen={true}>
-        <div className="hidden lg:block">
-          <AdminAppSidebar side={side} />
-        </div>
-        <main className="relative flex-1 flex flex-col min-w-0 overflow-hidden">
-          <div className="pointer-events-none absolute inset-0">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(56,189,248,0.08),transparent_40%),radial-gradient(circle_at_80%_20%,rgba(168,85,247,0.06),transparent_45%),radial-gradient(circle_at_20%_80%,rgba(34,197,94,0.05),transparent_40%)]" />
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff06_1px,transparent_1px)] bg-[size:28px_28px] opacity-20" />
-          </div>
-          <header className="relative z-10 flex items-center gap-4 border-b border-white/10 bg-black/50 px-6 py-3 backdrop-blur-md sticky top-0">
-            <SidebarTrigger
-              className="hidden lg:inline-flex size-9! rounded-xl bg-gradient-to-r from-cyan-500/10 to-blue-600/10 border border-white/10 text-white shadow-[0_8px_24px_-10px_rgba(6,182,212,0.45)] hover:shadow-[0_12px_32px_-10px_rgba(6,182,212,0.65)] ring-1 ring-white/10 hover:ring-cyan-400/40 transition-all duration-300 active:scale-95"
-              title="Menu"
-            />
-            <div className="flex-1" />
-            <div className="flex items-center gap-2">
+    <div className={cn("admin-theme min-h-svh bg-background text-foreground relative selection:bg-primary/20 selection:text-primary", lang === "ar" && "[direction:rtl]")}>
+      {/* Background ambient lighting effects */}
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-50">
+        <div className="absolute -top-40 -left-40 size-[32rem] rounded-full bg-cyan-400/10 blur-[120px]" />
+        <div className="absolute top-1/3 -right-40 size-[30rem] rounded-full bg-blue-500/10 blur-[120px]" />
+        <div className="absolute -bottom-60 left-1/3 size-[36rem] rounded-full bg-indigo-400/8 blur-[130px]" />
+      </div>
+
+      <SidebarProvider
+        defaultOpen
+        style={{ "--sidebar-width": "15.5rem", "--sidebar-width-icon": "3.25rem" } as CSSProperties}
+      >
+        <AdminAppSidebar side={lang === "ar" ? "right" : "left"} />
+        <SidebarInset className="relative z-10 min-w-0 w-auto overflow-hidden border border-white/70 dark:border-white/10 bg-background/80 backdrop-blur-3xl shadow-[0_25px_80px_rgba(41,72,112,.12)] dark:shadow-black/30 md:rounded-[24px] md:m-3 md:ml-0">
+          <header className="sticky top-0 z-30 grid min-h-[70px] shrink-0 grid-cols-[auto_1fr_auto] items-center gap-4 border-b border-border/40 bg-background/65 px-4 md:px-6 backdrop-blur-3xl transition-all">
+            <div className="flex items-center gap-3 min-w-0">
+              <SidebarTrigger className="-ml-1 rounded-xl size-9 text-muted-foreground hover:bg-accent hover:text-foreground transition-all duration-200" />
+              <Separator orientation="vertical" className="h-5 bg-border/60" />
+              <Breadcrumb className="min-w-0">
+                <BreadcrumbList className="flex-nowrap">
+                  <BreadcrumbItem className="hidden sm:inline-flex">
+                    <BreadcrumbLink asChild>
+                      <Link href="/admin" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors">
+                        Admin
+                      </Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator className="hidden sm:block text-muted-foreground/40" />
+                  <BreadcrumbItem className="min-w-0">
+                    <BreadcrumbPage className="truncate font-bold text-sm bg-gradient-to-r from-foreground via-foreground/90 to-muted-foreground bg-clip-text text-transparent">
+                      {t(pageName)}
+                    </BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+
+            <form onSubmit={submitGlobalSearch} className="mx-auto hidden h-11 w-full max-w-[490px] items-center gap-3 rounded-2xl border border-border/60 bg-white/60 px-4 shadow-[0_8px_24px_rgba(44,75,116,.07)] backdrop-blur-2xl md:flex dark:bg-slate-900/60">
+              <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <input
+                ref={globalSearchRef}
+                type="search"
+                name="q"
+                value={globalSearch}
+                onChange={(event) => updateGlobalSearch(event.target.value)}
+                aria-label={t("Search orders")}
+                placeholder={t("Search orders, customers, devices...")}
+                className="min-w-0 flex-1 border-0 bg-transparent text-xs text-foreground outline-none placeholder:text-muted-foreground"
+              />
+              <button type="submit" className="sr-only">{t("Search orders")}</button>
+              <kbd className="hidden rounded-md border border-border/70 bg-background/70 px-1.5 py-0.5 font-sans text-[10px] text-muted-foreground lg:inline">⌘ K</kbd>
+            </form>
+
+            <div className="flex items-center gap-2.5">
+              <div className={cn("hidden items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold lg:flex border transition-all", online ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" : "bg-rose-500/10 text-rose-500 border-rose-500/30")}>
+                <span className={cn("size-2 rounded-full", online ? "bg-emerald-500 animate-pulse" : "bg-rose-500")} />
+                {online ? t("Live Sync") : t("Offline")}
+              </div>
+
+              <ThemeToggle />
+
               <NotificationBell role="admin" />
-              {!isInstalled && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="rounded-xl border border-white/10 bg-gradient-to-r from-cyan-500/15 to-blue-500/15 text-cyan-300 hover:text-white hover:from-cyan-500/25 hover:to-blue-500/25"
-                  title={t("Install Admin App")}
-                  disabled={!installPrompt || isInstalling}
-                  onClick={handleInstallApp}
-                >
-                  <Download className="h-4 w-4" />
-                  <span className="hidden sm:inline">{isInstalling ? t("Installing...") : t("Install App")}</span>
-                </Button>
-              )}
-              {user && (
-                <div className="hidden md:flex items-center gap-2 px-2 py-1 rounded-lg bg-white/5 border border-white/10">
-                  <span className="text-xs text-white/70">{user.email}</span>
-                  {role && (
-                    <Badge className="text-[10px] px-1.5 py-0.5 bg-cyan-500/20 text-cyan-300 border-cyan-500/30">
-                      {role}
-                    </Badge>
-                  )}
-                </div>
-              )}
-              {role === "super_admin" && (
-                <a
-                  href="/admin/settings/security"
-                  title={t("Security")}
-                  className="group relative overflow-hidden size-9 rounded-xl bg-gradient-to-r from-cyan-500/15 to-blue-500/15 border border-white/10 text-white shadow-[0_8px_24px_-10px_rgba(6,182,212,0.45)] hover:shadow-[0_12px_32px_-10px_rgba(6,182,212,0.65)] ring-1 ring-white/10 hover:ring-cyan-400/40 transition-all duration-300 active:scale-95 flex items-center justify-center"
-                >
-                  <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.08),transparent_40%),radial-gradient(circle_at_70%_80%,rgba(255,255,255,0.06),transparent_45%)]" />
-                  <ShieldCheck className="h-5 w-5 text-cyan-400" />
-                </a>
-              )}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="group relative overflow-hidden size-9 rounded-xl bg-gradient-to-r from-red-500/15 to-pink-500/15 border border-white/10 text-white shadow-[0_8px_24px_-10px_rgba(244,63,94,0.45)] hover:shadow-[0_12px_32px_-10px_rgba(244,63,94,0.65)] ring-1 ring-white/10 hover:ring-red-400/40 transition-all duration-300 active:scale-95"
-                title={t("Logout")}
-                onClick={async () => {
-                  try {
-                    await signOut(auth)
-                    router.replace("/admin/login")
-                  } catch { }
-                }}
-              >
-                <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.08),transparent_40%),radial-gradient(circle_at_70%_80%,rgba(255,255,255,0.06),transparent_45%)]" />
-                <LogOut className="h-5 w-5 text-red-400" />
-              </Button>
-              <button
-                onClick={() => setLang("en")}
-                className={cn("px-3 py-1 rounded-full text-xs font-semibold border border-white/10 transition-colors", lang === "en" ? "bg-cyan-500 text-black border-cyan-500" : "text-white/70 hover:bg-white/10")}
-              >
-                EN
-              </button>
-              <button
-                onClick={() => setLang("ar")}
-                className={cn("px-3 py-1 rounded-full text-xs font-semibold border border-white/10 transition-colors", lang === "ar" ? "bg-cyan-500 text-black border-cyan-500" : "text-white/70 hover:bg-white/10")}
-              >
-                AR
-              </button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button type="button" variant="ghost" size="icon-sm" className="rounded-xl size-8 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label={t("Language")}>
+                    <Languages className="size-4 text-slate-500 dark:text-slate-400" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 z-50 bg-white dark:bg-[#0D1217] text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 shadow-xl p-1.5 rounded-2xl">
+                  <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 p-2">{t("Language")}</DropdownMenuLabel>
+                  <DropdownMenuSeparator className="my-1 border-slate-100 dark:border-slate-800" />
+                  <DropdownMenuRadioGroup value={lang} onValueChange={(value) => setLang(value as "en" | "ar")}>
+                    <DropdownMenuRadioItem value="en" className="rounded-xl cursor-pointer py-2 text-xs">English</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="ar" className="rounded-xl cursor-pointer py-2 text-xs">العربية</DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </header>
+
           {!online && (
-            <div className="relative z-10 px-6 py-2 bg-red-500/10 border-y border-red-500/30 text-red-400 text-sm flex items-center gap-2 justify-center">
-              <AlertTriangle className="h-4 w-4" />
-              <span>You are offline. Live updates paused.</span>
-            </div>
+            <Alert variant="destructive" className="m-4 mb-0 rounded-2xl border-destructive/30 bg-destructive/10">
+              <AlertTriangle className="size-5" />
+              <AlertTitle className="font-bold">{t("You are offline")}</AlertTitle>
+              <AlertDescription>{t("Live updates are paused until the connection returns.")}</AlertDescription>
+            </Alert>
           )}
-          <div className="relative z-10 flex-1 overflow-auto p-6 pb-24 lg:pb-6">
-            {children}
-          </div>
-          <div className="lg:hidden">
-            <Dock items={dockItems} panelHeight={64} baseItemSize={48} />
-          </div>
-        </main>
+
+          <div className="min-w-0 flex-1 overflow-auto p-4 md:p-6 lg:p-7">{children}</div>
+        </SidebarInset>
       </SidebarProvider>
     </div>
   )

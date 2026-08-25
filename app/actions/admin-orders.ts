@@ -2,7 +2,7 @@
 
 import { adminDb } from "@/lib/firebase-admin"
 import { FieldValue } from "firebase-admin/firestore"
-import { verifyAdmin, verifyTechnician } from "@/lib/server-auth"
+import { verifyAdmin } from "@/lib/server-auth"
 
 // Check if Firebase is ready
 function isFirebaseReady(): boolean {
@@ -14,25 +14,16 @@ function isFirebaseReady(): boolean {
     }
 }
 
-// Mock orders data
-const mockOrders = [
-    { id: "1", orderId: "ORD-0001", customerName: "Ahmed Khan", customerPhone: "+971501234567", brand: "Apple", model: "iPhone 15 Pro", issue: "Screen replacement", status: "in_progress", createdAt: new Date(Date.now() - 3600000).toISOString(), price: 450 },
-    { id: "2", orderId: "ORD-0002", customerName: "Sarah Smith", customerPhone: "+971559876543", brand: "Samsung", model: "Galaxy S24", issue: "Battery replacement", status: "pending", createdAt: new Date(Date.now() - 7200000).toISOString(), price: 250 },
-    { id: "3", orderId: "ORD-0003", customerName: "Mohammed Ali", customerPhone: "+971523456789", brand: "HP", model: "Pavilion 15", issue: "Keyboard not working", status: "completed", createdAt: new Date(Date.now() - 86400000).toISOString(), price: 300 },
-];
-
 type OrdersCursor = {
     createdAtIso: string
 }
 
 export async function getAdminOrdersPageAction(input?: { limit?: number; cursor?: OrdersCursor | null; idToken?: string }) {
     try {
-        const auth = await verifyTechnician(input?.idToken || "")
+        const auth = await verifyAdmin(input?.idToken || "")
         if (!auth) return { orders: [], nextCursor: null, hasMore: false, error: "Unauthorized" }
 
-        if (!isFirebaseReady() && process.env.NODE_ENV === "development") {
-            return { orders: mockOrders, nextCursor: null, hasMore: false };
-        }
+        if (!isFirebaseReady()) return { orders: [], nextCursor: null, hasMore: false, error: "Firebase Admin is not configured." }
 
         const limit = Math.min(Math.max(Number(input?.limit || 50), 1), 100)
         const cacheKey = `__kbi_admin_orders_page_v2_${limit}_${input?.cursor?.createdAtIso || "first"}`
@@ -111,12 +102,10 @@ export async function getAdminOrdersPageAction(input?: { limit?: number; cursor?
 
 export async function getAdminOrdersAction(idToken?: string) {
     try {
-        const auth = await verifyTechnician(idToken || "")
+        const auth = await verifyAdmin(idToken || "")
         if (!auth) return []
 
-        if (!isFirebaseReady() && process.env.NODE_ENV === "development") {
-            return mockOrders;
-        }
+        if (!isFirebaseReady()) return []
 
         const cacheKey = "__kbi_admin_orders_cache_v2"
         const nowMs = Date.now()
@@ -181,7 +170,7 @@ export async function getAdminOrdersAction(idToken?: string) {
 
 export async function updateOrderStatusAction(orderId: string, status: string, note?: string, idToken?: string) {
     try {
-        const auth = await verifyTechnician(idToken || "")
+        const auth = await verifyAdmin(idToken || "")
         if (!auth) return { error: "Unauthorized" }
 
         const now = new Date()
@@ -245,7 +234,7 @@ export async function getNextOrderNumberAction() {
 
 export async function updateEtaAction(orderId: string, estimatedCompletionIso: string, idToken?: string) {
     try {
-        const auth = await verifyTechnician(idToken || "")
+        const auth = await verifyAdmin(idToken || "")
         if (!auth) return { error: "Unauthorized" }
 
         await adminDb.collection("orders").doc(orderId).update({
@@ -260,7 +249,7 @@ export async function updateEtaAction(orderId: string, estimatedCompletionIso: s
 
 export async function updateOrderPriceAction(orderId: string, price: number, idToken?: string) {
     try {
-        const auth = await verifyTechnician(idToken || "")
+        const auth = await verifyAdmin(idToken || "")
         if (!auth) return { error: "Unauthorized" }
 
         await adminDb.collection("orders").doc(orderId).update({

@@ -9,43 +9,49 @@ const features = [
   {
     title: "Certified Experts",
     description: "Our team consists of highly trained and certified technicians with years of experience.",
-    icon: <Award className="w-8 h-8 text-cyan-400" />,
+    icon: <Award className="w-8 h-8 text-cyan-600 dark:text-cyan-400" />,
+    bg: "bg-cyan-500/10",
   },
   {
     title: "Same-Day Service",
     description: "We arrive at your location - home or office - the same day you book.",
-    icon: <Clock className="w-8 h-8 text-blue-400" />,
+    icon: <Clock className="w-8 h-8 text-blue-600 dark:text-blue-400" />,
+    bg: "bg-blue-500/10",
   },
   {
     title: "Free Diagnostics",
     description: "No fix, no fee. Diagnostic check is free if you proceed with the repair.",
-    icon: <Zap className="w-8 h-8 text-yellow-400" />,
+    icon: <Zap className="w-8 h-8 text-amber-500 dark:text-yellow-400" />,
+    bg: "bg-amber-500/10",
   },
   {
     title: "Genuine Parts",
     description: "We only use high-quality, genuine parts for all our repairs.",
-    icon: <ShieldCheck className="w-8 h-8 text-green-400" />,
+    icon: <ShieldCheck className="w-8 h-8 text-emerald-600 dark:text-green-400" />,
+    bg: "bg-emerald-500/10",
   },
   {
     title: "Warranty Included",
     description: "All our repairs come with a solid 3-6 months warranty for your peace of mind.",
-    icon: <Star className="w-8 h-8 text-purple-400" />,
+    icon: <Star className="w-8 h-8 text-purple-600 dark:text-purple-400" />,
+    bg: "bg-purple-500/10",
   },
   {
     title: "Transparent Pricing",
     description: "Know the cost upfront. No hidden fees or surprises after the work is done.",
-    icon: <HeartHandshake className="w-8 h-8 text-pink-400" />,
+    icon: <HeartHandshake className="w-8 h-8 text-rose-600 dark:text-pink-400" />,
+    bg: "bg-rose-500/10",
   },
 ]
 
 export function WhyChooseUs() {
   const t = useT()
   return (
-    <section className="py-24 relative overflow-hidden bg-black/50">
+    <section className="py-24 relative overflow-hidden bg-slate-50/60 dark:bg-black/50 transition-colors">
       {/* Background Decorations */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] opacity-20" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] opacity-20" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] opacity-30" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] opacity-30" />
       </div>
 
       <div className="max-w-6xl mx-auto px-4 relative z-10">
@@ -54,7 +60,7 @@ export function WhyChooseUs() {
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="inline-block mb-4 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-sm font-semibold tracking-wider uppercase"
+            className="inline-block mb-4 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-700 dark:text-cyan-400 text-sm font-bold tracking-wider uppercase shadow-xs"
           >
             {t("Why Choose Us")}
           </motion.div>
@@ -62,7 +68,7 @@ export function WhyChooseUs() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-4xl md:text-6xl lg:text-7xl font-extrabold mb-8 tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/40 leading-[1.1] drop-shadow-[0_5px_15px_rgba(255,255,255,0.1)]"
+            className="text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 tracking-tighter text-foreground leading-[1.1]"
           >
             {t("Why Choose KBI?")}
           </motion.h2>
@@ -71,7 +77,7 @@ export function WhyChooseUs() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-white/50 text-xl max-w-2xl mx-auto font-light leading-relaxed"
+            className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed"
           >
             {t("We're committed to providing the best repair experience in Abu Dhabi with professional on-site service.")}
           </motion.p>
@@ -91,25 +97,25 @@ export function WhyChooseUs() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1, duration: 0.5 }}
-              whileHover={{ y: -10 }}
+              whileHover={{ y: -6 }}
               className="group"
             >
               <GlassCard 
-                className="h-full p-8 text-center flex flex-col items-center justify-center transition-all duration-500 border-white/5 group-hover:border-cyan-500/40 group-hover:bg-white/[0.08] relative overflow-hidden" 
+                className="h-full p-8 text-center flex flex-col items-center justify-center transition-all duration-300 border-border bg-card hover:border-cyan-500/50 hover:shadow-lg relative overflow-hidden shadow-xs" 
                 hoverEffect={false}
               >
                 {/* Card Glow Effect */}
                 <div className="absolute -inset-24 bg-cyan-500/5 blur-[60px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                 
-                <div className="relative mb-6 p-5 rounded-[2rem] bg-white/5 ring-1 ring-white/10 group-hover:ring-cyan-500/30 group-hover:bg-cyan-500/10 transition-all duration-500 group-hover:rotate-6">
+                <div className={`relative mb-6 p-5 rounded-[2rem] ${feature.bg} ring-1 ring-border group-hover:ring-cyan-500/30 group-hover:scale-110 transition-all duration-300`}>
                   {feature.icon}
                 </div>
                 
-                <h3 className="text-2xl font-bold mb-4 tracking-tight group-hover:text-cyan-400 transition-colors duration-300 bg-clip-text text-transparent bg-gradient-to-br from-white to-white/60 group-hover:from-cyan-400 group-hover:to-cyan-600">
+                <h3 className="text-2xl font-bold mb-3 tracking-tight text-foreground group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors duration-300">
                   {t(feature.title)}
                 </h3>
                 
-                <p className="text-white/50 text-base leading-relaxed group-hover:text-white/80 transition-colors duration-300 font-medium">
+                <p className="text-muted-foreground text-sm md:text-base leading-relaxed font-medium">
                   {t(feature.description)}
                 </p>
 

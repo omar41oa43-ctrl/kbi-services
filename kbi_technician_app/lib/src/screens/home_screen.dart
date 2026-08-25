@@ -1,169 +1,447 @@
-import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../i18n.dart';
+import 'package:flutter/services.dart';
+
+import '../theme.dart';
+import '../widgets/liquid_glass.dart';
 import 'dashboard_screen.dart';
 import 'jobs_screen.dart';
-import 'wallet_screen.dart';
 import 'notifications_screen.dart';
 import 'profile_screen.dart';
+import 'wallet_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final Locale locale;
   final void Function(Locale) onLocaleChanged;
 
-  const HomeScreen({super.key, required this.onLocaleChanged, required this.locale});
+  const HomeScreen({
+    super.key,
+    required this.onLocaleChanged,
+    required this.locale,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const _wideLayoutBreakpoint = 720.0;
+
   int _index = 0;
+  late List<Widget> _pages;
+  late final Stream<List<ConnectivityResult>> _connectivityStream;
+  List<ConnectivityResult> _lastConnectivity = const [ConnectivityResult.wifi];
+  Stream<QuerySnapshot<Map<String, dynamic>>>? _notificationsStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _buildPages();
+    _connectivityStream = Connectivity().onConnectivityChanged;
+    Connectivity().checkConnectivity().then((res) {
+      if (mounted) setState(() => _lastConnectivity = res);
+    });
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      _notificationsStream = FirebaseFirestore.instance
+          .collection('notifications')
+          .where('userId', isEqualTo: uid)
+          .where('isRead', isEqualTo: false)
+          .limit(100)
+          .snapshots();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.locale != widget.locale) _buildPages();
+  }
+
+  void _buildPages() {
+    _pages = [
+      DashboardScreen(
+        onLocaleChanged: widget.onLocaleChanged,
+        locale: widget.locale,
+        onNavigate: _selectTab,
+      ),
+      JobsScreen(
+        onLocaleChanged: widget.onLocaleChanged,
+        locale: widget.locale,
+      ),
+      const WalletScreen(),
+      const NotificationsScreen(),
+      ProfileScreen(
+        onLocaleChanged: widget.onLocaleChanged,
+        locale: widget.locale,
+      ),
+    ];
+  }
+
+  void _selectTab(int index) {
+    if (index == _index || index < 0 || index >= _pages.length) return;
+    HapticFeedback.selectionClick();
+    setState(() => _index = index);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
     final isAr = widget.locale.languageCode == 'ar';
-
-    final pages = [
-      DashboardScreen(onLocaleChanged: widget.onLocaleChanged, locale: widget.locale),
-      JobsScreen(onLocaleChanged: widget.onLocaleChanged, locale: widget.locale),
-      const WalletScreen(),
-      const NotificationsScreen(),
-      ProfileScreen(onLocaleChanged: widget.onLocaleChanged, locale: widget.locale),
-    ];
 
     return Directionality(
       textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
-      child: Scaffold(
-        backgroundColor: const Color(0xFF070A0E),
-        body: Stack(
-          children: [
-            // Preserves state of all tab pages using IndexedStack
-            IndexedStack(
-              index: _index,
-              children: pages,
-            ),
-            
-            // Floating Glassmorphic Bottom Navigation Bar
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: 16,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0E131B).withOpacity(0.8),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.08),
-                        width: 1.2,
+      child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: _notificationsStream,
+        builder: (context, notificationsSnap) {
+          final unread = notificationsSnap.data?.docs.length ?? 0;
+          return LayoutBuilder(builder: (context, constraints) {
+            final useSidebar =
+                constraints.maxWidth >= _wideLayoutBreakpoint;
+            if (useSidebar) {
+              return Scaffold(
+                backgroundColor: Colors.transparent,
+                body: Row(
+                  children: [
+                    SafeArea(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 8, 16),
+                        child: _NavigationGlass(
+                          axis: Axis.vertical,
+                          selectedIndex: _index,
+                          unread: unread,
+                          isAr: isAr,
+                          onSelected: _selectTab,
+                        ),
                       ),
                     ),
-                    child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                      stream: uid != null
-                          ? FirebaseFirestore.instance
-                              .collection('notifications')
-                              .where('userId', isEqualTo: uid)
-                              .where('isRead', isEqualTo: false)
-                              .snapshots()
-                          : const Stream.empty(),
-                      builder: (context, notificationsSnap) {
-                        final unreadNotificationsCount = notificationsSnap.data?.docs.length ?? 0;
-
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _buildNavItem(0, Icons.home_outlined, Icons.home, 'Home', 0),
-                            _buildNavItem(1, Icons.assignment_outlined, Icons.assignment, 'Jobs', 0),
-                            _buildNavItem(2, Icons.account_balance_wallet_outlined, Icons.account_balance_wallet, 'Wallet', 0),
-                            _buildNavItem(3, Icons.notifications_outlined, Icons.notifications, 'Inbox', unreadNotificationsCount),
-                            _buildNavItem(4, Icons.person_outline, Icons.person, 'Profile', 0),
-                          ],
-                        );
-                      },
+                    Expanded(
+                      child: _pageBody(),
                     ),
-                  ),
+                  ],
+                ),
+              );
+            }
+
+            return Scaffold(
+              backgroundColor: Colors.transparent,
+              extendBody: true,
+              body: _pageBody(),
+              bottomNavigationBar: SafeArea(
+                minimum: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                child: _NavigationGlass(
+                  axis: Axis.horizontal,
+                  selectedIndex: _index,
+                  unread: unread,
+                  isAr: isAr,
+                  onSelected: _selectTab,
                 ),
               ),
-            ),
-          ],
-        ),
+            );
+          });
+        },
       ),
     );
   }
 
-  Widget _buildNavItem(int index, IconData outlineIcon, IconData filledIcon, String label, int badgeCount) {
-    final isSelected = _index == index;
-    
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _index = index;
-        });
-      },
-      borderRadius: BorderRadius.circular(20),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.cyanAccent.withOpacity(0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Stack(
-          clipBehavior: Clip.none,
+  Widget _pageBody() {
+    return StreamBuilder<List<ConnectivityResult>>(
+      stream: _connectivityStream,
+      initialData: _lastConnectivity,
+      builder: (context, snapshot) {
+        final results = snapshot.data ?? _lastConnectivity;
+        final isOffline = results.isNotEmpty &&
+            results.every((result) => result == ConnectivityResult.none);
+        return Stack(
           children: [
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  isSelected ? filledIcon : outlineIcon,
-                  color: isSelected ? Colors.cyanAccent : Colors.white38,
-                  size: 22,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: isSelected ? Colors.cyanAccent : Colors.white38,
-                    fontSize: 10,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  ),
-                ),
-              ],
+            Positioned.fill(
+              child: IndexedStack(index: _index, children: _pages),
             ),
-            if (badgeCount > 0)
-              Positioned(
-                top: -2,
-                right: -2,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Colors.redAccent,
-                    shape: BoxShape.circle,
-                  ),
-                  constraints: const BoxConstraints(
-                    minWidth: 16,
-                    minHeight: 16,
-                  ),
-                  child: Text(
-                    badgeCount.toString(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 8,
-                      fontWeight: FontWeight.bold,
+            if (isOffline)
+              PositionedDirectional(
+                bottom: 84,
+                start: 16,
+                end: 16,
+                child: Center(
+                  child: Semantics(
+                    liveRegion: true,
+                    label: widget.locale.languageCode == 'ar'
+                        ? 'أنت غير متصل. ستتم مزامنة التغييرات لاحقاً.'
+                        : 'You are offline. Changes will sync later.',
+                    child: Container(
+                      constraints: const BoxConstraints(maxWidth: 420),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 9,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xEB1C1C1E),
+                        borderRadius: BorderRadius.circular(999),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.18),
+                            blurRadius: 14,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.cloud_off_rounded,
+                            color: Colors.white,
+                            size: 15,
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              widget.locale.languageCode == 'ar'
+                                  ? 'غير متصل • ستتم المزامنة تلقائياً'
+                                  : 'Offline • changes sync automatically',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    textAlign: TextAlign.center,
                   ),
                 ),
               ),
           ],
+        );
+      },
+    );
+  }
+
+}
+
+class _NavigationGlass extends StatelessWidget {
+  final Axis axis;
+  final int selectedIndex;
+  final int unread;
+  final bool isAr;
+  final ValueChanged<int> onSelected;
+
+  const _NavigationGlass({
+    required this.axis,
+    required this.selectedIndex,
+    required this.unread,
+    required this.isAr,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final destinations = [
+      (
+        icon: CupertinoIcons.house,
+        selectedIcon: CupertinoIcons.house_fill,
+        en: 'Home',
+        ar: 'الرئيسية',
+      ),
+      (
+        icon: CupertinoIcons.doc_text,
+        selectedIcon: CupertinoIcons.doc_text_fill,
+        en: 'Orders',
+        ar: 'الطلبات',
+      ),
+      (
+        icon: CupertinoIcons.creditcard,
+        selectedIcon: CupertinoIcons.creditcard_fill,
+        en: 'Wallet',
+        ar: 'المحفظة',
+      ),
+      (
+        icon: CupertinoIcons.bell,
+        selectedIcon: CupertinoIcons.bell_fill,
+        en: 'Inbox',
+        ar: 'الإشعارات',
+      ),
+      (
+        icon: CupertinoIcons.person_crop_circle,
+        selectedIcon: CupertinoIcons.person_crop_circle_fill,
+        en: 'Profile',
+        ar: 'حسابي',
+      ),
+    ];
+
+    final children = List.generate(destinations.length, (index) {
+      final destination = destinations[index];
+      return _NavigationItem(
+        selected: selectedIndex == index,
+        icon: destination.icon,
+        selectedIcon: destination.selectedIcon,
+        label: isAr ? destination.ar : destination.en,
+        badgeCount: index == 3 ? unread : 0,
+        axis: axis,
+        onTap: () => onSelected(index),
+      );
+    });
+
+    return LiquidGlassSurface(
+      borderRadius: BorderRadius.circular(axis == Axis.horizontal ? 30 : 32),
+      padding: EdgeInsets.symmetric(
+        horizontal: axis == Axis.horizontal ? 6 : 8,
+        vertical: axis == Axis.horizontal ? 6 : 12,
+      ),
+      child: axis == Axis.horizontal
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children:
+                  children.map((child) => Expanded(child: child)).toList(),
+            )
+          : SizedBox(
+              width: 76,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    margin: const EdgeInsets.only(bottom: 14),
+                    decoration: const BoxDecoration(
+                      color: kbiLabel,
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: const Text(
+                      'K',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  ...children,
+                ],
+              ),
+            ),
+    );
+  }
+}
+
+class _NavigationItem extends StatelessWidget {
+  final bool selected;
+  final IconData icon;
+  final IconData selectedIcon;
+  final String label;
+  final int badgeCount;
+  final Axis axis;
+  final VoidCallback onTap;
+
+  const _NavigationItem({
+    required this.selected,
+    required this.icon,
+    required this.selectedIcon,
+    required this.label,
+    required this.badgeCount,
+    required this.axis,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context) ||
+        MediaQuery.accessibleNavigationOf(context);
+    final duration =
+        reduceMotion ? Duration.zero : const Duration(milliseconds: 220);
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: Tooltip(
+        message: label,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: duration,
+            curve: Curves.easeOutCubic,
+            constraints: BoxConstraints(
+              minHeight: axis == Axis.horizontal ? 56 : 62,
+              minWidth: 52,
+            ),
+            margin: EdgeInsets.symmetric(
+              horizontal: axis == Axis.horizontal ? 1 : 0,
+              vertical: axis == Axis.vertical ? 2 : 0,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+            decoration: BoxDecoration(
+              color: selected
+                  ? kbiBlue.withValues(alpha: 0.12)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    AnimatedSwitcher(
+                      duration: duration,
+                      child: Icon(
+                        selected ? selectedIcon : icon,
+                        key: ValueKey(selected),
+                        size: 23,
+                        color: selected ? kbiBlue : const Color(0xFF8E8E93),
+                      ),
+                    ),
+                    if (badgeCount > 0)
+                      PositionedDirectional(
+                        top: -7,
+                        end: -10,
+                        child: Container(
+                          constraints: const BoxConstraints(minWidth: 17),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: kbiRed,
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(color: Colors.white, width: 1.5),
+                          ),
+                          child: Text(
+                            badgeCount > 99 ? '99+' : '$badgeCount',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              height: 1.25,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: selected ? kbiBlue : const Color(0xFF636366),
+                    fontSize: 10.5,
+                    height: 1.1,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                    letterSpacing: -0.1,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

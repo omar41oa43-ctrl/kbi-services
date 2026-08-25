@@ -17,15 +17,28 @@ enum UserRole {
   TECHNICIAN
   ADMIN
   COMPANY
+  SUPER_ADMIN
+  DISPATCHER
+  OPERATIONS_MANAGER
+  CUSTOMER_SUPPORT
+  FINANCE
+  WAREHOUSE
+  HR
 }
 
 enum OrderStatus {
   PENDING
+  CREATED
+  SEARCHING
   REVIEWING
   QUOTED
   APPROVED
   ASSIGNED
   ON_THE_WAY
+  EN_ROUTE
+  ARRIVED
+  INSPECTION
+  QUOTE_APPROVAL
   IN_PROGRESS
   COMPLETED
   CANCELLED
@@ -112,6 +125,11 @@ model Order {
   review             Review?
   warranty           Warranty?
   emailLogs          EmailLog[]
+
+  @@index([customerId])
+  @@index([technicianId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Device {
@@ -178,12 +196,30 @@ model Technician {
   idDocumentUrl     String?
   profilePhotoUrl   String?
 
+  // Enterprise Telemetry & Real-Time Sync Fields
+  batteryLevel      Int?             @default(100)
+  networkStatus     String?          @default("4G")
+  speed             Float?           @default(0)
+  heading           Float?           @default(0)
+  cashInHand        Decimal?         @default(0)
+  walletBalance     Decimal?         @default(0)
+  acceptanceRate    Float?           @default(100.0)
+  completionRate    Float?           @default(100.0)
+  vehicleType       String?          @default("Van")
+  deviceId          String?
+  appVersion        String?          @default("1.0.0")
+  isSuspended       Boolean          @default(false)
+  isLocked          Boolean          @default(false)
+
   user          User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
   assignedOrders Order[]
   locations      TechnicianLocation[]
   earnings       TechnicianEarnings[]
   availability   TechnicianAvailability[]
   reviews        Review[]
+  telemetry      TechnicianTelemetry[]
+  remoteCommands RemoteCommand[]
+  inventory      TechnicianInventory[]
 }
 
 model TechnicianLocation {
@@ -469,4 +505,81 @@ model BusinessInsight {
   content     String
   data        Json?
   generatedAt DateTime @default(now())
+}
+
+model TechnicianTelemetry {
+  id           String     @id @default(cuid())
+  technicianId String
+  latitude     Float
+  longitude    Float
+  batteryLevel Int        @default(100)
+  networkStatus String     @default("4G")
+  speed        Float      @default(0)
+  heading      Float      @default(0)
+  isOnline     Boolean    @default(true)
+  timestamp    DateTime   @default(now())
+
+  technician   Technician @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+
+  @@index([technicianId])
+  @@index([timestamp])
+}
+
+model RemoteCommand {
+  id           String     @id @default(cuid())
+  technicianId String
+  action       String     // NAVIGATE, FORCE_LOGOUT, LOCK_SCREEN, POPUP_ALERT, EMERGENCY_ALERT, FORCE_SYNC
+  payload      Json?
+  status       String     @default("PENDING") // PENDING, EXECUTED, FAILED
+  createdBy    String?
+  createdAt    DateTime   @default(now())
+  executedAt   DateTime?
+
+  technician   Technician @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+
+  @@index([technicianId])
+  @@index([status])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  userRole    String?
+  ipAddress   String?
+  device      String?
+  action      String
+  oldValue    Json?
+  newValue    Json?
+  timestamp   DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([timestamp])
+}
+
+model InventoryItem {
+  id          String   @id @default(cuid())
+  sku         String   @unique
+  name        String
+  category    String
+  unitPrice   Decimal
+  warehouseQty Int      @default(0)
+  minThreshold Int      @default(5)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  technicianInventory TechnicianInventory[]
+}
+
+model TechnicianInventory {
+  id           String        @id @default(cuid())
+  technicianId String
+  itemId       String
+  quantity     Int           @default(0)
+  assignedAt   DateTime      @default(now())
+
+  technician   Technician    @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+  item         InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([technicianId, itemId])
 }

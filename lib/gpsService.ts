@@ -41,7 +41,7 @@ export function getCurrentLocation(): Promise<LocationData> {
                     )
                     const data = await response.json()
                     address = data.display_name
-                } catch (e) {
+                } catch {
                     // Ignore geocoding errors
                 }
 
@@ -111,8 +111,8 @@ export function formatLocation(location: LocationData): string {
  * Watch position for real-time tracking
  */
 export function watchLocation(
-    onUpdate: (location: LocationData) => void,
-    onError?: (error: Error) => void
+    onUpdate: (_location: LocationData) => void,
+    onError?: (_error: Error) => void
 ): number | null {
     if (!navigator.geolocation) {
         onError?.(new Error("Geolocation is not supported"))

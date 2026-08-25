@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge"
 import { formatDistanceToNow } from "date-fns"
 import { clearNotificationsAction, getNotificationsAction, markNotificationReadAction, type Notification as NotificationType } from "@/app/actions/notifications"
 import { handleStaleServerActionError } from "@/lib/utils"
+import { auth } from "@/firebase/authClient"
 
 interface NotificationBellProps {
     role?: "admin" | "technician"
@@ -33,7 +34,9 @@ export function NotificationBell({ role = "admin" }: NotificationBellProps) {
 
     const fetchNotifications = useCallback(async () => {
         try {
-            const { notifications: data } = await getNotificationsAction(role)
+            const token = await auth.currentUser?.getIdToken()
+            if (!token) return
+            const { notifications: data } = await getNotificationsAction(role, token)
             if (!isMounted.current) return
             if (data) {
                 setNotifications(data)
@@ -57,7 +60,8 @@ export function NotificationBell({ role = "admin" }: NotificationBellProps) {
             ))
             setUnreadCount(prev => Math.max(0, prev - 1))
             try {
-                await markNotificationReadAction(notification.id)
+                const token = await auth.currentUser?.getIdToken()
+                if (token) await markNotificationReadAction(notification.id, role, token)
             } catch (err) {
                 if (handleStaleServerActionError(err)) return
             }
@@ -78,7 +82,9 @@ export function NotificationBell({ role = "admin" }: NotificationBellProps) {
         setUnreadCount(0)
 
         try {
-            const result = await clearNotificationsAction(role)
+            const token = await auth.currentUser?.getIdToken()
+            if (!token) throw new Error("Authentication required")
+            const result = await clearNotificationsAction(role, token)
             if (!result.success) {
                 setNotifications(prevNotifications)
                 setUnreadCount(prevUnreadCount)
@@ -110,7 +116,12 @@ export function NotificationBell({ role = "admin" }: NotificationBellProps) {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative"
+                    aria-label="Open notifications"
+                >
                     <Bell className="h-5 w-5 text-white/70 hover:text-white" />
                     {unreadCount > 0 && (
                         <Badge
@@ -145,6 +156,7 @@ export function NotificationBell({ role = "admin" }: NotificationBellProps) {
                             variant="ghost"
                             size="icon"
                             className="h-6 w-6"
+                            aria-label="Refresh notifications"
                             onClick={(e) => {
                                 e.stopPropagation()
                                 fetchNotifications()

@@ -414,7 +414,12 @@ export const ModelName = {
   EmailLog: 'EmailLog',
   NotificationLog: 'NotificationLog',
   AIRecommendation: 'AIRecommendation',
-  BusinessInsight: 'BusinessInsight'
+  BusinessInsight: 'BusinessInsight',
+  TechnicianTelemetry: 'TechnicianTelemetry',
+  RemoteCommand: 'RemoteCommand',
+  AuditLog: 'AuditLog',
+  InventoryItem: 'InventoryItem',
+  TechnicianInventory: 'TechnicianInventory'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -430,7 +435,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "order" | "device" | "quote" | "orderStatusHistory" | "notification" | "technician" | "technicianLocation" | "technicianEarnings" | "technicianAvailability" | "repairPhoto" | "customerSignature" | "chatMessage" | "customerAddress" | "payment" | "invoice" | "review" | "warranty" | "customerTag" | "customerTagAssignment" | "customerTimeline" | "campaign" | "campaignRecipient" | "automationRule" | "automationExecution" | "conversation" | "message" | "emailLog" | "notificationLog" | "aIRecommendation" | "businessInsight"
+    modelProps: "user" | "order" | "device" | "quote" | "orderStatusHistory" | "notification" | "technician" | "technicianLocation" | "technicianEarnings" | "technicianAvailability" | "repairPhoto" | "customerSignature" | "chatMessage" | "customerAddress" | "payment" | "invoice" | "review" | "warranty" | "customerTag" | "customerTagAssignment" | "customerTimeline" | "campaign" | "campaignRecipient" | "automationRule" | "automationExecution" | "conversation" | "message" | "emailLog" | "notificationLog" | "aIRecommendation" | "businessInsight" | "technicianTelemetry" | "remoteCommand" | "auditLog" | "inventoryItem" | "technicianInventory"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2728,6 +2733,376 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    TechnicianTelemetry: {
+      payload: Prisma.$TechnicianTelemetryPayload<ExtArgs>
+      fields: Prisma.TechnicianTelemetryFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TechnicianTelemetryFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicianTelemetryPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TechnicianTelemetryFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicianTelemetryPayload>
+        }
+        findFirst: {
+          args: Prisma.TechnicianTelemetryFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicianTelemetryPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TechnicianTelemetryFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicianTelemetryPayload>
+        }
+        findMany: {
+          args: Prisma.TechnicianTelemetryFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicianTelemetryPayload>[]
+        }
+        create: {
+          args: Prisma.TechnicianTelemetryCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicianTelemetryPayload>
+        }
+        createMany: {
+          args: Prisma.TechnicianTelemetryCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TechnicianTelemetryCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicianTelemetryPayload>[]
+        }
+        delete: {
+          args: Prisma.TechnicianTelemetryDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicianTelemetryPayload>
+        }
+        update: {
+          args: Prisma.TechnicianTelemetryUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicianTelemetryPayload>
+        }
+        deleteMany: {
+          args: Prisma.TechnicianTelemetryDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TechnicianTelemetryUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TechnicianTelemetryUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicianTelemetryPayload>[]
+        }
+        upsert: {
+          args: Prisma.TechnicianTelemetryUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicianTelemetryPayload>
+        }
+        aggregate: {
+          args: Prisma.TechnicianTelemetryAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTechnicianTelemetry>
+        }
+        groupBy: {
+          args: Prisma.TechnicianTelemetryGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TechnicianTelemetryGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TechnicianTelemetryCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TechnicianTelemetryCountAggregateOutputType> | number
+        }
+      }
+    }
+    RemoteCommand: {
+      payload: Prisma.$RemoteCommandPayload<ExtArgs>
+      fields: Prisma.RemoteCommandFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.RemoteCommandFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RemoteCommandPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.RemoteCommandFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RemoteCommandPayload>
+        }
+        findFirst: {
+          args: Prisma.RemoteCommandFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RemoteCommandPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.RemoteCommandFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RemoteCommandPayload>
+        }
+        findMany: {
+          args: Prisma.RemoteCommandFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RemoteCommandPayload>[]
+        }
+        create: {
+          args: Prisma.RemoteCommandCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RemoteCommandPayload>
+        }
+        createMany: {
+          args: Prisma.RemoteCommandCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.RemoteCommandCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RemoteCommandPayload>[]
+        }
+        delete: {
+          args: Prisma.RemoteCommandDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RemoteCommandPayload>
+        }
+        update: {
+          args: Prisma.RemoteCommandUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RemoteCommandPayload>
+        }
+        deleteMany: {
+          args: Prisma.RemoteCommandDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.RemoteCommandUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.RemoteCommandUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RemoteCommandPayload>[]
+        }
+        upsert: {
+          args: Prisma.RemoteCommandUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RemoteCommandPayload>
+        }
+        aggregate: {
+          args: Prisma.RemoteCommandAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateRemoteCommand>
+        }
+        groupBy: {
+          args: Prisma.RemoteCommandGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RemoteCommandGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.RemoteCommandCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RemoteCommandCountAggregateOutputType> | number
+        }
+      }
+    }
+    AuditLog: {
+      payload: Prisma.$AuditLogPayload<ExtArgs>
+      fields: Prisma.AuditLogFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AuditLogFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuditLogPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AuditLogFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuditLogPayload>
+        }
+        findFirst: {
+          args: Prisma.AuditLogFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuditLogPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AuditLogFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuditLogPayload>
+        }
+        findMany: {
+          args: Prisma.AuditLogFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuditLogPayload>[]
+        }
+        create: {
+          args: Prisma.AuditLogCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuditLogPayload>
+        }
+        createMany: {
+          args: Prisma.AuditLogCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AuditLogCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuditLogPayload>[]
+        }
+        delete: {
+          args: Prisma.AuditLogDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuditLogPayload>
+        }
+        update: {
+          args: Prisma.AuditLogUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuditLogPayload>
+        }
+        deleteMany: {
+          args: Prisma.AuditLogDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AuditLogUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AuditLogUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuditLogPayload>[]
+        }
+        upsert: {
+          args: Prisma.AuditLogUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuditLogPayload>
+        }
+        aggregate: {
+          args: Prisma.AuditLogAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAuditLog>
+        }
+        groupBy: {
+          args: Prisma.AuditLogGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AuditLogGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AuditLogCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AuditLogCountAggregateOutputType> | number
+        }
+      }
+    }
+    InventoryItem: {
+      payload: Prisma.$InventoryItemPayload<ExtArgs>
+      fields: Prisma.InventoryItemFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.InventoryItemFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InventoryItemPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.InventoryItemFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InventoryItemPayload>
+        }
+        findFirst: {
+          args: Prisma.InventoryItemFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InventoryItemPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.InventoryItemFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InventoryItemPayload>
+        }
+        findMany: {
+          args: Prisma.InventoryItemFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InventoryItemPayload>[]
+        }
+        create: {
+          args: Prisma.InventoryItemCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InventoryItemPayload>
+        }
+        createMany: {
+          args: Prisma.InventoryItemCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.InventoryItemCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InventoryItemPayload>[]
+        }
+        delete: {
+          args: Prisma.InventoryItemDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InventoryItemPayload>
+        }
+        update: {
+          args: Prisma.InventoryItemUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InventoryItemPayload>
+        }
+        deleteMany: {
+          args: Prisma.InventoryItemDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.InventoryItemUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.InventoryItemUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InventoryItemPayload>[]
+        }
+        upsert: {
+          args: Prisma.InventoryItemUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InventoryItemPayload>
+        }
+        aggregate: {
+          args: Prisma.InventoryItemAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateInventoryItem>
+        }
+        groupBy: {
+          args: Prisma.InventoryItemGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.InventoryItemGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.InventoryItemCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.InventoryItemCountAggregateOutputType> | number
+        }
+      }
+    }
+    TechnicianInventory: {
+      payload: Prisma.$TechnicianInventoryPayload<ExtArgs>
+      fields: Prisma.TechnicianInventoryFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TechnicianInventoryFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicianInventoryPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TechnicianInventoryFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicianInventoryPayload>
+        }
+        findFirst: {
+          args: Prisma.TechnicianInventoryFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicianInventoryPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TechnicianInventoryFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicianInventoryPayload>
+        }
+        findMany: {
+          args: Prisma.TechnicianInventoryFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicianInventoryPayload>[]
+        }
+        create: {
+          args: Prisma.TechnicianInventoryCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicianInventoryPayload>
+        }
+        createMany: {
+          args: Prisma.TechnicianInventoryCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TechnicianInventoryCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicianInventoryPayload>[]
+        }
+        delete: {
+          args: Prisma.TechnicianInventoryDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicianInventoryPayload>
+        }
+        update: {
+          args: Prisma.TechnicianInventoryUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicianInventoryPayload>
+        }
+        deleteMany: {
+          args: Prisma.TechnicianInventoryDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TechnicianInventoryUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TechnicianInventoryUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicianInventoryPayload>[]
+        }
+        upsert: {
+          args: Prisma.TechnicianInventoryUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicianInventoryPayload>
+        }
+        aggregate: {
+          args: Prisma.TechnicianInventoryAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTechnicianInventory>
+        }
+        groupBy: {
+          args: Prisma.TechnicianInventoryGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TechnicianInventoryGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TechnicianInventoryCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TechnicianInventoryCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -2867,7 +3242,20 @@ export const TechnicianScalarFieldEnum = {
   specialization: 'specialization',
   serviceAreas: 'serviceAreas',
   idDocumentUrl: 'idDocumentUrl',
-  profilePhotoUrl: 'profilePhotoUrl'
+  profilePhotoUrl: 'profilePhotoUrl',
+  batteryLevel: 'batteryLevel',
+  networkStatus: 'networkStatus',
+  speed: 'speed',
+  heading: 'heading',
+  cashInHand: 'cashInHand',
+  walletBalance: 'walletBalance',
+  acceptanceRate: 'acceptanceRate',
+  completionRate: 'completionRate',
+  vehicleType: 'vehicleType',
+  deviceId: 'deviceId',
+  appVersion: 'appVersion',
+  isSuspended: 'isSuspended',
+  isLocked: 'isLocked'
 } as const
 
 export type TechnicianScalarFieldEnum = (typeof TechnicianScalarFieldEnum)[keyof typeof TechnicianScalarFieldEnum]
@@ -3170,6 +3558,77 @@ export const BusinessInsightScalarFieldEnum = {
 } as const
 
 export type BusinessInsightScalarFieldEnum = (typeof BusinessInsightScalarFieldEnum)[keyof typeof BusinessInsightScalarFieldEnum]
+
+
+export const TechnicianTelemetryScalarFieldEnum = {
+  id: 'id',
+  technicianId: 'technicianId',
+  latitude: 'latitude',
+  longitude: 'longitude',
+  batteryLevel: 'batteryLevel',
+  networkStatus: 'networkStatus',
+  speed: 'speed',
+  heading: 'heading',
+  isOnline: 'isOnline',
+  timestamp: 'timestamp'
+} as const
+
+export type TechnicianTelemetryScalarFieldEnum = (typeof TechnicianTelemetryScalarFieldEnum)[keyof typeof TechnicianTelemetryScalarFieldEnum]
+
+
+export const RemoteCommandScalarFieldEnum = {
+  id: 'id',
+  technicianId: 'technicianId',
+  action: 'action',
+  payload: 'payload',
+  status: 'status',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt',
+  executedAt: 'executedAt'
+} as const
+
+export type RemoteCommandScalarFieldEnum = (typeof RemoteCommandScalarFieldEnum)[keyof typeof RemoteCommandScalarFieldEnum]
+
+
+export const AuditLogScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  userRole: 'userRole',
+  ipAddress: 'ipAddress',
+  device: 'device',
+  action: 'action',
+  oldValue: 'oldValue',
+  newValue: 'newValue',
+  timestamp: 'timestamp'
+} as const
+
+export type AuditLogScalarFieldEnum = (typeof AuditLogScalarFieldEnum)[keyof typeof AuditLogScalarFieldEnum]
+
+
+export const InventoryItemScalarFieldEnum = {
+  id: 'id',
+  sku: 'sku',
+  name: 'name',
+  category: 'category',
+  unitPrice: 'unitPrice',
+  warehouseQty: 'warehouseQty',
+  minThreshold: 'minThreshold',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type InventoryItemScalarFieldEnum = (typeof InventoryItemScalarFieldEnum)[keyof typeof InventoryItemScalarFieldEnum]
+
+
+export const TechnicianInventoryScalarFieldEnum = {
+  id: 'id',
+  technicianId: 'technicianId',
+  itemId: 'itemId',
+  quantity: 'quantity',
+  assignedAt: 'assignedAt'
+} as const
+
+export type TechnicianInventoryScalarFieldEnum = (typeof TechnicianInventoryScalarFieldEnum)[keyof typeof TechnicianInventoryScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -3520,6 +3979,11 @@ export type GlobalOmitConfig = {
   notificationLog?: Prisma.NotificationLogOmit
   aIRecommendation?: Prisma.AIRecommendationOmit
   businessInsight?: Prisma.BusinessInsightOmit
+  technicianTelemetry?: Prisma.TechnicianTelemetryOmit
+  remoteCommand?: Prisma.RemoteCommandOmit
+  auditLog?: Prisma.AuditLogOmit
+  inventoryItem?: Prisma.InventoryItemOmit
+  technicianInventory?: Prisma.TechnicianInventoryOmit
 }
 
 /* Types for Logging */

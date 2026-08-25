@@ -12,21 +12,54 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  cloud_firestore: any
-  firebase_auth: any
-  firebase_core: any
-  cloud_functions: any
-  firebase_messaging: any
-  geolocator: any
-  google_maps_flutter: any
-  intl: any
-  file_picker: ^3.0.4
+  cloud_firestore: ^6.8.0
+  firebase_auth: ^6.5.7
+  firebase_core: ^4.13.0
+  cloud_functions: ^6.3.6
+  firebase_messaging: ^16.5.0
+  firebase_storage: ^13.4.6
+  geolocator: ^14.0.2
+  flutter_map: 7.0.2
+  latlong2: 0.9.1
+  intl: ^0.20.2
+  file_picker: ^11.0.3
   url_launcher: ^6.3.2
+  qr_flutter: ^4.1.0
+  local_auth: ^2.3.0
+  flutter_secure_storage: ^9.2.4
+  # Pinned below the JNI-based Android implementation because Flutter 3.44's
+  # macOS test runner currently crashes while copying that native test asset.
+  shared_preferences: 2.3.5
+  battery_plus: 6.2.3
+  connectivity_plus: 6.1.5
+  image_picker: ^1.2.3
+  http: ^1.2.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
+  integration_test:
+    sdk: flutter
+  flutter_lints: ^3.0.2
+
+dependency_overrides:
+  # 2.4.27 introduces a JNI native asset that crashes Flutter 3.44's macOS
+  # test host before widget tests start. The app only uses the stable legacy
+  # SharedPreferences API, which 2.3.4 fully supports.
+  shared_preferences_android: 2.3.4
+  # 2.3.x migrated to JNI; 2.2.23 is the last channel-based release and avoids
+  # the same Flutter 3.44 macOS widget-test host crash.
+  path_provider_android: 2.2.23
+  # 9.2 migrated to native assets; 9.1 keeps plugin registration and allows
+  # Flutter's macOS widget-test runner to start reliably.
+  objective_c: 9.1.0
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/technician-login-bg.png
+    - assets/images/technician-login-bg-v2.png
+    - assets/images/kbi_welcome_bg.jpg
+    - assets/images/kbi_logo.png
+    - assets/images/kbi_icon.png
+    - assets/images/

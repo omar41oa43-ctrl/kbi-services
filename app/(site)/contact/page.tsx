@@ -15,7 +15,7 @@ export default async function ContactPage() {
   const contact = await getSiteContact()
 
   return (
-    <main className="min-h-screen bg-black text-white selection:bg-cyan-500/30 pb-16 lg:pb-0">
+    <main className="min-h-screen bg-background text-foreground selection:bg-cyan-500/30 pb-16 lg:pb-0">
       <ContactContent contact={contact} />
     </main>
   )

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { RefreshCw, X } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
 import { APP_VERSION, BUILD_TIMESTAMP } from '@/lib/app-version'
 import { Button } from '@/components/ui/button'
 import {
@@ -43,7 +43,7 @@ export function UpdateNotification({
       }
     } catch (error) {
       // Silent fail - don't show errors to user
-      console.debug('Update check failed:', error)
+      console.warn('Update check failed:', error)
     } finally {
       setIsChecking(false)
     }

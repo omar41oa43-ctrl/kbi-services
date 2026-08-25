@@ -13,14 +13,14 @@ type ScoredTech = {
   fcmToken?: string
 }
 
-function scoreTechnician(params: { distanceKm: number; rating: number; activeJobs: number }) {
+export function scoreTechnician(params: { distanceKm: number; rating: number; activeJobs: number }) {
   const distanceWeight = 1.6
   const ratingWeight = 2.2
   const loadPenalty = 1.4
   return -params.distanceKm * distanceWeight + params.rating * ratingWeight - params.activeJobs * loadPenalty
 }
 
-function skillMatch(requestType: string, skills: string[]) {
+export function skillMatch(requestType: string, skills: string[]) {
   const rt = normalizeSkill(requestType)
   const set = new Set(skills.map(normalizeSkill))
   if (set.has(rt)) return true
@@ -109,15 +109,28 @@ export async function assignServiceRequest(requestId: string) {
   const offerUids = offers.map((x) => x.uid)
   const tokens = offers.map((x) => x.fcmToken || "").filter(Boolean)
 
-  await ref.update({
-    status: "assigned",
-    assignedTo: FieldValue.arrayUnion(...offerUids),
-    offers: offerUids,
-    offeredAt: Timestamp.now(),
-    updatedAt: Timestamp.now(),
-    assignmentAttempt: toNumber(data.assignmentAttempt, 0) + 1,
-    lastOfferedTo: FieldValue.arrayUnion(...offerUids),
+  const expectedAttempt = toNumber(data.assignmentAttempt, 0)
+  const assigned = await db.runTransaction(async (transaction) => {
+    const currentSnap = await transaction.get(ref)
+    if (!currentSnap.exists) return false
+    const current = currentSnap.data() as ServiceRequestDoc
+    const currentStatus = String(current.status || "").toLowerCase()
+    if ((currentStatus !== "new" && currentStatus !== "assigned") || current.technicianId) return false
+    if (toNumber(current.assignmentAttempt, 0) !== expectedAttempt) return false
+
+    const now = Timestamp.now()
+    transaction.update(ref, {
+      status: "assigned",
+      assignedTo: FieldValue.arrayUnion(...offerUids),
+      offers: offerUids,
+      offeredAt: now,
+      updatedAt: now,
+      assignmentAttempt: expectedAttempt + 1,
+      lastOfferedTo: FieldValue.arrayUnion(...offerUids),
+    })
+    return true
   })
+  if (!assigned) return
 
   await writeAuditLog({
     action: "service_request_assigned",

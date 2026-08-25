@@ -1,77 +1,112 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react"
-import { GlassCard } from "@/components/ui/glass-card"
 import { getAuditLogsAction } from "@/app/actions/admin-audit"
-import { Loader2, Scroll, User, Clock, Monitor } from "lucide-react"
+import { Loader2, Scroll, User, Clock, Monitor, ShieldCheck, Activity } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { handleStaleServerActionError } from "@/lib/utils"
+import { auth } from "@/firebase/authClient"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 
 export function AuditLogViewer() {
-    const [logs, setLogs] = useState<any[]>([])
-    const [loading, setLoading] = useState(true)
-    const isMounted = useRef(true)
+  const [logs, setLogs] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const isMounted = useRef(true)
 
-    useEffect(() => {
-        isMounted.current = true
-        return () => { isMounted.current = false }
-    }, [])
+  useEffect(() => {
+    isMounted.current = true
+    return () => {
+      isMounted.current = false
+    }
+  }, [])
 
-    useEffect(() => {
-        getAuditLogsAction()
-            .then(data => {
-                if (isMounted.current) setLogs(data)
-            })
-            .catch((err) => {
-                if (!isMounted.current) return
-                if (handleStaleServerActionError(err)) return
-                setLogs([])
-            })
-            .finally(() => {
-                if (isMounted.current) setLoading(false)
-            })
-    }, [])
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const token = await auth.currentUser?.getIdToken()
+        const data = token ? await getAuditLogsAction(token) : []
+        if (isMounted.current) setLogs(data)
+      } catch (err) {
+        if (!isMounted.current) return
+        if (handleStaleServerActionError(err)) return
+        setLogs([])
+      } finally {
+        if (isMounted.current) setLoading(false)
+      }
+    }
+    void load()
+  }, [])
 
-    return (
-        <section>
-            <h2 className="text-xl font-semibold mb-4 text-white flex items-center gap-2">
-                <Scroll className="w-5 h-5 text-cyan-400" /> System Audit Logs
-            </h2>
-            <GlassCard className="bg-zinc-900/50 border border-white/10 max-h-[500px] overflow-y-auto">
-                {loading ? (
-                    <div className="flex justify-center p-8">
-                        <Loader2 className="w-6 h-6 animate-spin text-white/50" />
-                    </div>
-                ) : logs.length === 0 ? (
-                    <div className="text-center p-8 text-white/50">No activity logs found.</div>
-                ) : (
-                    <div className="space-y-2">
-                        {logs.map(log => (
-                            <div key={log.id} className="p-3 rounded bg-white/5 border border-white/5 flex flex-col md:flex-row gap-2 justify-between text-sm">
-                                <div className="space-y-1">
-                                    <div className="font-semibold text-white">
-                                        {log.action.replace(/_/g, " ")}
-                                        {log.targetType && <span className="text-white/50 font-normal"> on {log.targetType}</span>}
-                                    </div>
-                                    <div className="text-xs text-white/40 flex items-center gap-2">
-                                        <span className="flex items-center gap-1"><User className="w-3 h-3" /> {log.performedBy}</span>
-                                        {log.userAgent && <span className="flex items-center gap-1"><Monitor className="w-3 h-3" /> {log.userAgent}</span>}
-                                    </div>
-                                </div>
-                                <div className="text-right text-xs text-white/40 flex flex-col justify-between">
-                                    <div className="flex items-center gap-1 justify-end">
-                                        <Clock className="w-3 h-3" />
-                                        {log.timestamp ? formatDistanceToNow(new Date(log.timestamp), { addSuffix: true }) : "Unknown"}
-                                    </div>
-                                    <pre className="text-[10px] mt-1 text-white/20 overflow-hidden max-w-[200px] truncate">
-                                        {JSON.stringify(log.details)}
-                                    </pre>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </GlassCard>
-        </section>
-    )
+  return (
+    <Card className="border-border bg-card shadow-sm rounded-2xl overflow-hidden">
+      <CardHeader className="border-b border-border/70 pb-4 bg-muted/20">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="size-8 rounded-lg bg-cyan-500/10 dark:bg-[#00f5c4]/15 border border-cyan-500/30 dark:border-[#00f5c4]/30 flex items-center justify-center text-cyan-600 dark:text-[#00f5c4]">
+              <Activity className="size-4" />
+            </div>
+            <div>
+              <CardTitle className="text-base font-bold text-foreground">System Audit Logs</CardTitle>
+              <CardDescription className="text-xs text-muted-foreground">
+                Immutable records of administrative security operations and configuration updates.
+              </CardDescription>
+            </div>
+          </div>
+
+          <Badge variant="outline" className="text-[11px] font-bold">
+            {logs.length} Logged Events
+          </Badge>
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-4 max-h-[420px] overflow-y-auto [&::-webkit-scrollbar]:w-[4px] [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center p-10 space-y-2">
+            <Loader2 className="size-6 animate-spin text-cyan-600 dark:text-[#00f5c4]" />
+            <p className="text-xs text-muted-foreground">Fetching activity logs...</p>
+          </div>
+        ) : logs.length === 0 ? (
+          <div className="text-center p-10 text-xs text-muted-foreground">No administrative activity logs found.</div>
+        ) : (
+          <div className="space-y-2">
+            {logs.map((log) => (
+              <div
+                key={log.id}
+                className="p-3.5 rounded-xl border border-border/70 bg-background/60 hover:border-cyan-500/40 transition-colors flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center text-xs"
+              >
+                <div className="space-y-1 min-w-0">
+                  <div className="font-bold text-foreground flex items-center gap-2">
+                    <span className="capitalize">{log.action.replace(/_/g, " ")}</span>
+                    {log.targetType && (
+                      <span className="text-muted-foreground font-normal text-[11px]">
+                        on <code className="bg-muted px-1 py-0.5 rounded text-[10px]">{log.targetType}</code>
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground flex flex-wrap items-center gap-3">
+                    <span className="flex items-center gap-1">
+                      <User className="size-3 text-cyan-600 dark:text-[#00f5c4]" /> {log.performedBy}
+                    </span>
+                    {log.userAgent && (
+                      <span className="flex items-center gap-1 truncate max-w-[220px]">
+                        <Monitor className="size-3" /> {log.userAgent}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="text-right text-[11px] text-muted-foreground flex flex-row sm:flex-col items-end justify-between shrink-0">
+                  <div className="flex items-center gap-1">
+                    <Clock className="size-3 text-muted-foreground" />
+                    {log.timestamp ? formatDistanceToNow(new Date(log.timestamp), { addSuffix: true }) : "Recent"}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
 }

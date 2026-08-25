@@ -1,0 +1,50 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && (
+        (request.auth.token.keys().hasAny(['admin']) && request.auth.token.admin == true)
+        || (request.auth.token.keys().hasAny(['role'])
+          && request.auth.token.role in ['admin', 'super_admin'])
+      );
+    }
+
+    function safeImage() {
+      return request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    match /company/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin() && request.resource.size < 25 * 1024 * 1024;
+    }
+
+    match /devices/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin() && safeImage();
+    }
+
+    match /technicians/{uid}/{allPaths=**} {
+      allow read: if (signedIn() && request.auth.uid == uid) || isAdmin();
+      allow write: if (signedIn() && request.auth.uid == uid)
+        && request.resource.size < 15 * 1024 * 1024;
+    }
+
+    match /orders/{orderId}/{allPaths=**} {
+      allow read: if signedIn();
+      allow write: if signedIn() && request.resource.size < 15 * 1024 * 1024;
+    }
+
+    match /registration/{allPaths=**} {
+      allow read, write: if signedIn() && request.resource.size < 15 * 1024 * 1024;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

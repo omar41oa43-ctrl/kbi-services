@@ -81,7 +81,12 @@ export const ModelName = {
   EmailLog: 'EmailLog',
   NotificationLog: 'NotificationLog',
   AIRecommendation: 'AIRecommendation',
-  BusinessInsight: 'BusinessInsight'
+  BusinessInsight: 'BusinessInsight',
+  TechnicianTelemetry: 'TechnicianTelemetry',
+  RemoteCommand: 'RemoteCommand',
+  AuditLog: 'AuditLog',
+  InventoryItem: 'InventoryItem',
+  TechnicianInventory: 'TechnicianInventory'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -200,7 +205,20 @@ export const TechnicianScalarFieldEnum = {
   specialization: 'specialization',
   serviceAreas: 'serviceAreas',
   idDocumentUrl: 'idDocumentUrl',
-  profilePhotoUrl: 'profilePhotoUrl'
+  profilePhotoUrl: 'profilePhotoUrl',
+  batteryLevel: 'batteryLevel',
+  networkStatus: 'networkStatus',
+  speed: 'speed',
+  heading: 'heading',
+  cashInHand: 'cashInHand',
+  walletBalance: 'walletBalance',
+  acceptanceRate: 'acceptanceRate',
+  completionRate: 'completionRate',
+  vehicleType: 'vehicleType',
+  deviceId: 'deviceId',
+  appVersion: 'appVersion',
+  isSuspended: 'isSuspended',
+  isLocked: 'isLocked'
 } as const
 
 export type TechnicianScalarFieldEnum = (typeof TechnicianScalarFieldEnum)[keyof typeof TechnicianScalarFieldEnum]
@@ -503,6 +521,77 @@ export const BusinessInsightScalarFieldEnum = {
 } as const
 
 export type BusinessInsightScalarFieldEnum = (typeof BusinessInsightScalarFieldEnum)[keyof typeof BusinessInsightScalarFieldEnum]
+
+
+export const TechnicianTelemetryScalarFieldEnum = {
+  id: 'id',
+  technicianId: 'technicianId',
+  latitude: 'latitude',
+  longitude: 'longitude',
+  batteryLevel: 'batteryLevel',
+  networkStatus: 'networkStatus',
+  speed: 'speed',
+  heading: 'heading',
+  isOnline: 'isOnline',
+  timestamp: 'timestamp'
+} as const
+
+export type TechnicianTelemetryScalarFieldEnum = (typeof TechnicianTelemetryScalarFieldEnum)[keyof typeof TechnicianTelemetryScalarFieldEnum]
+
+
+export const RemoteCommandScalarFieldEnum = {
+  id: 'id',
+  technicianId: 'technicianId',
+  action: 'action',
+  payload: 'payload',
+  status: 'status',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt',
+  executedAt: 'executedAt'
+} as const
+
+export type RemoteCommandScalarFieldEnum = (typeof RemoteCommandScalarFieldEnum)[keyof typeof RemoteCommandScalarFieldEnum]
+
+
+export const AuditLogScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  userRole: 'userRole',
+  ipAddress: 'ipAddress',
+  device: 'device',
+  action: 'action',
+  oldValue: 'oldValue',
+  newValue: 'newValue',
+  timestamp: 'timestamp'
+} as const
+
+export type AuditLogScalarFieldEnum = (typeof AuditLogScalarFieldEnum)[keyof typeof AuditLogScalarFieldEnum]
+
+
+export const InventoryItemScalarFieldEnum = {
+  id: 'id',
+  sku: 'sku',
+  name: 'name',
+  category: 'category',
+  unitPrice: 'unitPrice',
+  warehouseQty: 'warehouseQty',
+  minThreshold: 'minThreshold',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type InventoryItemScalarFieldEnum = (typeof InventoryItemScalarFieldEnum)[keyof typeof InventoryItemScalarFieldEnum]
+
+
+export const TechnicianInventoryScalarFieldEnum = {
+  id: 'id',
+  technicianId: 'technicianId',
+  itemId: 'itemId',
+  quantity: 'quantity',
+  assignedAt: 'assignedAt'
+} as const
+
+export type TechnicianInventoryScalarFieldEnum = (typeof TechnicianInventoryScalarFieldEnum)[keyof typeof TechnicianInventoryScalarFieldEnum]
 
 
 export const SortOrder = {

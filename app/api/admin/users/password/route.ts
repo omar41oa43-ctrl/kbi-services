@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAdminAuth, getAdminDb, verifyAdmin } from "@/lib/firebase-admin"
-import admin from "firebase-admin"
+import { Timestamp } from "firebase-admin/firestore"
 
 export const dynamic = "force-dynamic"
 
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     try {
       await db.collection("users").doc(finalTargetUid).update({
         mustChangePassword: forceChange,
-        updatedAt: admin.firestore.Timestamp.now(),
+        updatedAt: Timestamp.now(),
       })
     } catch {}
 
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
         targetId: finalTargetUid,
         targetType: "user",
         details: { forceChange },
-        timestamp: admin.firestore.Timestamp.now(),
+        timestamp: Timestamp.now(),
       })
     } catch {}
 

@@ -63,6 +63,10 @@ export default function AdminInventoryPage() {
   const [newIssueDuration, setNewIssueDuration] = useState<string>("30")
 
   const fetchData = async () => {
+    if (tab === "parts") {
+      setLoading(false)
+      return
+    }
     if (loading && devices.length > 0) return // Already loading
     setLoading(true)
     try {
@@ -75,13 +79,13 @@ export default function AdminInventoryPage() {
 
       if (!isMounted.current) return
 
-      setDevices(d as Device[])
-      setBrands(b as Brand[])
-      setModels(m as Model[])
-      setIssues(i as Issue[])
+      setDevices((d || []) as Device[])
+      setBrands((b || []) as Brand[])
+      setModels((m || []) as Model[])
+      setIssues((i || []) as Issue[])
 
-      if (d.length > 0 && !selectedDeviceId) setSelectedDeviceId(d[0].id)
-      if (d.length > 0 && !issueDeviceId) setIssueDeviceId(d[0].id)
+      if ((d || []).length > 0 && !selectedDeviceId) setSelectedDeviceId((d as Device[])[0].id)
+      if ((d || []).length > 0 && !issueDeviceId) setIssueDeviceId((d as Device[])[0].id)
 
     } catch (e: any) {
       if (!isMounted.current) return
@@ -95,9 +99,13 @@ export default function AdminInventoryPage() {
 
   useEffect(() => {
     isMounted.current = true
-    fetchData()
+    if (tab !== "parts") {
+      fetchData()
+    } else {
+      setLoading(false)
+    }
     return () => { isMounted.current = false }
-  }, [])
+  }, [tab])
 
   // Derived State
   const filteredBrands = useMemo(() => brands.filter(b => b.deviceId === selectedDeviceId), [brands, selectedDeviceId])
@@ -233,77 +241,126 @@ export default function AdminInventoryPage() {
     } catch (e: any) { toast({ variant: "destructive", title: "Error", description: e.message }) }
   }
 
-  if (loading && devices.length === 0) return <div className="p-8 text-center text-white/50">{t("Loading...")}</div>
+  if (loading && devices.length === 0) return <div className="p-8 text-center text-muted-foreground">{t("Loading...")}</div>
 
   return (
     <section className="pt-2 pb-8">
       <Toaster />
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2 flex-wrap">
-          <button onClick={() => setTab("parts")} className={`px-3 py-2 rounded-lg text-sm ${tab === "parts" ? "bg-cyan-500 text-black" : "bg-white/5 border border-white/10"}`}>{t("Spare Parts")}</button>
-          <button onClick={() => setTab("devices")} className={`px-3 py-2 rounded-lg text-sm ${tab === "devices" ? "bg-cyan-500 text-black" : "bg-white/5 border border-white/10"}`}>{t("Devices List")}</button>
-          <button onClick={() => setTab("models")} className={`px-3 py-2 rounded-lg text-sm ${tab === "models" ? "bg-cyan-500 text-black" : "bg-white/5 border border-white/10"}`}>{t("Models Management")}</button>
-          <button onClick={() => setTab("issues")} className={`px-3 py-2 rounded-lg text-sm ${tab === "issues" ? "bg-cyan-500 text-black" : "bg-white/5 border border-white/10"}`}>{t("Issues Management")}</button>
+        <div className="flex items-center gap-2 flex-wrap bg-slate-100 dark:bg-white/5 p-1.5 rounded-xl border border-border">
+          <button
+            onClick={() => setTab("parts")}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+              tab === "parts"
+                ? "bg-cyan-500 text-white shadow-xs"
+                : "text-muted-foreground hover:text-foreground hover:bg-slate-200/60 dark:hover:bg-white/10"
+            }`}
+          >
+            {t("Spare Parts")}
+          </button>
+          <button
+            onClick={() => setTab("devices")}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+              tab === "devices"
+                ? "bg-cyan-500 text-white shadow-xs"
+                : "text-muted-foreground hover:text-foreground hover:bg-slate-200/60 dark:hover:bg-white/10"
+            }`}
+          >
+            {t("Devices List")}
+          </button>
+          <button
+            onClick={() => setTab("models")}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+              tab === "models"
+                ? "bg-cyan-500 text-white shadow-xs"
+                : "text-muted-foreground hover:text-foreground hover:bg-slate-200/60 dark:hover:bg-white/10"
+            }`}
+          >
+            {t("Models Management")}
+          </button>
+          <button
+            onClick={() => setTab("issues")}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+              tab === "issues"
+                ? "bg-cyan-500 text-white shadow-xs"
+                : "text-muted-foreground hover:text-foreground hover:bg-slate-200/60 dark:hover:bg-white/10"
+            }`}
+          >
+            {t("Issues Management")}
+          </button>
         </div>
-        <Button variant="ghost" size="icon" onClick={fetchData} title="Refresh">
-          <Loader2 className={cn("w-4 h-4", loading && "animate-spin")} />
+        <Button variant="outline" size="icon" onClick={fetchData} title="Refresh" className="border-border">
+          <Loader2 className={cn("w-4 h-4 text-foreground", loading && "animate-spin")} />
         </Button>
       </div>
 
       {tab === "devices" && (
         <div className="grid md:grid-cols-1 gap-6">
-          <GlassCard>
-            <h2 className="text-xl font-semibold mb-4">{t("Devices List")}</h2>
-            <div className="flex flex-col md:flex-row gap-6 mb-8 items-start bg-white/5 p-6 rounded-xl border border-white/10">
+          <div className="bg-card border border-border rounded-2xl p-6 shadow-xs">
+            <h2 className="text-xl font-bold text-foreground mb-4">{t("Devices List")}</h2>
+            <div className="flex flex-col md:flex-row gap-6 mb-8 items-start bg-slate-50 dark:bg-white/5 p-6 rounded-xl border border-border">
               <div className="shrink-0">
-                <label className="text-xs text-white/50 mb-2 block">{t("Device Icon")}</label>
+                <label className="text-xs font-semibold text-muted-foreground mb-2 block">{t("Device Icon")}</label>
                 <ImageUpload value={newDeviceIcon} onChange={setNewDeviceIcon} path="devices" />
               </div>
               <div className="flex-1 w-full">
-                <label className="text-xs text-white/50 mb-2 block">{t("Device Name")}</label>
+                <label className="text-xs font-semibold text-muted-foreground mb-2 block">{t("Device Name")}</label>
                 <div className="flex gap-2">
-                  <input value={newDeviceName} onChange={(e) => setNewDeviceName(e.target.value)} placeholder={t("Device Name")} className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-500" />
-                  <button disabled={processing} onClick={addDevice} className="px-6 py-3 bg-cyan-500 text-black rounded-xl font-semibold flex items-center gap-2">
+                  <input
+                    value={newDeviceName}
+                    onChange={(e) => setNewDeviceName(e.target.value)}
+                    placeholder={t("Device Name")}
+                    className="flex-1 px-4 py-3 bg-background border border-input rounded-xl focus:outline-none focus:border-cyan-500 text-foreground placeholder:text-muted-foreground"
+                  />
+                  <button
+                    disabled={processing}
+                    onClick={addDevice}
+                    className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl font-bold flex items-center gap-2 transition-colors disabled:opacity-50"
+                  >
                     <Plus className="w-5 h-5" /> {t("Add")}
                   </button>
                 </div>
-                <p className="text-xs text-white/30 mt-2">{t("Upload an icon or a default placeholder will be used.")}</p>
+                <p className="text-xs text-muted-foreground mt-2">{t("Upload an icon or a default placeholder will be used.")}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {devices.map((d) => (
-                <div key={d.id} className="flex items-center justify-between bg-white/5 rounded-xl p-4 border border-white/10 hover:border-white/20 transition-colors group">
+                <div key={d.id} className="flex items-center justify-between bg-slate-50 dark:bg-white/5 rounded-xl p-4 border border-border hover:border-cyan-500/50 transition-colors group">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center overflow-hidden shrink-0 border border-white/10">
+                    <div className="w-12 h-12 rounded-xl bg-slate-200/60 dark:bg-white/10 flex items-center justify-center overflow-hidden shrink-0 border border-border">
                       {d.icon.startsWith("http") ? (
                         <img src={d.icon} alt={d.name} className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-xs font-bold text-white/50">{d.icon.substring(0, 2).toUpperCase()}</span>
+                        <span className="text-xs font-bold text-foreground">{d.icon.substring(0, 2).toUpperCase()}</span>
                       )}
                     </div>
                     <div>
-                      <p className="font-medium text-lg">{d.name}</p>
-                      <p className="text-xs text-white/50">
-                        {brands.filter(b => b.deviceId === d.id).length} {t("Brand")} •
-                        {issues.filter(i => i.deviceId === d.id).length} {t("Issue")}
+                      <p className="font-bold text-base text-foreground">{d.name}</p>
+                      <p className="text-xs text-muted-foreground font-medium">
+                        {brands.filter(b => b.deviceId === d.id).length} {t("Brand")} • {issues.filter(i => i.deviceId === d.id).length} {t("Issue")}
                       </p>
                     </div>
                   </div>
-                  <button onClick={() => deleteDevice(d.id)} className="p-2 rounded-lg bg-white/5 hover:bg-red-500/20 text-white/50 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"><Trash2 className="w-4 h-4" /></button>
+                  <button
+                    onClick={() => deleteDevice(d.id)}
+                    className="p-2 rounded-lg bg-background hover:bg-rose-500/10 text-muted-foreground hover:text-rose-600 transition-colors opacity-0 group-hover:opacity-100 border border-border"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               ))}
             </div>
-          </GlassCard>
+          </div>
         </div>
       )}
 
       {tab === "models" && (
         <div className="grid md:grid-cols-2 gap-6">
-          <GlassCard>
-            <h2 className="text-xl font-semibold mb-4">{t("Brands Management")}</h2>
+          <div className="bg-card border border-border rounded-2xl p-6 shadow-xs">
+            <h2 className="text-xl font-bold text-foreground mb-4">{t("Brands Management")}</h2>
             <div className="mb-4">
-              <label className="text-xs text-white/50 mb-1 block">{t("Select Device")}</label>
+              <label className="text-xs font-semibold text-muted-foreground mb-1 block">{t("Select Device")}</label>
               <AppSelect
                 value={selectedDeviceId}
                 onValueChange={setSelectedDeviceId}
@@ -312,56 +369,92 @@ export default function AdminInventoryPage() {
               />
             </div>
             <div className="flex gap-2 mb-6">
-              <input value={newBrandName} onChange={(e) => setNewBrandName(e.target.value)} placeholder={t("Brand Name")} className="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-cyan-500" />
-              <button disabled={processing} onClick={addBrand} className="px-4 py-2 bg-cyan-500 text-black rounded-lg font-semibold flex items-center gap-2">
+              <input
+                value={newBrandName}
+                onChange={(e) => setNewBrandName(e.target.value)}
+                placeholder={t("Brand Name")}
+                className="flex-1 px-4 py-2 bg-background border border-input rounded-xl focus:outline-none focus:border-cyan-500 text-foreground placeholder:text-muted-foreground"
+              />
+              <button
+                disabled={processing}
+                onClick={addBrand}
+                className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl font-bold flex items-center gap-2 transition-colors disabled:opacity-50"
+              >
                 <Plus className="w-4 h-4" /> {t("Add")}
               </button>
             </div>
-            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/10">
+            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin">
               {filteredBrands.map(b => (
-                <div key={b.id} className={`flex items-center justify-between p-3 rounded-lg border transition-colors group cursor-pointer ${selectedBrandId === b.id ? "bg-cyan-500/10 border-cyan-500/50" : "bg-white/5 border-white/10 hover:border-white/20"}`} onClick={() => setSelectedBrandId(b.id)}>
-                  <span className="font-medium">{b.name}</span>
-                  <button onClick={(e) => { e.stopPropagation(); deleteBrand(b.id) }} className="p-1.5 rounded-md hover:bg-red-500/20 text-white/30 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"><Trash2 className="w-4 h-4" /></button>
+                <div
+                  key={b.id}
+                  className={`flex items-center justify-between p-3 rounded-xl border transition-colors group cursor-pointer ${
+                    selectedBrandId === b.id
+                      ? "bg-cyan-500/10 border-cyan-500 text-cyan-700 dark:text-cyan-400 font-bold"
+                      : "bg-slate-50 dark:bg-white/5 border-border hover:border-cyan-500/40 text-foreground"
+                  }`}
+                  onClick={() => setSelectedBrandId(b.id)}
+                >
+                  <span className="font-semibold">{b.name}</span>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); deleteBrand(b.id) }}
+                    className="p-1.5 rounded-md hover:bg-rose-500/10 text-muted-foreground hover:text-rose-600 transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               ))}
-              {filteredBrands.length === 0 && <p className="text-center text-white/20 py-8 italic text-sm">{t("No brands for this device")}</p>}
+              {filteredBrands.length === 0 && <p className="text-center text-muted-foreground py-8 italic text-sm">{t("No brands for this device")}</p>}
             </div>
-          </GlassCard>
+          </div>
 
-          <GlassCard>
-            <h2 className="text-xl font-semibold mb-4">{t("Models Management")}</h2>
+          <div className="bg-card border border-border rounded-2xl p-6 shadow-xs">
+            <h2 className="text-xl font-bold text-foreground mb-4">{t("Models Management")}</h2>
             <div className="mb-4">
-              <label className="text-xs text-white/50 mb-1 block">{t("Select Brand")}</label>
-              <div className="p-3 rounded-lg bg-white/5 border border-white/10 font-medium text-cyan-400">
+              <label className="text-xs font-semibold text-muted-foreground mb-1 block">{t("Select Brand")}</label>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-border font-bold text-cyan-600 dark:text-cyan-400">
                 {brands.find(b => b.id === selectedBrandId)?.name || t("Select a brand on the left")}
               </div>
             </div>
             <div className="flex gap-2 mb-6">
-              <input value={newModelName} onChange={(e) => setNewModelName(e.target.value)} placeholder={t("Model Name")} className="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-cyan-500" />
-              <button disabled={processing || !selectedBrandId} onClick={addModel} className="px-4 py-2 bg-cyan-500 text-black rounded-lg font-semibold flex items-center gap-2 disabled:opacity-50">
+              <input
+                value={newModelName}
+                onChange={(e) => setNewModelName(e.target.value)}
+                placeholder={t("Model Name")}
+                className="flex-1 px-4 py-2 bg-background border border-input rounded-xl focus:outline-none focus:border-cyan-500 text-foreground placeholder:text-muted-foreground"
+              />
+              <button
+                disabled={processing || !selectedBrandId}
+                onClick={addModel}
+                className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl font-bold flex items-center gap-2 disabled:opacity-50 transition-colors"
+              >
                 <Plus className="w-4 h-4" /> {t("Add")}
               </button>
             </div>
-            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/10">
+            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin">
               {filteredModels.map(m => (
-                <div key={m.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-colors group">
-                  <span className="font-medium">{m.name}</span>
-                  <button onClick={() => deleteModel(m.id)} className="p-1.5 rounded-md hover:bg-red-500/20 text-white/30 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"><Trash2 className="w-4 h-4" /></button>
+                <div key={m.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-border hover:border-cyan-500/40 transition-colors group">
+                  <span className="font-semibold text-foreground">{m.name}</span>
+                  <button
+                    onClick={() => deleteModel(m.id)}
+                    className="p-1.5 rounded-md hover:bg-rose-500/10 text-muted-foreground hover:text-rose-600 transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               ))}
-              {filteredModels.length === 0 && <p className="text-center text-white/20 py-8 italic text-sm">{selectedBrandId ? t("No models for this brand") : t("Select a brand first")}</p>}
+              {filteredModels.length === 0 && <p className="text-center text-muted-foreground py-8 italic text-sm">{selectedBrandId ? t("No models for this brand") : t("Select a brand first")}</p>}
             </div>
-          </GlassCard>
+          </div>
         </div>
       )}
 
       {tab === "issues" && (
         <div className="grid md:grid-cols-1 gap-6">
-          <GlassCard>
-            <h2 className="text-xl font-semibold mb-4">{t("Issues Management")}</h2>
-            <div className="mb-6 grid md:grid-cols-3 gap-4 bg-white/5 p-4 rounded-xl border border-white/10 items-end">
+          <div className="bg-card border border-border rounded-2xl p-6 shadow-xs">
+            <h2 className="text-xl font-bold text-foreground mb-4">{t("Issues Management")}</h2>
+            <div className="mb-6 grid md:grid-cols-3 gap-4 bg-slate-50 dark:bg-white/5 p-4 rounded-xl border border-border items-end">
               <div>
-                <label className="text-xs text-white/50 mb-1 block">{t("Device Type")}</label>
+                <label className="text-xs font-semibold text-muted-foreground mb-1 block">{t("Device Type")}</label>
                 <AppSelect
                   value={issueDeviceId}
                   onValueChange={setIssueDeviceId}
@@ -370,15 +463,29 @@ export default function AdminInventoryPage() {
                 />
               </div>
               <div>
-                <label className="text-xs text-white/50 mb-1 block">{t("Issue Description")}</label>
-                <input value={newIssueName} onChange={(e) => setNewIssueName(e.target.value)} placeholder={t("e.g. Screen Replacement")} className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-cyan-500" />
+                <label className="text-xs font-semibold text-muted-foreground mb-1 block">{t("Issue Description")}</label>
+                <input
+                  value={newIssueName}
+                  onChange={(e) => setNewIssueName(e.target.value)}
+                  placeholder={t("e.g. Screen Replacement")}
+                  className="w-full px-4 py-2 bg-background border border-input rounded-xl focus:outline-none focus:border-cyan-500 text-foreground placeholder:text-muted-foreground"
+                />
               </div>
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <label className="text-xs text-white/50 mb-1 block">{t("Duration (Mins)")}</label>
-                  <input type="number" value={newIssueDuration} onChange={(e) => setNewIssueDuration(e.target.value)} className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-cyan-500" />
+                  <label className="text-xs font-semibold text-muted-foreground mb-1 block">{t("Duration (Mins)")}</label>
+                  <input
+                    type="number"
+                    value={newIssueDuration}
+                    onChange={(e) => setNewIssueDuration(e.target.value)}
+                    className="w-full px-4 py-2 bg-background border border-input rounded-xl focus:outline-none focus:border-cyan-500 text-foreground"
+                  />
                 </div>
-                <button disabled={processing || !issueDeviceId} onClick={addIssue} className="px-6 py-2 bg-cyan-500 text-black rounded-lg font-semibold flex items-center gap-2 h-[42px] mt-auto">
+                <button
+                  disabled={processing || !issueDeviceId}
+                  onClick={addIssue}
+                  className="px-6 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl font-bold flex items-center gap-2 h-[42px] mt-auto transition-colors disabled:opacity-50"
+                >
                   <Plus className="w-4 h-4" /> {t("Add")}
                 </button>
               </div>
@@ -386,26 +493,31 @@ export default function AdminInventoryPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredIssues.map((i) => (
-                <div key={i.id} className="bg-white/5 rounded-xl p-4 border border-white/10 hover:border-white/20 transition-colors group">
+                <div key={i.id} className="bg-slate-50 dark:bg-white/5 rounded-xl p-4 border border-border hover:border-cyan-500/40 transition-colors group">
                   <div className="flex items-start justify-between mb-3">
-                    <p className="font-medium flex-1">{i.name}</p>
-                    <button onClick={() => deleteIssue(i.id)} className="p-1.5 rounded-md hover:bg-red-500/20 text-white/30 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"><Trash2 className="w-4 h-4" /></button>
+                    <p className="font-bold text-foreground flex-1">{i.name}</p>
+                    <button
+                      onClick={() => deleteIssue(i.id)}
+                      className="p-1.5 rounded-md hover:bg-rose-500/10 text-muted-foreground hover:text-rose-600 transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-white/30 uppercase font-bold">{t("Standard Duration")}:</span>
+                    <span className="text-[10px] text-muted-foreground uppercase font-bold">{t("Standard Duration")}:</span>
                     <input
                       type="number"
                       defaultValue={i.durationMinutes}
                       onBlur={(e) => updateIssueDurationHandler(i.id, Number(e.target.value))}
-                      className="w-16 bg-transparent border-b border-white/10 text-cyan-400 text-sm focus:outline-none focus:border-cyan-500"
+                      className="w-16 bg-background border border-input rounded-md px-2 py-0.5 text-cyan-600 dark:text-cyan-400 text-sm font-bold focus:outline-none focus:border-cyan-500"
                     />
-                    <span className="text-xs text-white/40">{t("mins")}</span>
+                    <span className="text-xs text-muted-foreground font-medium">{t("mins")}</span>
                   </div>
                 </div>
               ))}
-              {filteredIssues.length === 0 && <p className="col-span-full text-center text-white/20 py-12 italic">{t("No issues defined for this device type")}</p>}
+              {filteredIssues.length === 0 && <p className="col-span-full text-center text-muted-foreground py-12 italic text-sm">{t("No issues defined for this device type")}</p>}
             </div>
-          </GlassCard>
+          </div>
         </div>
       )}
 

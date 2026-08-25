@@ -28,12 +28,12 @@ export default async function Home() {
         <h2 className="text-2xl md:text-3xl font-bold mb-6">Trusted by</h2>
         <SlidingLogoMarquee
           items={[
-            { id: "apple", content: <SiApple className="w-12 h-12 text-white/70 hover:text-white transition-colors" />, href: "https://www.apple.com" },
-            { id: "samsung", content: <SiSamsung className="w-16 h-16 text-white/70 hover:text-[#1428A0] transition-colors" />, href: "https://www.samsung.com" },
-            { id: "dell", content: <SiDell className="w-12 h-12 text-white/70 hover:text-[#0076CE] transition-colors" />, href: "https://www.dell.com" },
-            { id: "hp", content: <SiHp className="w-12 h-12 text-white/70 hover:text-[#0096D6] transition-colors" />, href: "https://www.hp.com" },
-            { id: "lenovo", content: <SiLenovo className="w-16 h-16 text-white/70 hover:text-[#E2231A] transition-colors" />, href: "https://www.lenovo.com" },
-            { id: "sony", content: <SiSony className="w-16 h-16 text-white/70 hover:text-white transition-colors" />, href: "https://www.sony.com" },
+            { id: "apple", content: <SiApple className="w-12 h-12 text-slate-800 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors" />, href: "https://www.apple.com" },
+            { id: "samsung", content: <SiSamsung className="w-16 h-16 text-slate-800 dark:text-white/70 hover:text-[#1428A0] transition-colors" />, href: "https://www.samsung.com" },
+            { id: "dell", content: <SiDell className="w-12 h-12 text-slate-800 dark:text-white/70 hover:text-[#0076CE] transition-colors" />, href: "https://www.dell.com" },
+            { id: "hp", content: <SiHp className="w-12 h-12 text-slate-800 dark:text-white/70 hover:text-[#0096D6] transition-colors" />, href: "https://www.hp.com" },
+            { id: "lenovo", content: <SiLenovo className="w-16 h-16 text-slate-800 dark:text-white/70 hover:text-[#E2231A] transition-colors" />, href: "https://www.lenovo.com" },
+            { id: "sony", content: <SiSony className="w-16 h-16 text-slate-800 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors" />, href: "https://www.sony.com" },
           ]}
           speed={40}
           pauseOnHover

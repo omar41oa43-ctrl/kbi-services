@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAdminAuth, getAdminDb, verifyAdmin } from "@/lib/firebase-admin"
-import admin from "firebase-admin"
+import type { UserRecord } from "firebase-admin/auth"
+import { Timestamp } from "firebase-admin/firestore"
 
 export const dynamic = "force-dynamic"
 
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
     const auth = getAdminAuth()
     const db = getAdminDb()
 
-    let userRecord: admin.auth.UserRecord
+    let userRecord: UserRecord
     try {
       userRecord = await auth.createUser({
         email,
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
 
     await auth.setCustomUserClaims(userRecord.uid, { role: "super_admin" })
 
-    const now = admin.firestore.Timestamp.now()
+    const now = Timestamp.now()
     await db.collection("users").doc(userRecord.uid).set(
       {
         uid: userRecord.uid,

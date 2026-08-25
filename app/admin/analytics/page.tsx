@@ -1,18 +1,25 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
-import { GlassCard } from "@/components/ui/glass-card"
-import {
-    TrendingUp,
-    DollarSign,
-    Users,
-    ShoppingCart,
-    BarChart3,
-    PieChart as PieChartIcon,
-    Calendar,
-    Loader2
-} from "lucide-react"
+import { useEffect, useState } from "react"
 import nextDynamic from "next/dynamic"
+import { collection, onSnapshot, query } from "firebase/firestore"
+import {
+  BarChart3,
+  CheckCircle2,
+  DollarSign,
+  Laptop,
+  PieChart as PieChartIcon,
+  ShoppingCart,
+  TrendingUp,
+  Wrench,
+} from "lucide-react"
+
+import { getAdminOrdersAction } from "@/app/actions/admin-orders"
+import { useT } from "@/components/language-provider"
+import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
+import { auth } from "@/firebase/authClient"
+import { db } from "@/firebase/firebaseConfig"
 
 const ResponsiveContainer = nextDynamic(() => import("recharts").then((m) => m.ResponsiveContainer as any), { ssr: false }) as any
 const BarChart = nextDynamic(() => import("recharts").then((m) => m.BarChart as any), { ssr: false }) as any
@@ -25,245 +32,341 @@ const PieChart = nextDynamic(() => import("recharts").then((m) => m.PieChart as 
 const Pie = nextDynamic(() => import("recharts").then((m) => m.Pie as any), { ssr: false }) as any
 const Cell = nextDynamic(() => import("recharts").then((m) => m.Cell as any), { ssr: false }) as any
 
-import { useT } from "@/components/language-provider"
-import { Button } from "@/components/ui/button"
-
-import { getAdminOrdersAction } from "@/app/actions/admin-orders"
-
-import { auth } from "@/firebase/authClient"
+interface OrderAnalyticsItem {
+  id: string
+  status: string
+  price: number
+  deviceType: string
+  createdAt: string | null
+}
 
 export default function AdminAnalyticsPage() {
-    const t = useT()
-    const [mounted, setMounted] = useState(false)
-    const [orders, setOrders] = useState<any[]>([])
-    const [loading, setLoading] = useState(true)
-    const isMounted = useRef(true)
+  const t = useT()
+  const [mounted, setMounted] = useState(false)
+  const [orders, setOrders] = useState<OrderAnalyticsItem[]>([])
+  const [, setLoading] = useState(true)
+  const [timeRange, setTimeRange] = useState<"7d" | "30d" | "all">("7d")
 
-    useEffect(() => {
-        setMounted(true)
-        return () => { isMounted.current = false }
-    }, [])
+  useEffect(() => {
+    setMounted(true)
 
-    const fetchData = async () => {
-        setLoading(true)
-        try {
-            const user = auth.currentUser
-            const idToken = user ? await user.getIdToken() : undefined
-            const ordersData = await getAdminOrdersAction(idToken)
-            if (isMounted.current) {
-                setOrders(ordersData)
-            }
-        } catch (e: any) {
-            if (!isMounted.current) return
-            if (e?.name === 'AbortError' || e?.message?.includes('aborted')) return
-        } finally {
-            if (isMounted.current) setLoading(false)
-        }
-    }
-
-    useEffect(() => {
-        fetchData()
-    }, [])
-
-    // Calculate metrics
-    const totalRevenue = orders.reduce((sum, o) => sum + (Number(o.price) || 0), 0)
-    const completedOrders = orders.filter(o => ["completed", "delivered"].includes(o.status?.toLowerCase()))
-    const completionRate = orders.length > 0 ? Math.round((completedOrders.length / orders.length) * 100) : 0
-    const avgOrderValue = orders.length > 0 ? Math.round(totalRevenue / orders.length) : 0
-
-    // Weekly data
-    const last7Days = Array.from({ length: 7 }, (_, i) => {
-        const date = new Date()
-        date.setDate(date.getDate() - (6 - i))
-        return date.toISOString().split('T')[0]
-    })
-
-    const weeklyData = last7Days.map(date => {
-        const dayOrders = orders.filter(o => {
-            const orderDate = o.createdAt ? String(o.createdAt).split('T')[0] : ""
-            return orderDate === date
-        })
+    // Listen to real-time client Firestore orders
+    const ordersQuery = query(collection(db, "orders"))
+    const unsubOrders = onSnapshot(ordersQuery, (snapshot) => {
+      const liveList: OrderAnalyticsItem[] = snapshot.docs.map((doc) => {
+        const raw = doc.data()
+        const createdAtDate = raw.createdAt?.toDate ? raw.createdAt.toDate().toISOString() : String(raw.createdAt || "")
         return {
-            name: new Date(date).toLocaleDateString('en', { weekday: 'short' }),
-            orders: dayOrders.length,
-            revenue: dayOrders.reduce((sum, o) => sum + (Number(o.price) || 0), 0)
+          id: doc.id,
+          status: String(raw.status || "pending").toLowerCase(),
+          price: Number(raw.price || raw.totalAmount || raw.amount || 0),
+          deviceType: String(raw.deviceType || raw.device || raw.service || "Device"),
+          createdAt: createdAtDate || null,
         }
+      })
+
+      if (liveList.length > 0) {
+        setOrders(liveList)
+        setLoading(false)
+      }
+    }, (err) => {
+      console.warn("Analytics Firestore listener notice:", err)
     })
 
-    // Status distribution
-    const statusCounts = {
-        pending: orders.filter(o => ["pending", "order created"].includes(o.status?.toLowerCase())).length,
-        inProgress: orders.filter(o => ["in_progress", "in progress"].includes(o.status?.toLowerCase())).length,
-        completed: completedOrders.length,
-        cancelled: orders.filter(o => o.status === "cancelled").length
+    // Fallback: Fetch via admin Server Action
+    const fetchAdminOrders = async () => {
+      try {
+        const user = auth.currentUser
+        const idToken = user ? await user.getIdToken() : undefined
+        const adminData = await getAdminOrdersAction(idToken)
+        if (Array.isArray(adminData) && adminData.length > 0) {
+          const mappedAdminList: OrderAnalyticsItem[] = adminData.map((raw: any) => ({
+            id: raw.id,
+            status: String(raw.status || "pending").toLowerCase(),
+            price: Number(raw.price || 0),
+            deviceType: String(raw.deviceType || raw.brand || "Device"),
+            createdAt: raw.createdAt || null,
+          }))
+          setOrders((prev) => (prev.length === 0 ? mappedAdminList : prev))
+        }
+      } catch (err) {
+        console.warn("Admin orders action notice:", err)
+      } finally {
+        setLoading(false)
+      }
     }
 
-    const statusData = [
-        { name: t("Pending"), value: statusCounts.pending, color: "#EAB308" },
-        { name: t("In Progress"), value: statusCounts.inProgress, color: "#3B82F6" },
-        { name: t("Completed"), value: statusCounts.completed, color: "#22C55E" },
-        { name: t("Cancelled"), value: statusCounts.cancelled, color: "#EF4444" }
-    ].filter(s => s.value > 0)
+    fetchAdminOrders()
 
-    // Top devices
-    const deviceCounts: Record<string, number> = {}
-    orders.forEach(o => {
-        const device = o.deviceType || o.device || "Unknown"
-        deviceCounts[device] = (deviceCounts[device] || 0) + 1
+    return () => {
+      unsubOrders()
+    }
+  }, [])
+
+  // Filter orders by selected time range
+  const filteredOrders = orders.filter((o) => {
+    if (timeRange === "all" || !o.createdAt) return true
+    const date = new Date(o.createdAt)
+    const now = new Date()
+    const diffDays = (now.getTime() - date.getTime()) / (1000 * 3600 * 24)
+    return timeRange === "7d" ? diffDays <= 7 : diffDays <= 30
+  })
+
+  // Metrics Calculations
+  const totalRevenue = filteredOrders.reduce((sum, o) => sum + (o.price || 0), 0)
+  const completedOrders = filteredOrders.filter((o) => ["completed", "delivered", "done"].includes(o.status))
+  const completionRate = filteredOrders.length > 0 ? Math.round((completedOrders.length / filteredOrders.length) * 100) : 0
+  const avgOrderValue = filteredOrders.length > 0 ? Math.round(totalRevenue / filteredOrders.length) : 0
+
+  // Weekly Trend Chart Data
+  const daysCount = timeRange === "7d" ? 7 : 14
+  const trendDays = Array.from({ length: daysCount }, (_, i) => {
+    const d = new Date()
+    d.setDate(d.getDate() - (daysCount - 1 - i))
+    return d.toISOString().split("T")[0]
+  })
+
+  const weeklyData = trendDays.map((dateStr) => {
+    const dayOrders = filteredOrders.filter((o) => {
+      if (!o.createdAt) return false
+      return o.createdAt.split("T")[0] === dateStr
     })
-    const topDevices = Object.entries(deviceCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
-        .map(([name, value]) => ({ name, value }))
+    return {
+      name: new Date(dateStr).toLocaleDateString("en", { weekday: "short", day: "numeric" }),
+      orders: dayOrders.length,
+      revenue: dayOrders.reduce((sum, o) => sum + (o.price || 0), 0),
+    }
+  })
 
-    return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold text-white">{t("Analytics")}</h1>
-                <div className="flex items-center gap-4 text-sm text-white/50">
-                    <span className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4" />
-                        <span>{t("Last 7 Days")}</span>
-                    </span>
-                    <Button variant="ghost" size="icon" onClick={fetchData} title="Refresh">
-                        <Loader2 className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-                    </Button>
-                </div>
-            </div>
+  // Status Distribution
+  const statusCounts = {
+    pending: filteredOrders.filter((o) => ["pending", "order created", "new"].includes(o.status)).length,
+    inProgress: filteredOrders.filter((o) => ["in_progress", "in progress", "assigned"].includes(o.status)).length,
+    completed: completedOrders.length,
+    cancelled: filteredOrders.filter((o) => ["cancelled", "rejected"].includes(o.status)).length,
+  }
 
-            {/* Key Metrics */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <GlassCard className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 ring-1 ring-white/10 border border-white/10">
-                    <div className="flex flex-row items-center justify-between">
-                        <div className="text-sm font-medium text-white/70">{t("Total Revenue")}</div>
-                        <DollarSign className="h-4 w-4 text-green-400" />
-                    </div>
-                    <div className="mt-3">
-                        <div className="text-2xl font-bold text-white">AED {totalRevenue.toLocaleString()}</div>
-                        <p className="text-xs text-white/50">{t("From")} {orders.length} {t("orders")}</p>
-                    </div>
-                </GlassCard>
+  const statusData = [
+    { name: t("Pending"), value: statusCounts.pending, color: "#ffb703" },
+    { name: t("In Progress"), value: statusCounts.inProgress, color: "#38bdf8" },
+    { name: t("Completed"), value: statusCounts.completed, color: "#00f5c4" },
+    { name: t("Cancelled"), value: statusCounts.cancelled, color: "#ff4d6d" },
+  ].filter((s) => s.value > 0)
 
-                <GlassCard className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 ring-1 ring-white/10 border border-white/10">
-                    <div className="flex flex-row items-center justify-between">
-                        <div className="text-sm font-medium text-white/70">{t("Total Orders")}</div>
-                        <ShoppingCart className="h-4 w-4 text-blue-400" />
-                    </div>
-                    <div className="mt-3">
-                        <div className="text-2xl font-bold text-white">{orders.length}</div>
-                        <p className="text-xs text-white/50">{completedOrders.length} {t("completed")}</p>
-                    </div>
-                </GlassCard>
+  // Top Serviced Devices Breakdown
+  const deviceCounts: Record<string, number> = {}
+  filteredOrders.forEach((o) => {
+    const name = o.deviceType?.trim() || "Unspecified"
+    deviceCounts[name] = (deviceCounts[name] || 0) + 1
+  })
 
-                <GlassCard className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 ring-1 ring-white/10 border border-white/10">
-                    <div className="flex flex-row items-center justify-between">
-                        <div className="text-sm font-medium text-white/70">{t("Completion Rate")}</div>
-                        <TrendingUp className="h-4 w-4 text-purple-400" />
-                    </div>
-                    <div className="mt-3">
-                        <div className="text-2xl font-bold text-white">{completionRate}%</div>
-                        <p className="text-xs text-white/50">{t("Of all orders")}</p>
-                    </div>
-                </GlassCard>
+  const topDevices = Object.entries(deviceCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([name, value]) => ({ name, value }))
 
-                <GlassCard className="bg-gradient-to-br from-orange-500/10 to-amber-500/10 ring-1 ring-white/10 border border-white/10">
-                    <div className="flex flex-row items-center justify-between">
-                        <div className="text-sm font-medium text-white/70">{t("Avg Order Value")}</div>
-                        <BarChart3 className="h-4 w-4 text-orange-400" />
-                    </div>
-                    <div className="mt-3">
-                        <div className="text-2xl font-bold text-white">AED {avgOrderValue}</div>
-                        <p className="text-xs text-white/50">{t("Per order")}</p>
-                    </div>
-                </GlassCard>
-            </div>
-
-            {/* Charts Row */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {/* Weekly Orders Chart */}
-                <GlassCard className="col-span-2 ring-1 ring-white/10 border border-white/10">
-                    <div className="text-white flex items-center gap-2 mb-4">
-                        <BarChart3 className="w-5 h-5 text-cyan-400" />
-                        <span className="font-semibold">{t("Weekly Orders & Revenue")}</span>
-                    </div>
-                    {mounted && (
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={weeklyData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                                <XAxis dataKey="name" stroke="#888" />
-                                <YAxis stroke="#888" />
-                                <Tooltip
-                                    contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '8px' }}
-                                    labelStyle={{ color: '#fff' }}
-                                />
-                                <Bar dataKey="orders" fill="#06b6d4" name={t("Orders")} radius={[4, 4, 0, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    )}
-                </GlassCard>
-
-                {/* Status Distribution */}
-                <GlassCard className="ring-1 ring-white/10 border border-white/10">
-                    <div className="text-white flex items-center gap-2 mb-4">
-                        <PieChartIcon className="w-5 h-5 text-cyan-400" />
-                        <span className="font-semibold">{t("Order Status")}</span>
-                    </div>
-                    {mounted && (
-                        <ResponsiveContainer width="100%" height={200}>
-                            <PieChart>
-                                <Pie
-                                    data={statusData}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={40}
-                                    outerRadius={70}
-                                    paddingAngle={3}
-                                    dataKey="value"
-                                >
-                                    {statusData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color} />
-                                    ))}
-                                </Pie>
-                                <Tooltip
-                                    contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '8px' }}
-                                />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    )}
-                    <div className="flex flex-wrap justify-center gap-4 mt-4">
-                        {statusData.map((s, i) => (
-                            <div key={i} className="flex items-center gap-2 text-xs text-white/70">
-                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: s.color }} />
-                                <span>{s.name}: {s.value}</span>
-                            </div>
-                        ))}
-                    </div>
-                </GlassCard>
-            </div>
-
-            {/* Bottom Row */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {/* Top Devices */}
-                <GlassCard className="lg:col-span-2 ring-1 ring-white/10 border border-white/10">
-                    <div className="text-white font-semibold mb-4">{t("Top Devices")}</div>
-                    <div className="space-y-4">
-                        {topDevices.map((device, i) => (
-                            <div key={i} className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 text-sm font-bold">
-                                        {i + 1}
-                                    </div>
-                                    <span className="text-white">{device.name}</span>
-                                </div>
-                                <span className="text-white/50">{device.value} {t("orders")}</span>
-                            </div>
-                        ))}
-                        {topDevices.length === 0 && (
-                            <p className="text-white/40 text-center">{t("No data available")}</p>
-                        )}
-                    </div>
-                </GlassCard>
-            </div>
+  return (
+    <div className="mx-auto w-full max-w-7xl space-y-6">
+      {/* Header Bar */}
+      <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border/60 pb-5">
+        <div className="flex items-start gap-3.5">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xs">
+            <BarChart3 className="size-5" />
+          </span>
+          <div>
+            <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">{t("Analytics & Revenue")}</h1>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Real-time financial performance, work order metrics, and service demand insights.
+            </p>
+          </div>
         </div>
-    )
+
+        {/* Time Filter Controls */}
+        <div className="flex items-center gap-1.5 bg-card border border-border p-1 rounded-xl shadow-xs">
+          {(["7d", "30d", "all"] as const).map((range) => (
+            <button
+              key={range}
+              onClick={() => setTimeRange(range)}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                timeRange === range
+                  ? "bg-primary text-primary-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              {range === "7d" ? "Last 7 Days" : range === "30d" ? "Last 30 Days" : "All Time"}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Key Metric Cards */}
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Card 1: Revenue */}
+        <Card className="bg-card border-border/80 p-5 shadow-xs space-y-3 rounded-2xl relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Total Revenue</span>
+            <span className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20">
+              <DollarSign className="size-4" />
+            </span>
+          </div>
+          <div>
+            <p className="text-2xl font-black text-foreground tabular-nums tracking-tight font-mono">AED {totalRevenue.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground mt-1">From {filteredOrders.length} recorded orders</p>
+          </div>
+        </Card>
+
+        {/* Card 2: Orders */}
+        <Card className="bg-card border-border/80 p-5 shadow-xs space-y-3 rounded-2xl relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Total Work Orders</span>
+            <span className="flex size-9 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
+              <ShoppingCart className="size-4" />
+            </span>
+          </div>
+          <div>
+            <p className="text-2xl font-black text-foreground tabular-nums tracking-tight font-mono">{filteredOrders.length}</p>
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-1 flex items-center gap-1">
+              <CheckCircle2 className="size-3" /> {completedOrders.length} successfully completed
+            </p>
+          </div>
+        </Card>
+
+        {/* Card 3: Completion Rate */}
+        <Card className="bg-card border-border/80 p-5 shadow-xs space-y-3 rounded-2xl relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Completion Rate</span>
+            <span className="flex size-9 items-center justify-center rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+              <TrendingUp className="size-4" />
+            </span>
+          </div>
+          <div>
+            <p className="text-2xl font-black text-primary tabular-nums tracking-tight font-mono">{completionRate}%</p>
+            <p className="text-xs text-muted-foreground mt-1">Fulfillment efficiency score</p>
+          </div>
+        </Card>
+
+        {/* Card 4: Average Order Value */}
+        <Card className="bg-card border-border/80 p-5 shadow-xs space-y-3 rounded-2xl relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Avg Order Value</span>
+            <span className="flex size-9 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+              <Wrench className="size-4" />
+            </span>
+          </div>
+          <div>
+            <p className="text-2xl font-black text-foreground tabular-nums tracking-tight font-mono">AED {avgOrderValue}</p>
+            <p className="text-xs text-muted-foreground mt-1">Average ticket price</p>
+          </div>
+        </Card>
+      </section>
+
+      {/* Main Charts Area */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Weekly Trend Bar Chart (2 Columns) */}
+        <Card className="lg:col-span-2 bg-card border-border/80 shadow-xs p-6 rounded-2xl space-y-4">
+          <div className="flex items-center justify-between border-b border-border/60 pb-4">
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <BarChart3 className="size-4" />
+              </span>
+              <h3 className="text-base font-bold text-foreground">Daily Orders & Revenue Trend</h3>
+            </div>
+            <Badge variant="outline" className="bg-primary/10 border-primary/20 text-primary font-mono text-xs">
+              {timeRange === "7d" ? "7 Days" : "30 Days"} Stream
+            </Badge>
+          </div>
+
+          {mounted && (
+            <div className="h-[280px] w-full pt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={weeklyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
+                  <XAxis dataKey="name" stroke="#94A3B8" fontSize={11} />
+                  <YAxis stroke="#94A3B8" fontSize={11} allowDecimals={false} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "hsl(var(--popover))", borderColor: "hsl(var(--border))", borderRadius: "12px", color: "hsl(var(--popover-foreground))", fontSize: "12px" }}
+                    labelStyle={{ color: "#32CBE9", fontWeight: "bold" }}
+                  />
+                  <Bar dataKey="orders" fill="#32CBE9" name="Orders" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </Card>
+
+        {/* Order Status Breakdown Pie Chart (1 Column) */}
+        <Card className="bg-card border-border/80 shadow-xs p-6 rounded-2xl space-y-4 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-2.5 border-b border-border/60 pb-4">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <PieChartIcon className="size-4" />
+              </span>
+              <h3 className="text-base font-bold text-foreground">Job Status Distribution</h3>
+            </div>
+
+            {mounted && statusData.length > 0 ? (
+              <div className="h-[200px] w-full pt-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={statusData} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={4} dataKey="value">
+                      {statusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip contentStyle={{ backgroundColor: "hsl(var(--popover))", borderColor: "hsl(var(--border))", borderRadius: "12px", color: "hsl(var(--popover-foreground))", fontSize: "12px" }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="h-[180px] flex items-center justify-center text-xs text-muted-foreground">
+                No status data available.
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/60">
+            {statusData.map((s, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs font-semibold text-muted-foreground bg-muted/40 p-2 rounded-lg border border-border/60">
+                <span className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+                <span className="truncate">{s.name}: <strong className="text-foreground">{s.value}</strong></span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      {/* Top Serviced Devices */}
+      <Card className="bg-card border-border/80 shadow-xs p-6 rounded-2xl space-y-4">
+        <div className="flex items-center justify-between border-b border-border/60 pb-4">
+          <div className="flex items-center gap-2.5">
+            <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Laptop className="size-4" />
+            </span>
+            <h3 className="text-base font-bold text-foreground">Top Serviced Device Categories</h3>
+          </div>
+          <span className="text-xs text-muted-foreground">Ranked by repair demand</span>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {topDevices.length === 0 ? (
+            <p className="text-xs text-muted-foreground col-span-full text-center py-6">No device service records available.</p>
+          ) : (
+            topDevices.map((device, i) => (
+              <div key={i} className="bg-muted/30 border border-border/70 p-4 rounded-xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="flex size-6 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold font-mono">
+                    #{i + 1}
+                  </span>
+                  <Badge variant="outline" className="bg-card border-border text-[10px] text-primary font-mono">
+                    {device.value} Job{device.value === 1 ? "" : "s"}
+                  </Badge>
+                </div>
+                <p className="font-bold text-foreground text-xs truncate pt-1">{device.name}</p>
+              </div>
+            ))
+          )}
+        </div>
+      </Card>
+    </div>
+  )
 }

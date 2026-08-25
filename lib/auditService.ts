@@ -3,6 +3,7 @@
  */
 
 import { logAuditAction, getAuditLogsAction } from "@/app/actions/admin-audit"
+import { auth } from "@/firebase/authClient"
 
 export interface AuditLog {
     id?: string
@@ -32,7 +33,9 @@ export async function logAction(
     }
 ): Promise<void> {
     try {
-        await logAuditAction(action, options?.targetType || category, userEmail || userId, {
+        const token = await auth.currentUser?.getIdToken()
+        if (!token) return
+        await logAuditAction(token, action, options?.targetType || category, {
             ...options?.details,
             category,
             userId,
@@ -54,7 +57,9 @@ export async function getAuditLogs(filters?: {
     limitCount?: number
 }): Promise<AuditLog[]> {
     try {
-        const logs = await getAuditLogsAction(filters?.limitCount || 100)
+        const token = await auth.currentUser?.getIdToken()
+        if (!token) return []
+        const logs = await getAuditLogsAction(token, filters?.limitCount || 100)
         return (logs || []).map((l: any) => ({
             ...l,
             timestamp: new Date(l.timestamp)

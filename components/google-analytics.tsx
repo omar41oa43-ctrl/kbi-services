@@ -81,8 +81,9 @@ export function GoogleAnalytics({ GA_MEASUREMENT_ID }: { GA_MEASUREMENT_ID?: str
 
 // Add gtag to window interface
 declare global {
+    // eslint-disable-next-line no-unused-vars
     interface Window {
-        gtag: (...args: any[]) => void
+        gtag: (..._args: any[]) => void
         dataLayer: any[]
     }
 }

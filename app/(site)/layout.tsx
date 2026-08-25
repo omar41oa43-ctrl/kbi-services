@@ -1,5 +1,4 @@
 import type React from "react"
-import { cn } from "@/lib/utils"
 import { ContactProvider } from "@/components/contact-provider"
 import { getSiteContact } from "@/lib/site-contact"
 import { Navbar } from "@/components/navbar"
@@ -19,16 +18,19 @@ export default async function SiteLayout({
 
   return (
     <ContactProvider contact={contact}>
-      <JsonLd contact={contact} />
-      <Navbar contact={contact} />
-      <div className="flex-1 min-h-[calc(100vh-theme(spacing.16))]">
-        {children}
+      <div className="site-shell">
+        <a className="skip-link" href="#main-content">Skip to content</a>
+        <JsonLd contact={contact} />
+        <Navbar contact={contact} />
+        <main id="main-content" className="min-h-[calc(100vh-theme(spacing.16))]" tabIndex={-1}>
+          {children}
+        </main>
+        <Footer contact={contact} />
+        <SafeAnalytics />
+        <GoogleAnalytics />
+        <CookieConsent />
+        <UpdateNotification />
       </div>
-      <Footer contact={contact} />
-      <SafeAnalytics />
-      <GoogleAnalytics />
-      <CookieConsent />
-      <UpdateNotification />
     </ContactProvider>
   )
 }

@@ -1,299 +1,269 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { usePathname, useRouter } from "next/navigation"
-import Link from "next/link"
-import { onAuthStateChanged } from "firebase/auth"
+import * as React from "react";
+import Link from "next/link";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import {
+  Boxes,
+  Building2,
+  ChartNoAxesCombined,
+  ChevronsUpDown,
+  ClipboardList,
+  LayoutDashboard,
+  LogOut,
+  MapPin,
+  Settings,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 
+import { useT } from "@/components/language-provider";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
-} from "@/components/ui/sidebar"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { useT } from "@/components/language-provider"
-import { auth, isMockMode } from "@/firebase/authClient"
-import { signOut } from "firebase/auth"
+} from "@/components/ui/sidebar";
+import { auth } from "@/firebase/authClient";
+import { clearAdminSession } from "@/lib/admin-session-client";
 
-function IconDashboard(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
-      <rect x="3" y="3" width="7" height="7" rx="2" />
-      <rect x="14" y="3" width="7" height="7" rx="2" />
-      <rect x="3" y="14" width="7" height="7" rx="2" />
-      <rect x="14" y="14" width="7" height="7" rx="2" />
-    </svg>
-  )
-}
-function IconCart(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
-      <path d="M3 4h2l3 12h9l2-7H6" />
-      <circle cx="9" cy="20" r="1.5" />
-      <circle cx="18" cy="20" r="1.5" />
-    </svg>
-  )
-}
-function IconUsers(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
-      <circle cx="8" cy="8" r="3" />
-      <circle cx="16" cy="11" r="3" />
-      <path d="M2 20c0-3.5 3.5-6 7-6" />
-      <path d="M12 20c0-2.8 2.4-5 5.5-5" />
-    </svg>
-  )
-}
-function IconPhone(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
-      <rect x="7" y="2" width="10" height="20" rx="2" />
-      <circle cx="12" cy="18" r="1" />
-    </svg>
-  )
-}
-function IconSettings(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 12a7.4 7.4 0 0 0-.2-1.5l2.1-1.6-2-3.5-2.5.7a7.4 7.4 0 0 0-2.6-1.5L12 2l-2.2 1.1a7.4 7.4 0 0 0-2.6 1.5l-2.5-.7-2 3.5 2.1 1.6a7.4 7.4 0 0 0 0 3l-2.1 1.6 2 3.5 2.5-.7a7.4 7.4 0 0 0 2.6 1.5L12 22l2.2-1.1a7.4 7.4 0 0 0 2.6-1.5l2.5.7 2-3.5-2.1-1.6c.1-.5.2-1 .2-1.5Z" />
-    </svg>
-  )
-}
-function IconShield(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
-      <path d="M12 2l7 4v6c0 5-3.5 9-7 10-3.5-1-7-5-7-10V6l7-4Z" />
-      <path d="M9.5 12.5l1.7 1.7L14.8 10.6" />
-    </svg>
-  )
-}
-function IconLogout(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
-      <path d="M9 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3" />
-      <path d="M16 17l5-5-5-5" />
-      <path d="M21 12H9" />
-    </svg>
-  )
-}
-function IconBriefcase(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
-      <rect x="3" y="7" width="18" height="13" rx="2" />
-      <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-      <path d="M3 12h18" />
-    </svg>
-  )
-}
-function IconClipboard(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
-      <rect x="5" y="4" width="14" height="16" rx="2" />
-      <rect x="9" y="2" width="6" height="4" rx="1" />
-      <path d="M8 10h8M8 14h8" />
-    </svg>
-  )
-}
+const navigation = [
+  {
+    label: "OPERATIONS",
+    items: [
+      { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
+      { title: "Orders", url: "/admin/orders", icon: ClipboardList },
+      { title: "Live Tracking", url: "/admin/tracking", icon: MapPin },
+    ],
+  },
+  {
+    label: "WORKFORCE",
+    items: [
+      { title: "Technicians", url: "/admin/technicians", icon: Users },
+    ],
+  },
+  {
+    label: "BUSINESS",
+    items: [
+      { title: "Inventory", url: "/admin/inventory", icon: Boxes },
+      { title: "Corporate Requests", url: "/admin/inbox/corporate", icon: Building2 },
+      { title: "Analytics", url: "/admin/analytics", icon: ChartNoAxesCombined },
+    ],
+  },
+  {
+    label: "SYSTEM",
+    items: [
+      { title: "Settings", url: "/admin/settings", icon: Settings },
+      { title: "Security", url: "/admin/settings/security", icon: ShieldCheck },
+    ],
+  },
+];
 
-const navItems = [
-  {
-    title: "Dashboard",
-    url: "/admin",
-    icon: IconDashboard,
-  },
-  {
-    title: "Orders",
-    url: "/admin/orders",
-    icon: IconCart,
-  },
-  {
-    title: "Service Requests",
-    url: "/admin/service-requests",
-    icon: IconClipboard,
-  },
-  {
-    title: "Technicians",
-    url: "/admin/technicians",
-    icon: IconUsers,
-  },
-  {
-    title: "Subscriptions",
-    url: "/admin/subscriptions",
-    icon: IconBriefcase,
-  },
-  {
-    title: "Inventory",
-    url: "/admin/inventory",
-    icon: IconPhone,
-  },
-]
+const isCurrentRoute = (pathname: string, url: string) => {
+  if (url === "/admin") return pathname === url;
+  if (url === "/admin/settings") return pathname === url;
+  return pathname === url || pathname.startsWith(`${url}/`);
+};
 
-const inboxItems = [
-  {
-    title: "Corporate Requests",
-    url: "/admin/inbox/corporate",
-    icon: IconBriefcase,
-  },
-]
+export function AdminAppSidebar(props: React.ComponentProps<typeof Sidebar>) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const t = useT();
+  const [userEmail, setUserEmail] = React.useState<string | null>(null);
 
-const settingsItems = [
-  {
-    title: "Settings",
-    url: "/admin/settings",
-    icon: IconSettings,
-  },
-  {
-    title: "Security Settings",
-    url: "/admin/settings/security",
-    icon: IconShield,
-  },
-]
-
-export function AdminAppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const pathname = usePathname()
-  const router = useRouter()
-  const t = useT()
-  const [userEmail, setUserEmail] = React.useState<string | null>(null)
+  React.useEffect(() => onAuthStateChanged(auth, (user) => setUserEmail(user?.email ?? null)), []);
 
   React.useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setUserEmail(u?.email ?? null)
-    })
-    return () => unsub()
-  }, [])
+    const adminRoutes = [
+      "/admin",
+      "/admin/orders",
+      "/admin/tracking",
+      "/admin/technicians",
+      "/admin/inventory",
+      "/admin/inbox/corporate",
+      "/admin/analytics",
+      "/admin/settings",
+      "/admin/settings/security",
+    ];
+    const prefetchRoutes = () => {
+      adminRoutes.forEach((route) => {
+        try {
+          router.prefetch(route);
+        } catch {}
+      });
+    };
+    const timer = setTimeout(prefetchRoutes, 100);
+    return () => clearTimeout(timer);
+  }, [router]);
 
   const handleLogout = async () => {
-    if (isMockMode) {
-      localStorage.removeItem("mock_admin_user")
-      router.replace("/admin/login")
-      return
-    }
-    await signOut(auth)
-    router.replace("/admin/login")
-  }
+    await clearAdminSession();
+    await signOut(auth);
+    router.replace("/admin/login");
+  };
 
   return (
     <Sidebar
       collapsible="icon"
-      className="bg-black/70 border-r border-white/10 backdrop-blur-xl shadow-[0_20px_50px_-35px_rgba(6,182,212,0.5)]"
+      variant="inset"
+      className="border-transparent bg-transparent text-sidebar-foreground transition-colors duration-200 [&_[data-slot=sidebar-inner]]:m-3 [&_[data-slot=sidebar-inner]]:mr-2 [&_[data-slot=sidebar-inner]]:rounded-[24px] [&_[data-slot=sidebar-inner]]:border [&_[data-slot=sidebar-inner]]:border-white/75 [&_[data-slot=sidebar-inner]]:bg-white/65 [&_[data-slot=sidebar-inner]]:shadow-[0_24px_70px_rgba(44,75,116,.1)] [&_[data-slot=sidebar-inner]]:backdrop-blur-3xl dark:[&_[data-slot=sidebar-inner]]:border-white/10 dark:[&_[data-slot=sidebar-inner]]:bg-slate-950/55"
       {...props}
     >
-      <SidebarHeader className="border-b border-white/10">
-        <div className="flex items-center gap-3 p-3">
-          <div className="relative flex aspect-square size-9 items-center justify-center rounded-xl bg-gradient-to-br from-black via-black to-[#0b1a1f] text-sidebar-primary-foreground shadow-[0_18px_40px_-22px_rgba(6,182,212,0.75)] overflow-hidden ring-1 ring-white/10">
-            <div className="absolute -inset-px bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-70" />
-            <div className="absolute inset-0 bg-[radial-gradient(90%_90%_at_50%_60%,rgba(255,255,255,0.18),rgba(255,255,255,0)_62%)]" />
-            <div className="absolute -left-4 top-0 h-16 w-10 rotate-[20deg] bg-gradient-to-b from-white/18 via-white/8 to-transparent blur-[0.5px] opacity-60" />
-            <span className="relative font-extrabold tracking-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.55)]">
-              KBI<span className="text-cyan-400">.</span>
+      {/* Brand Header */}
+      <SidebarHeader className="p-4 pb-3">
+        <Link
+          href="/admin"
+          className="flex items-center gap-3 p-1.5 rounded-2xl transition hover:bg-sidebar-accent/60"
+        >
+          <div className="flex aspect-square size-10 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-700 text-white font-extrabold text-sm tracking-tight shadow-[0_8px_20px_rgba(0,112,239,.24)] ring-1 ring-white/70">
+            KBI.
+          </div>
+          <div className="flex flex-col gap-0.5 leading-none">
+              <span className="font-bold text-[15px] tracking-tight text-sidebar-foreground">
+              KBI Admin
             </span>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              <span className="text-[9px] font-semibold tracking-wide text-muted-foreground uppercase">
+                Live workspace
+              </span>
+            </div>
           </div>
-          <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-semibold text-white">{t("Admin Panel")}</span>
-            <span className="truncate text-xs text-white/50">{t("Repair Operations Hub")}</span>
-          </div>
-        </div>
+        </Link>
       </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[11px] tracking-[0.2em] uppercase text-white/40">{t("Management")}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={pathname === item.url}
-                    tooltip={t(item.title)}
-                    className="h-10 rounded-xl px-3 text-white/70 hover:text-white hover:bg-white/5 data-[active=true]:bg-gradient-to-r data-[active=true]:from-cyan-500/20 data-[active=true]:to-blue-500/20 data-[active=true]:text-white data-[active=true]:shadow-[0_12px_30px_-20px_rgba(6,182,212,0.7)]"
-                  >
-                    <Link href={item.url}>
-                      <item.icon />
-                      <span>{t(item.title)}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[11px] tracking-[0.2em] uppercase text-white/40">{t("Inbox")}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {inboxItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={pathname === item.url}
-                    tooltip={t(item.title)}
-                    className="h-10 rounded-xl px-3 text-white/70 hover:text-white hover:bg-white/5 data-[active=true]:bg-gradient-to-r data-[active=true]:from-purple-500/20 data-[active=true]:to-pink-500/20 data-[active=true]:text-white data-[active=true]:shadow-[0_12px_30px_-20px_rgba(236,72,153,0.65)]"
-                  >
-                    <Link href={item.url}>
-                      <item.icon />
-                      <span>{t(item.title)}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+      {/* Navigation Content */}
+      <SidebarContent className="px-3 py-2 space-y-5">
+        {navigation.map((group) => (
+          <SidebarGroup key={group.label} className="p-0">
+            <SidebarGroupLabel className="px-3 py-1.5 text-[9px] font-bold tracking-[0.13em] text-muted-foreground uppercase">
+              {group.label}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="gap-1">
+                {group.items.map((item) => {
+                  const active = isCurrentRoute(pathname, item.url);
+                  const Icon = item.icon;
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[11px] tracking-[0.2em] uppercase text-white/40">{t("Configuration")}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {settingsItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={pathname === item.url}
-                    tooltip={t(item.title)}
-                    className="h-10 rounded-xl px-3 text-white/70 hover:text-white hover:bg-white/5 data-[active=true]:bg-gradient-to-r data-[active=true]:from-emerald-500/20 data-[active=true]:to-cyan-500/20 data-[active=true]:text-white data-[active=true]:shadow-[0_12px_30px_-20px_rgba(16,185,129,0.6)]"
-                  >
-                    <Link href={item.url}>
-                      <item.icon />
-                      <span>{t(item.title)}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                  return (
+                    <SidebarMenuItem key={item.url}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={active}
+                        className={`h-11 rounded-[14px] px-3 text-xs font-semibold transition-all duration-150 ${
+                          active
+                            ? "bg-blue-50/90 text-blue-700 border border-blue-200/70 shadow-[0_7px_20px_rgba(20,102,196,.08)] font-bold dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-400/20"
+                            : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
+                        }`}
+                      >
+                        <Link href={item.url} className="flex items-center gap-3">
+                          <Icon
+                            className={`size-4 shrink-0 transition-colors ${
+                              active
+                                ? "text-primary"
+                                : "text-muted-foreground"
+                            }`}
+                          />
+                          <span className="truncate">{t(item.title)}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
-      <SidebarFooter className="border-t border-white/10">
+
+      {/* Footer / User Profile */}
+      <SidebarFooter className="p-3 border-t border-sidebar-border/60">
         <SidebarMenu>
           <SidebarMenuItem>
-             <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
-                <Avatar className="h-9 w-9 rounded-xl">
-                  <AvatarImage src="/placeholder-user.jpg" alt="Admin" />
-                  <AvatarFallback className="rounded-xl">AD</AvatarFallback>
-                </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold text-white">{t("Admin User")}</span>
-                  <span className="truncate text-xs text-white/50">{userEmail ?? "admin@kbi.ae"}</span>
-                </div>
-                <Button variant="ghost" size="icon-sm" className="ml-auto hover:bg-white/10" onClick={handleLogout} aria-label="Log out">
-                  <IconLogout className="size-4" />
-                </Button>
-             </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton
+                  size="lg"
+                  className="rounded-[18px] border border-white/80 bg-white/55 p-2.5 shadow-[0_8px_24px_rgba(47,76,112,.07)] hover:bg-white/80 transition dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+                >
+                  <Avatar className="size-9 rounded-full bg-primary text-primary-foreground font-bold text-xs flex items-center justify-center ring-2 ring-white/80 dark:ring-white/10">
+                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-700 text-white font-bold">
+                      {userEmail?.slice(0, 1).toUpperCase() || "A"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="grid flex-1 text-left text-xs leading-tight ml-1">
+                    <span className="truncate font-bold text-sidebar-foreground">
+                      Administrator
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      <span className="truncate text-[10px] text-muted-foreground font-mono">
+                        {userEmail || "admin@kbi.ae"}
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                className="w-56 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0D1217] text-slate-900 dark:text-white shadow-xl"
+                side="top"
+                align="end"
+                sideOffset={8}
+              >
+                <DropdownMenuLabel className="font-semibold text-xs">
+                  {userEmail || "admin@kbi.ae"}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/admin/settings"
+                    className="flex items-center gap-2 text-xs cursor-pointer"
+                  >
+                    <Settings className="size-4 text-slate-400" />
+                    {t("Settings")}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/admin/settings/security"
+                    className="flex items-center gap-2 text-xs cursor-pointer"
+                  >
+                    <ShieldCheck className="size-4 text-slate-400" />
+                    {t("Security")}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 text-xs text-rose-600 dark:text-rose-400 cursor-pointer focus:bg-rose-50 dark:focus:bg-rose-950/50"
+                >
+                  <LogOut className="size-4" />
+                  {t("Sign out")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

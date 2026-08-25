@@ -1,12 +1,16 @@
 "use server"
 
 import { adminDb } from "@/lib/firebase-admin"
+import { verifyAdmin } from "@/lib/server-auth"
 
-export async function getAuditLogsAction(limitCount: number = 50) {
+export async function getAuditLogsAction(idToken: string, limitCount: number = 50) {
     try {
+        const actor = await verifyAdmin(idToken)
+        if (!actor) return []
+        const safeLimit = Math.min(Math.max(Math.trunc(limitCount), 1), 200)
         const snap = await adminDb.collection("audit_logs")
             .orderBy("timestamp", "desc")
-            .limit(limitCount)
+            .limit(safeLimit)
             .get()
 
         return snap.docs.map((doc: any) => ({
@@ -14,22 +18,25 @@ export async function getAuditLogsAction(limitCount: number = 50) {
             ...doc.data(),
             timestamp: doc.data().timestamp?.toDate().toISOString()
         }))
-    } catch (e: any) {
+    } catch {
         return []
     }
 }
 
-export async function logAuditAction(action: string, targetType: string, performedBy: string, details: any = {}) {
+export async function logAuditAction(idToken: string, action: string, targetType: string, details: any = {}) {
     try {
+        const actor = await verifyAdmin(idToken)
+        if (!actor) return { error: "Unauthorized" }
         await adminDb.collection("audit_logs").add({
             action,
             targetType,
-            performedBy, // userId or email
+            performedBy: actor.uid,
             details,
             timestamp: new Date(),
             userAgent: "Server Action"
         })
-    } catch (e) {
-        // Silently fail or handle internally
+        return { success: true }
+    } catch {
+        return { error: "Failed to write audit log" }
     }
 }

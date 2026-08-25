@@ -43,7 +43,7 @@ export default async function ServicePage({ params }: Props) {
     const topIssues = device.issues.slice(0, 6)
 
     return (
-        <main className="min-h-screen bg-black text-white pt-24 pb-12">
+        <main className="adaptive-theme-page min-h-screen bg-black text-white pt-24 pb-12">
             {/* Hero Section */}
             <section className="container mx-auto px-6 mb-16">
                 <div className="max-w-4xl mx-auto text-center">

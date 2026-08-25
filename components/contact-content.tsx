@@ -10,18 +10,18 @@ import { SiteContact } from "@/lib/site-contact"
 
 const colorMap: Record<string, { text: string; bg: string; border: string; hoverBg: string }> = {
   cyan: {
-    text: "text-cyan-400",
+    text: "text-cyan-700 dark:text-cyan-400",
     bg: "bg-cyan-500/10",
     border: "border-cyan-500/30",
     hoverBg: "hover:bg-cyan-500/20",
   },
   green: {
-    text: "text-green-400",
+    text: "text-emerald-700 dark:text-green-400",
     bg: "bg-green-500/10",
     border: "border-green-500/30",
     hoverBg: "hover:bg-green-500/20",
   },
-  blue: { text: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/30", hoverBg: "hover:bg-blue-500/20" },
+  blue: { text: "text-blue-700 dark:text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/30", hoverBg: "hover:bg-blue-500/20" },
 }
 
 interface ContactContentProps {
@@ -71,14 +71,14 @@ export function ContactContent({ contact }: ContactContentProps) {
         {/* Hero */}
         <div className="text-center mb-16">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            <h1 className="text-4xl md:text-6xl font-extrabold mb-6 text-foreground">
               {isAr ? (
                 t("Contact Us")
               ) : (
-                <>Contact <span className="text-cyan-400">Us</span></>
+                <>Contact <span className="text-cyan-500 dark:text-cyan-400">Us</span></>
               )}
             </h1>
-            <p className="text-lg text-white/60 max-w-2xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               {t("We're here to help! Reach out through any of the channels below or book a technician directly.")}
             </p>
           </motion.div>
@@ -108,9 +108,9 @@ export function ContactContent({ contact }: ContactContentProps) {
                     <div className={`p-4 rounded-2xl ${colors.bg} ${colors.text} w-fit mx-auto mb-4`}>
                       {method.icon}
                     </div>
-                    <h3 className="text-xl font-semibold mb-2">{t(method.title)}</h3>
-                    <p className="text-white/50 text-sm mb-3">{t(method.description)}</p>
-                    <p className={`font-semibold ${colors.text}`} dir={isAr && method.href.startsWith("tel:") ? "ltr" : undefined}>{t(method.value)}</p>
+                    <h3 className="text-xl font-bold mb-2 text-foreground">{t(method.title)}</h3>
+                    <p className="text-muted-foreground text-sm mb-3">{t(method.description)}</p>
+                    <p className={`font-bold ${colors.text}`} dir={isAr && method.href.startsWith("tel:") ? "ltr" : undefined}>{t(method.value)}</p>
                   </GlassCard>
                 </a>
               </motion.div>
@@ -124,17 +124,17 @@ export function ContactContent({ contact }: ContactContentProps) {
             <GlassCard className="h-full">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-3 rounded-2xl bg-purple-500/10">
-                  <MapPin className="w-7 h-7 text-purple-400" />
+                  <MapPin className="w-7 h-7 text-purple-500 dark:text-purple-400" />
                 </div>
-                <h2 className="text-2xl font-bold">{t("Service Area")}</h2>
+                <h2 className="text-2xl font-bold text-foreground">{t("Service Area")}</h2>
               </div>
-              <p className="text-white/70 mb-4">
+              <p className="text-muted-foreground mb-4">
                 {t("We provide on-site repair services across all areas of Abu Dhabi, including:")}
               </p>
               <div className="grid grid-cols-2 gap-3">
                 {(contact.serviceAreas || []).map((area, index) => (
-                  <div key={index} className="flex items-center gap-2 text-sm text-white/60 p-2 rounded-lg bg-white/5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                  <div key={index} className="flex items-center gap-2 text-sm text-foreground/80 p-2.5 rounded-lg bg-black/5 dark:bg-white/5 border border-border">
+                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
                     {t(area)}
                   </div>
                 ))}
@@ -146,25 +146,25 @@ export function ContactContent({ contact }: ContactContentProps) {
             <GlassCard className="h-full">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-3 rounded-2xl bg-orange-500/10">
-                  <Clock className="w-7 h-7 text-orange-400" />
+                  <Clock className="w-7 h-7 text-orange-500 dark:text-orange-400" />
                 </div>
-                <h2 className="text-2xl font-bold">{t("Service Hours")}</h2>
+                <h2 className="text-2xl font-bold text-foreground">{t("Service Hours")}</h2>
               </div>
               <div className="space-y-4">
-                <div className="flex justify-between items-center p-4 rounded-xl bg-white/5 border border-white/10">
-                  <span className="text-white/70">{t("Saturday - Thursday")}</span>
-                  <span className="font-semibold text-green-400" dir="ltr">{contact.workingHoursWeekdays}</span>
+                <div className="flex justify-between items-center p-4 rounded-xl bg-card border border-border">
+                  <span className="text-foreground/80 font-medium">{t("Saturday - Thursday")}</span>
+                  <span className="font-bold text-emerald-600 dark:text-green-400" dir="ltr">{contact.workingHoursWeekdays}</span>
                 </div>
-                <div className="flex justify-between items-center p-4 rounded-xl bg-white/5 border border-white/10">
-                  <span className="text-white/70">{t("Friday")}</span>
-                  <span className="font-semibold text-green-400" dir="ltr">{contact.workingHoursFriday}</span>
+                <div className="flex justify-between items-center p-4 rounded-xl bg-card border border-border">
+                  <span className="text-foreground/80 font-medium">{t("Friday")}</span>
+                  <span className="font-bold text-emerald-600 dark:text-green-400" dir="ltr">{contact.workingHoursFriday}</span>
                 </div>
                 <div className="flex justify-between items-center p-4 rounded-xl bg-green-500/10 border border-green-500/30">
-                  <span className="text-white/70">{t("Emergency Service")}</span>
-                  <span className="font-semibold text-green-400">{t("24/7 Available")}</span>
+                  <span className="text-foreground/80 font-semibold">{t("Emergency Service")}</span>
+                  <span className="font-bold text-emerald-600 dark:text-green-400">{t("24/7 Available")}</span>
                 </div>
               </div>
-              <p className="mt-4 text-sm text-white/50">
+              <p className="mt-4 text-sm text-muted-foreground">
                 {t(
                   "For urgent repairs outside regular hours, contact us via WhatsApp or phone for emergency service availability.",
                 )}
@@ -176,8 +176,8 @@ export function ContactContent({ contact }: ContactContentProps) {
         {/* CTA */}
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
           <GlassCard className="text-center cta-creative">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">{t("Ready to Get Your Device Fixed?")}</h2>
-            <p className="text-white/60 mb-8 max-w-xl mx-auto">
+            <h2 className="text-2xl md:text-3xl font-extrabold mb-4 text-foreground">{t("Ready to Get Your Device Fixed?")}</h2>
+            <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
               {t(
                 "Skip the wait. Book a certified technician to come to your location today. Fast, reliable, and guaranteed.",
               )}

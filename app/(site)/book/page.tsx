@@ -14,8 +14,8 @@ export const metadata: Metadata = {
 
 export default function BookPage() {
   return (
-    <main className="min-h-screen bg-black text-white selection:bg-cyan-500/30 pb-16 lg:pb-0">
-      <Suspense fallback={<div className="container mx-auto px-6 pt-24 md:pt-32 pb-16">Loading booking form...</div>}>
+    <main className="min-h-screen bg-background text-foreground selection:bg-cyan-500/30 pb-16 lg:pb-0">
+      <Suspense fallback={<div className="container mx-auto px-6 pt-24 md:pt-32 pb-16 text-muted-foreground">Loading booking form...</div>}>
         <BookingForm />
       </Suspense>
     </main>

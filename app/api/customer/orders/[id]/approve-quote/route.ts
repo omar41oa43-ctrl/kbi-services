@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { authenticateCustomer, findPrismaUser } from '@/lib/api-auth'
 
 export async function POST(
   request: Request,
@@ -7,10 +8,13 @@ export async function POST(
 ) {
   const { id } = await params
   try {
-    const mockUserId = 'cust-1'
+    const identity = await authenticateCustomer(request)
+    if (!identity) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    const user = await findPrismaUser(identity)
+    if (!user) return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 })
 
     const updatedOrder = await prisma.order.update({
-      where: { id, customerId: mockUserId },
+      where: { id, customerId: user.id, status: 'QUOTED' },
       data: { status: 'APPROVED' },
     })
 
@@ -18,7 +22,7 @@ export async function POST(
       data: {
         orderId: id,
         status: 'APPROVED',
-        changedBy: mockUserId,
+        changedBy: identity.uid,
       },
     })
 

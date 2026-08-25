@@ -135,12 +135,12 @@ export function OrderTracker() {
       <div className="container mx-auto px-6 relative z-10">
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-cyan-500/10 mb-6 border border-cyan-500/20">
-            <Search className="w-8 h-8 text-cyan-400" />
+            <Search className="w-8 h-8 text-cyan-500 dark:text-cyan-400" />
           </div>
-          <h1 className="text-3xl md:text-5xl font-bold mb-4">
+          <h1 className="text-3xl md:text-5xl font-extrabold mb-4 text-foreground">
             {t("Track Order")}
           </h1>
-          <p className="text-white/60 max-w-xl mx-auto">
+          <p className="text-muted-foreground max-w-xl mx-auto">
             {t("Enter your tracking number to see the live status of your repair order.")}
           </p>
         </div>
@@ -150,20 +150,20 @@ export function OrderTracker() {
           <GlassCard className="mb-8">
             <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1">
-                <Search className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-white/30 ${isAr ? "right-4" : "left-4"}`} />
+                <Search className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground ${isAr ? "right-4" : "left-4"}`} />
                 <input
                   type="tel"
                   value={inputVal}
                   onChange={(e) => setInputVal(e.target.value)}
                   placeholder={t("Enter registered phone number")}
-                  className={`w-full py-4 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-500 transition-colors ${isAr ? "pr-12 pl-4 text-right placeholder:text-right" : "pl-12 pr-4 text-left"}`}
+                  className={`w-full py-4 bg-background border border-input rounded-xl focus:outline-none focus:border-cyan-500 transition-colors text-foreground text-base shadow-xs placeholder:text-muted-foreground/60 ${isAr ? "pr-12 pl-4 text-right placeholder:text-right" : "pl-12 pr-4 text-left"}`}
                   dir={isAr ? "rtl" : "ltr"}
                 />
               </div>
               <Button
                 type="submit"
                 disabled={!inputVal || isSearching}
-                className="rounded-xl px-8 min-w-[140px] bg-cyan-500 text-black hover:bg-cyan-400"
+                className="rounded-xl px-8 min-w-[140px] bg-cyan-500 text-black hover:bg-cyan-400 font-bold shadow-md cursor-pointer"
               >
                 {isSearching ? (
                   <div className="flex items-center gap-2">
@@ -192,10 +192,10 @@ export function OrderTracker() {
               >
                 <GlassCard className="text-center">
                   <div className="w-16 h-16 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center mx-auto mb-4">
-                    <AlertCircle className="w-8 h-8 text-red-400" />
+                    <AlertCircle className="w-8 h-8 text-red-500 dark:text-red-400" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">{t("Order Not Found")}</h3>
-                  <p className="text-white/60 mb-6">
+                  <h3 className="text-xl font-bold mb-2 text-foreground">{t("Order Not Found")}</h3>
+                  <p className="text-muted-foreground mb-6">
                     {errorMessage || (isAr ? `لم نعثر على أي طلب مطابق لـ "${inputVal}".` : `We couldn't find any order matching "${inputVal}".`)}
                   </p>
                   <Button asChild variant="secondary">
@@ -223,7 +223,7 @@ export function OrderTracker() {
               >
                 <div className="text-center mb-4">
                   <h3 className="text-lg font-bold">{t("Found orders")} ({ordersList.length})</h3>
-                  <p className="text-sm text-white/50">{t("Select an order to view details")}</p>
+                  <p className="text-sm text-muted-foreground">{t("Select an order to view details")}</p>
                 </div>
                 {ordersList.map((order) => (
                   (() => {
@@ -232,16 +232,16 @@ export function OrderTracker() {
                     return (
                   <GlassCard
                     key={order.orderId}
-                    className="cursor-pointer hover:bg-white/10 transition-colors border-l-4 border-l-cyan-500"
+                    className="cursor-pointer hover:bg-muted/70 transition-colors border-l-4 border-l-cyan-500"
                     onClick={() => selectOrder(order)}
                   >
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="font-bold text-cyan-400">{order.orderId}</p>
-                        <p className="text-sm text-white/70">{order.device}</p>
+                        <p className="font-bold text-cyan-600 dark:text-cyan-400">{order.orderId}</p>
+                        <p className="text-sm text-muted-foreground">{order.device}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-white/40">{order.date || order.createdAt?.split('T')[0]}</p>
+                        <p className="text-xs text-muted-foreground/80">{order.date || order.createdAt?.split('T')[0]}</p>
                         <p className="text-sm font-medium">{isAr ? t(label) : label}</p>
                       </div>
                     </div>
@@ -273,50 +273,50 @@ export function OrderTracker() {
                     <div className="absolute inset-0 bg-[radial-gradient(70%_60%_at_50%_0%,rgba(6,182,212,0.14),rgba(0,0,0,0)_62%)]" />
                   </div>
                   {/* Order Info */}
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 pb-6 border-b border-white/10">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 pb-6 border-b border-border">
                     <div>
-                      <p className="text-sm text-white/50 mb-1">{t("Tracking Number")}</p>
-                      <p className="text-xl font-mono font-bold text-cyan-400">{orderData.orderId}</p>
+                      <p className="text-sm text-muted-foreground mb-1">{t("Tracking Number")}</p>
+                      <p className="text-xl font-mono font-bold text-cyan-600 dark:text-cyan-400">{orderData.orderId}</p>
                     </div>
                     <div className="text-start sm:text-end">
-                      <p className="text-sm text-white/50 mb-1">{t("Order Date")}</p>
-                      <p className="font-medium">{orderData.date || orderData.createdAt?.split('T')[0]}</p>
+                      <p className="text-sm text-muted-foreground mb-1">{t("Order Date")}</p>
+                      <p className="font-semibold text-foreground">{orderData.date || orderData.createdAt?.split('T')[0]}</p>
                     </div>
                   </div>
 
                   {/* Device Info */}
                   <div className="grid grid-cols-2 gap-4 mb-8 text-sm">
                     <div>
-                      <p className="text-white/50 mb-1">{t("Device")}</p>
-                      <p className="font-medium">{orderData.device}</p>
+                      <p className="text-muted-foreground mb-1">{t("Device")}</p>
+                      <p className="font-semibold text-foreground">{orderData.device}</p>
                     </div>
                     <div>
-                      <p className="text-white/50 mb-1">{t("Issue")}</p>
-                      <p className="font-medium">{orderData.issue}</p>
+                      <p className="text-muted-foreground mb-1">{t("Issue")}</p>
+                      <p className="font-semibold text-foreground">{orderData.issue}</p>
                     </div>
                     <div>
-                      <p className="text-white/50 mb-1">{t("Technician")}</p>
-                      <p className="font-medium text-cyan-200">{orderData.technicianName || "---"}</p>
+                      <p className="text-muted-foreground mb-1">{t("Technician")}</p>
+                      <p className="font-semibold text-cyan-700 dark:text-cyan-200">{orderData.technicianName || "---"}</p>
                     </div>
                     <div>
-                      <p className="text-white/50 mb-1">{t("Est. Completion")}</p>
-                      <p className="font-medium">{orderData.estimatedCompletion || "---"}</p>
+                      <p className="text-muted-foreground mb-1">{t("Est. Completion")}</p>
+                      <p className="font-semibold text-foreground">{orderData.estimatedCompletion || "---"}</p>
                     </div>
                   </div>
 
                   {/* Status Timeline */}
                   <div className="mb-8">
                     <div className="flex items-center justify-between gap-4 mb-6">
-                      <h3 className="text-lg font-semibold">{t("Order Status")}</h3>
+                      <h3 className="text-lg font-bold text-foreground">{t("Order Status")}</h3>
                       {currentStatus?.name ? (
-                        <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-200">
-                          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+                        <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-3 py-1 text-xs font-bold text-cyan-700 dark:text-cyan-200">
+                          <span className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
                           {isAr ? t(currentStatus.name) : currentStatus.name}
                         </div>
                       ) : null}
                     </div>
                     <div className="relative">
-                      <div className={`absolute top-0 bottom-0 w-px ${isAr ? "right-[23px]" : "left-[23px]"} bg-gradient-to-b from-cyan-500/35 via-white/10 to-white/5`} />
+                      <div className={`absolute top-0 bottom-0 w-px ${isAr ? "right-[23px]" : "left-[23px]"} bg-gradient-to-b from-cyan-500/35 via-border to-transparent`} />
 
                       <div className="space-y-4">
                         {orderStatuses.map((status, index) => {
@@ -334,10 +334,10 @@ export function OrderTracker() {
                             >
                               <div
                                 className={`relative z-10 w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${isCompleted
-                                  ? "bg-cyan-500 text-black shadow-[0_18px_40px_-20px_rgba(6,182,212,0.75)]"
+                                  ? "bg-cyan-500 text-black shadow-md"
                                   : isCurrent
-                                    ? "bg-cyan-500/15 border border-cyan-500/60 text-cyan-200 shadow-[0_18px_40px_-22px_rgba(6,182,212,0.6)]"
-                                    : "bg-white/5 border border-white/20 text-white/30"
+                                    ? "bg-cyan-500/15 border-2 border-cyan-500 text-cyan-600 dark:text-cyan-200 shadow-md"
+                                    : "bg-muted border border-border text-muted-foreground"
                                   }`}
                               >
                                 {isCurrent ? (
@@ -347,11 +347,11 @@ export function OrderTracker() {
                               </div>
                               <div className="pt-2">
                                 <p
-                                  className={`font-semibold ${isCurrent ? "text-cyan-200" : isCompleted ? "text-white" : "text-white/50"}`}
+                                  className={`font-bold ${isCurrent ? "text-cyan-600 dark:text-cyan-300" : isCompleted ? "text-foreground" : "text-muted-foreground"}`}
                                 >
                                   {isAr ? t(status.name) : status.name}
                                 </p>
-                                <p className="text-sm text-white/50">{isAr ? t(status.description) : status.description}</p>
+                                <p className="text-sm text-muted-foreground">{isAr ? t(status.description) : status.description}</p>
                               </div>
                             </motion.div>
                           )
@@ -386,7 +386,7 @@ export function OrderTracker() {
                 {ordersList.length > 0 && (
                   <button
                     onClick={() => { setOrderData(null) }}
-                    className="mt-6 mx-auto block text-white/50 hover:text-white underline text-sm"
+                    className="mt-6 mx-auto block text-muted-foreground hover:text-foreground underline text-sm"
                   >
                     {t("Back to list")}
                   </button>

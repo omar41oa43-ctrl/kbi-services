@@ -83,3 +83,18 @@ mobile/
 .vercel
 .env*.local
 service-account.json
+dev_credentials.txt
+
+# Flutter / iOS build artifacts (kbi_technician_app, apps/customer-app)
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/ephemeral/
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+kbi_technician_app*/build/
+apps/*/build/
+**/*.xcuserstate
+**/hs_err_pid*.log

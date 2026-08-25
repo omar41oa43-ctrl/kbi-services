@@ -21,52 +21,160 @@ export async function getPublicOrderAction(orderId: string) {
             } catch { return null }
         }
 
-        // Query by orderId field
-        const q = await db.collection("orders").where("orderId", "==", orderId.trim()).get()
-        if (q.empty) {
-            // Fallback: try querying by document ID
-            const doc = await db.collection("orders").doc(orderId.trim()).get()
-            if (!doc.exists) return null
+        // Decode URL components in case of "%2C%20", spaces, or commas
+        let rawId = decodeURIComponent(orderId).trim()
+        
+        // Build set of candidate search keys
+        const candidates = new Set<string>()
+        candidates.add(rawId)
+        candidates.add(orderId.trim())
 
-            const data = doc.data()
-            if (!data) return null
+        // Extract individual tokens if multiple IDs were separated by commas or spaces
+        const tokens = rawId.split(/[,;\s]+/).map(t => t.trim()).filter(Boolean)
+        tokens.forEach(t => {
+            candidates.add(t)
+            // Strip leading hash
+            if (t.startsWith("#")) candidates.add(t.slice(1).trim())
+            // If prefixed with KBI- or ORD-
+            candidates.add(t.toUpperCase())
+            candidates.add(t.toLowerCase())
+        })
 
-            return {
-                orderId: data.orderId || doc.id,
-                status: data.status || "pending",
-                device: `${data.brand || ""} ${data.model || ""}`.trim(),
-                issue: data.issueType || data.issue || "",
-                createdAt: safeDate(data.createdAt),
-                updatedAt: safeDate(data.updatedAt),
-                technicianName: data.technicianName ? data.technicianName.split(" ")[0] : "Assigned",
-                estimatedCompletion: safeDate(data.estimatedCompletion),
-                timeline: Array.isArray(data.statusHistory)
-                    ? data.statusHistory.map((h: any) => ({ ...h, timestamp: safeDate(h.timestamp) }))
-                    : []
+        // Also extract regex patterns like ORD-\d+ or KBI-\d+
+        const ordMatches = rawId.match(/(?:ORD|KBI)-?\d+/gi)
+        if (ordMatches) {
+            ordMatches.forEach(m => {
+                candidates.add(m.trim())
+                candidates.add(m.trim().toUpperCase())
+            })
+        }
+
+        const searchKeys = Array.from(candidates).filter(Boolean)
+
+        // 1. Try direct doc lookups in 'orders' and 'bookings'
+        for (const key of searchKeys) {
+            const orderDoc = await db.collection("orders").doc(key).get()
+            if (orderDoc.exists) {
+                const data = orderDoc.data() || {}
+                return {
+                    id: orderDoc.id,
+                    orderId: data.orderId || orderDoc.id,
+                    status: data.status || "pending",
+                    device: data.device || `${data.brand || ""} ${data.model || ""}`.trim() || "Device Repair",
+                    service: data.service || data.serviceType || data.issueType || data.issue || "General Repair",
+                    issue: data.issueType || data.issue || "",
+                    createdAt: safeDate(data.createdAt),
+                    updatedAt: safeDate(data.updatedAt),
+                    customerName: data.customerName || data.name || "Customer",
+                    customerPhone: data.customerPhone || data.phone || "",
+                    technicianName: data.technicianName ? data.technicianName.split(" ")[0] : (data.assignedTechnician ? "Assigned" : ""),
+                    assignedTechnician: data.assignedTechnician || data.technicianId,
+                    estimatedCompletion: safeDate(data.estimatedCompletion),
+                    timeline: Array.isArray(data.statusHistory)
+                        ? data.statusHistory.map((h: any) => ({ ...h, timestamp: safeDate(h.timestamp) }))
+                        : []
+                }
+            }
+
+            const bookingDoc = await db.collection("bookings").doc(key).get()
+            if (bookingDoc.exists) {
+                const data = bookingDoc.data() || {}
+                return {
+                    id: bookingDoc.id,
+                    orderId: data.orderId || data.trackingNumber || bookingDoc.id,
+                    status: data.status || "pending",
+                    device: data.device || `${data.brand || ""} ${data.model || ""}`.trim() || "Device Repair",
+                    service: data.service || data.serviceType || "Service Request",
+                    issue: data.issueType || data.issue || "",
+                    createdAt: safeDate(data.createdAt),
+                    updatedAt: safeDate(data.updatedAt),
+                    customerName: data.customerName || data.name || "Customer",
+                    customerPhone: data.customerPhone || data.phone || "",
+                    technicianName: data.technicianName ? data.technicianName.split(" ")[0] : (data.assignedTechnician ? "Assigned" : ""),
+                    assignedTechnician: data.assignedTechnician || data.technicianId,
+                    estimatedCompletion: safeDate(data.estimatedCompletion),
+                    timeline: Array.isArray(data.statusHistory)
+                        ? data.statusHistory.map((h: any) => ({ ...h, timestamp: safeDate(h.timestamp) }))
+                        : []
+                }
             }
         }
 
-        const doc = q.docs[0]
-        const data = doc.data()
-        if (!data) return null
+        // 2. Try querying 'orders' collection with 'in' queries on orderId, id, trackingNumber
+        for (const chunk of chunkArray(searchKeys, 10)) {
+            const [qOrderId, qTracking] = await Promise.all([
+                db.collection("orders").where("orderId", "in", chunk).limit(1).get(),
+                db.collection("orders").where("trackingNumber", "in", chunk).limit(1).get(),
+            ])
 
-        return {
-            orderId: data.orderId || doc.id,
-            status: data.status || "pending",
-            device: `${data.brand || ""} ${data.model || ""}`.trim(),
-            issue: data.issueType || data.issue || "",
-            createdAt: safeDate(data.createdAt),
-            updatedAt: safeDate(data.updatedAt),
-            technicianName: data.technicianName ? data.technicianName.split(" ")[0] : "Assigned",
-            estimatedCompletion: safeDate(data.estimatedCompletion),
-            timeline: Array.isArray(data.statusHistory)
-                ? data.statusHistory.map((h: any) => ({ ...h, timestamp: safeDate(h.timestamp) }))
-                : []
+            const hit = !qOrderId.empty ? qOrderId.docs[0] : (!qTracking.empty ? qTracking.docs[0] : null)
+            if (hit) {
+                const data = hit.data() || {}
+                return {
+                    id: hit.id,
+                    orderId: data.orderId || hit.id,
+                    status: data.status || "pending",
+                    device: data.device || `${data.brand || ""} ${data.model || ""}`.trim() || "Device Repair",
+                    service: data.service || data.serviceType || data.issueType || data.issue || "General Repair",
+                    issue: data.issueType || data.issue || "",
+                    createdAt: safeDate(data.createdAt),
+                    updatedAt: safeDate(data.updatedAt),
+                    customerName: data.customerName || data.name || "Customer",
+                    customerPhone: data.customerPhone || data.phone || "",
+                    technicianName: data.technicianName ? data.technicianName.split(" ")[0] : (data.assignedTechnician ? "Assigned" : ""),
+                    assignedTechnician: data.assignedTechnician || data.technicianId,
+                    estimatedCompletion: safeDate(data.estimatedCompletion),
+                    timeline: Array.isArray(data.statusHistory)
+                        ? data.statusHistory.map((h: any) => ({ ...h, timestamp: safeDate(h.timestamp) }))
+                        : []
+                }
+            }
         }
+
+        // 3. Try querying 'bookings' collection
+        for (const chunk of chunkArray(searchKeys, 10)) {
+            const [qOrderId, qTracking] = await Promise.all([
+                db.collection("bookings").where("orderId", "in", chunk).limit(1).get(),
+                db.collection("bookings").where("trackingNumber", "in", chunk).limit(1).get(),
+            ])
+
+            const hit = !qOrderId.empty ? qOrderId.docs[0] : (!qTracking.empty ? qTracking.docs[0] : null)
+            if (hit) {
+                const data = hit.data() || {}
+                return {
+                    id: hit.id,
+                    orderId: data.orderId || data.trackingNumber || hit.id,
+                    status: data.status || "pending",
+                    device: data.device || `${data.brand || ""} ${data.model || ""}`.trim() || "Device Repair",
+                    service: data.service || data.serviceType || "Service Request",
+                    issue: data.issueType || data.issue || "",
+                    createdAt: safeDate(data.createdAt),
+                    updatedAt: safeDate(data.updatedAt),
+                    customerName: data.customerName || data.name || "Customer",
+                    customerPhone: data.customerPhone || data.phone || "",
+                    technicianName: data.technicianName ? data.technicianName.split(" ")[0] : (data.assignedTechnician ? "Assigned" : ""),
+                    assignedTechnician: data.assignedTechnician || data.technicianId,
+                    estimatedCompletion: safeDate(data.estimatedCompletion),
+                    timeline: Array.isArray(data.statusHistory)
+                        ? data.statusHistory.map((h: any) => ({ ...h, timestamp: safeDate(h.timestamp) }))
+                        : []
+                }
+            }
+        }
+
+        return null
     } catch (e) {
         console.error("Public Order Search Error", e)
         return null
     }
+}
+
+function chunkArray<T>(arr: T[], size: number): T[][] {
+    const res: T[][] = []
+    for (let i = 0; i < arr.length; i += size) {
+        res.push(arr.slice(i, i + size))
+    }
+    return res
 }
 
 export async function getPublicOrdersByPhoneAction(phone: string) {

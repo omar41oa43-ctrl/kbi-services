@@ -51,7 +51,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#000000',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f4f9fc' },
+    { media: '(prefers-color-scheme: dark)', color: '#080b0f' },
+  ],
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
@@ -72,7 +75,7 @@ export default async function RootLayout({
         suppressHydrationWarning
         className={cn("min-h-screen font-sans antialiased selection:bg-cyan-500/20", cairo.variable)}
       >
-        <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark" enableSystem={false}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem={true}>
           <LanguageProvider initialLang={cookieLang}>
             {children}
           </LanguageProvider>

@@ -14,7 +14,7 @@ export default async function AboutPage() {
   const contact = await getSiteContact()
   const pdfUrl = contact.companyPresentationUrl || ""
   return (
-    <main className="min-h-screen bg-black text-white selection:bg-cyan-500/30 pb-16 lg:pb-0">
+    <main className="min-h-screen bg-background text-foreground selection:bg-cyan-500/30 pb-16 lg:pb-0">
       <AboutContent pdfUrl={pdfUrl} />
     </main>
   )

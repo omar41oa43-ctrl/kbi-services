@@ -6,10 +6,10 @@ import {
     deleteDoc,
     getDoc,
     getDocs,
+    setDoc,
     query,
     where,
     orderBy,
-    limit,
     onSnapshot,
     serverTimestamp,
     Timestamp,
@@ -169,11 +169,48 @@ export async function assignOrderToTechnician(
     technicianName: string
 ): Promise<void> {
     try {
-        await updateOrder(orderId, {
+        const payload: Partial<Order> = {
             technicianId,
             technicianName,
-            status: "in_progress",
-        });
+            status: "assigned",
+            assignedAt: Timestamp.now() as any,
+        };
+
+        await updateOrder(orderId, payload);
+
+        // Mirror to bookings, service_requests, and technicians
+        const fullPayload = {
+            ...payload,
+            assignedTechnician: technicianId,
+            assignedTechnicianId: technicianId,
+            assignedTechnicians: [technicianId],
+            assignedTechnicianNames: [technicianName],
+            technicianIds: [technicianId],
+            technicianNames: [technicianName],
+            updatedAt: Timestamp.now(),
+        };
+
+        try {
+            await setDoc(doc(db, "bookings", orderId), fullPayload, { merge: true });
+        } catch (_) {}
+
+        try {
+            await setDoc(doc(db, "service_requests", orderId), fullPayload, { merge: true });
+        } catch (_) {}
+
+        try {
+            await setDoc(
+                doc(db, "technicians", technicianId),
+                {
+                    currentJob: orderId,
+                    currentOrder: orderId,
+                    status: "ON_JOB",
+                    available: false,
+                    updatedAt: Timestamp.now(),
+                },
+                { merge: true }
+            );
+        } catch (_) {}
     } catch (error: any) {
         console.error("Assign order error:", error);
         throw new Error(error.message || "Failed to assign order");
@@ -202,7 +239,7 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus): P
 /**
  * Subscribe to all orders in real-time
  */
-export function subscribeToOrders(callback: (orders: Order[]) => void): () => void {
+export function subscribeToOrders(callback: (_orders: Order[]) => void): () => void {
     const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
 
     return onSnapshot(q, (snapshot) => {
@@ -219,7 +256,7 @@ export function subscribeToOrders(callback: (orders: Order[]) => void): () => vo
  */
 export function subscribeToTechnicianOrders(
     technicianId: string,
-    callback: (orders: Order[]) => void
+    callback: (_orders: Order[]) => void
 ): () => void {
     const q = query(
         collection(db, "orders"),
@@ -241,7 +278,7 @@ export function subscribeToTechnicianOrders(
  */
 export function subscribeToCustomerOrders(
     customerId: string,
-    callback: (orders: Order[]) => void
+    callback: (_orders: Order[]) => void
 ): () => void {
     const q = query(
         collection(db, "orders"),

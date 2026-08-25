@@ -15,7 +15,9 @@ class EarningsScreen extends StatelessWidget {
         body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
           stream: TechnicianService.instance.watchMyPayments(),
           builder: (context, snap) {
-            if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+            if (!snap.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
             final docs = snap.data!.docs;
             double total = 0;
             for (final d in docs) {
@@ -31,9 +33,11 @@ class EarningsScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Total', style: TextStyle(color: Colors.white70)),
+                        const Text('Total',
+                            style: TextStyle(color: Colors.black87)),
                         const SizedBox(height: 6),
-                        Text('AED ${total.toStringAsFixed(2)}', style: Theme.of(context).textTheme.headlineMedium),
+                        Text('AED ${total.toStringAsFixed(2)}',
+                            style: Theme.of(context).textTheme.headlineMedium),
                       ],
                     ),
                   ),
@@ -43,7 +47,9 @@ class EarningsScreen extends StatelessWidget {
                   final data = d.data();
                   final type = (data['type'] ?? '').toString();
                   final status = (data['status'] ?? '').toString();
-                  final amount = (data['amount'] is num) ? (data['amount'] as num).toDouble() : 0.0;
+                  final amount = (data['amount'] is num)
+                      ? (data['amount'] as num).toDouble()
+                      : 0.0;
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 10),
                     child: Card(
@@ -63,4 +69,3 @@ class EarningsScreen extends StatelessWidget {
     );
   }
 }
-

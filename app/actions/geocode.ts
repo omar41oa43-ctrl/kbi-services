@@ -52,7 +52,7 @@ export async function reverseGeocode(lat: number, lon: number, lang: "en" | "ar"
 
         return { address };
 
-    } catch (error) {
+    } catch {
         return { error: "Failed to detect address" }
     }
 }

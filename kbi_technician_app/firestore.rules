@@ -1,0 +1,140 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+    function isAdmin() { return signedIn() && request.auth.token.admin == true; }
+    function assignedToMe() {
+      return signedIn() && (
+        resource.data.assignedTechnician == request.auth.uid
+        || resource.data.assignedTechnicianId == request.auth.uid
+        || resource.data.technicianId == request.auth.uid
+        || resource.data.techId == request.auth.uid
+      );
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid) && request.resource.data.role == 'technician';
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['email', 'full_name', 'name', 'phone', 'profile_photo', 'updatedAt']);
+      allow delete: if isAdmin();
+    }
+
+    match /technician_requests/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create, update: if isOwner(uid)
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status in ['draft', 'pending'];
+      allow delete: if isAdmin();
+    }
+
+    match /technicians/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid)
+        && request.resource.data.isApproved == false
+        && request.resource.data.isActive == false;
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'full_name', 'name', 'phone', 'whatsapp', 'profile_photo', 'language',
+          'languages', 'service_areas', 'skills', 'vehicle', 'availability',
+          'available', 'isAvailable', 'online', 'isOnline', 'isTrackingActive',
+          'notificationsEnabled', 'fcmToken', 'fcmTokens', 'location', 'latitude', 'longitude',
+          'locationUpdatedAt', 'batteryLevel', 'networkStatus', 'speed', 'heading',
+          'locationPermission', 'lastActive', 'updatedAt',
+          'currentJob', 'currentOrder', 'current_job', 'current_order', 'status',
+          'activeJob', 'activeOrderId'
+        ])
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'isApproved', 'isActive', 'subscriptionStatus'
+        ])
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['vehicle'])
+          || (request.resource.data.vehicle.isVerified == false
+            && !resource.data.keys().hasAny(['vehicle']))
+          || request.resource.data.vehicle.isVerified == resource.data.vehicle.isVerified);
+      allow delete: if isAdmin();
+    }
+
+    match /bookings/{bookingId} {
+      allow read, create, update: if signedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /orders/{orderId} {
+      allow read, create, update: if signedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /job_history/{entryId} {
+      allow read: if isAdmin() || (signedIn()
+        && get(/databases/$(database)/documents/bookings/$(resource.data.bookingId))
+          .data.assignedTechnician == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    match /payments/{paymentId} {
+      allow read: if signedIn() && resource.data.techId == request.auth.uid || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid || isAdmin();
+      allow update: if signedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+      allow create, delete: if isAdmin();
+    }
+
+    match /activation_requests/{requestId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid || isAdmin();
+      allow create: if isOwner(requestId)
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.keys()
+          .hasOnly(['userId', 'status', 'channel', 'createdAt', 'updatedAt']);
+      allow update: if isOwner(requestId)
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['userId', 'status', 'channel', 'createdAt', 'updatedAt']);
+      allow delete: if isAdmin();
+    }
+
+    match /password_reset_requests/{requestId} {
+      allow read, delete: if isAdmin();
+      allow create: if request.resource.data.keys().hasOnly([
+          'email', 'status', 'source', 'requestedAt', 'updatedAt', 'requestCount'
+        ])
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 5
+        && request.resource.data.email.size() <= 320
+        && request.resource.data.status == 'pending'
+        && request.resource.data.source == 'technician_app'
+        && request.resource.data.requestedAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.requestCount == 1;
+      allow update: if isAdmin() || (
+        request.resource.data.email == resource.data.email
+        && request.resource.data.source == 'technician_app'
+        && request.resource.data.status == 'pending'
+        && request.resource.data.requestedAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.requestCount == resource.data.requestCount + 1
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status', 'requestedAt', 'updatedAt', 'requestCount'
+        ])
+      );
+    }
+
+    match /payout_requests/{requestId} {
+      allow read: if signedIn() && (resource.data.technicianId == request.auth.uid || isAdmin());
+      allow create: if signedIn() && request.resource.data.technicianId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

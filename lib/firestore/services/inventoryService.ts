@@ -7,7 +7,6 @@ import {
     getDocs,
     onSnapshot,
     query,
-    where,
     orderBy,
     Timestamp
 } from "firebase/firestore"
@@ -67,7 +66,7 @@ export async function getLowStockItems() {
 }
 
 // Subscribe to inventory changes
-export function subscribeToInventory(callback: (items: InventoryItem[]) => void) {
+export function subscribeToInventory(callback: (_items: InventoryItem[]) => void) {
     return onSnapshot(
         query(collection(db, "inventory"), orderBy("name")),
         (snapshot) => {

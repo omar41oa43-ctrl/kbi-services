@@ -230,7 +230,7 @@ export default async function TermsPage(props: PageProps) {
   )
 
   return (
-    <main className="min-h-screen bg-black text-white selection:bg-[#2EC4B6]/30">
+    <main className="adaptive-theme-page min-h-screen bg-black text-white selection:bg-[#2EC4B6]/30">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdLocalBusiness) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }} />
 

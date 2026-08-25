@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { authenticateAdmin } from '@/lib/api-auth'
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!await authenticateAdmin(request)) {
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+  }
   const { id } = await params
   try {
     const order = await prisma.order.findUnique({

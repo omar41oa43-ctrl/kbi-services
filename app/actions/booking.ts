@@ -111,6 +111,39 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
             const lat = typeof formData.locationLat === "number" ? formData.locationLat : null
             const lng = typeof formData.locationLng === "number" ? formData.locationLng : null
             const hasCoords = typeof lat === "number" && typeof lng === "number"
+
+            // Add Booking to 'bookings' collection
+            const bookingPayload = {
+                bookingId: orderId,
+                customerName: formData.name,
+                customerPhone: formData.phone,
+                customerEmail: formData.email || "",
+                service: entry.deviceName,
+                device: `${entry.brandName || ""} ${entry.model || ""}`.trim(),
+                issue: entry.issues.join(", "),
+                address: formData.address || "",
+                location: {
+                    lat: hasCoords ? lat : 0,
+                    lng: hasCoords ? lng : 0
+                },
+                priority: "Normal",
+                status: "Pending",
+                assignedTechnician: null,
+                notes: formData.notes || "",
+                createdAt: new Date(),
+                updatedAt: new Date()
+            }
+            await adminDb.collection("bookings").doc(orderId).set(bookingPayload)
+
+            // Add to job_history
+            await adminDb.collection("job_history").add({
+                bookingId: orderId,
+                action: "Booking Created",
+                performedBy: "Customer",
+                timestamp: new Date(),
+                notes: "Booking submitted via customer website form."
+            })
+
             const srRef = adminDb.collection("service_requests").doc()
             await srRef.set({
                 type: String(entry.deviceName || ""),
@@ -151,7 +184,7 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
                 message: `New service request for order ${orderId}`,
                 role: "admin",
                 orderId,
-                link: `/admin/service-requests`,
+                link: `/admin/orders`,
                 read: false,
                 createdAt: new Date()
             })

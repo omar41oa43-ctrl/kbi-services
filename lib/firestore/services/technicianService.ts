@@ -8,7 +8,6 @@ import {
     getDocs,
     query,
     where,
-    orderBy,
     onSnapshot,
     serverTimestamp,
 } from "firebase/firestore";
@@ -152,7 +151,7 @@ export async function updateTechnicianAvailability(techId: string, isAvailable: 
 /**
  * Subscribe to all technicians in real-time
  */
-export function subscribeToTechnicians(callback: (technicians: Technician[]) => void): () => void {
+export function subscribeToTechnicians(callback: (_technicians: Technician[]) => void): () => void {
     return onSnapshot(collection(db, "technicians"), (snapshot) => {
         const technicians = snapshot.docs.map((doc) => ({
             id: doc.id,

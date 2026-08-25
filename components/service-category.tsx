@@ -44,14 +44,14 @@ export function ServiceCategory({ id, name, icon, brands, issues, accentColor }:
       >
         <div className="flex items-center gap-4 mb-4">
           <div className={`p-3 rounded-2xl ${colors.bg} ${colors.text}`}>{icon}</div>
-          <h2 className="text-2xl md:text-3xl font-bold">{isAr ? t(name) : name}</h2>
+          <h2 className="text-2xl md:text-3xl font-extrabold text-foreground">{isAr ? t(name) : name}</h2>
         </div>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Services/Issues */}
         <GlassCard hoverEffect={false}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
             <span className={colors.text}>{t("Services We Offer")}</span>
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -65,13 +65,13 @@ export function ServiceCategory({ id, name, icon, brands, issues, accentColor }:
                 className={`flex items-center gap-2 p-3 rounded-xl ${colors.bg} border ${colors.border}`}
               >
                 {isAr ? <ChevronLeft className={`w-4 h-4 ${colors.text}`} /> : <ChevronRight className={`w-4 h-4 ${colors.text}`} />}
-                <span className="text-sm text-white/80">{isAr ? t(issue) : issue}</span>
+                <span className="text-sm font-medium text-foreground/90">{isAr ? t(issue) : issue}</span>
               </motion.div>
             ))}
           </div>
           <Link
             href={`/book?device=${id}`}
-            className={`mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-sm ${colors.bg} ${colors.text} border ${colors.border} hover:bg-white/10 transition-colors`}
+            className={`mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-full font-bold text-sm ${colors.bg} ${colors.text} border ${colors.border} hover:bg-muted transition-colors shadow-xs`}
           >
             {isAr ? `احجز إصلاح ${t(name)}` : `Book ${name} Repair`}
             {isAr ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -80,7 +80,7 @@ export function ServiceCategory({ id, name, icon, brands, issues, accentColor }:
 
         {/* Brands */}
         <GlassCard hoverEffect={false}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
             <span className={colors.text}>{t("Brands We Service")}</span>
           </h3>
           <div className="flex flex-wrap gap-2">
@@ -91,7 +91,7 @@ export function ServiceCategory({ id, name, icon, brands, issues, accentColor }:
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.03 }}
-                className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-white/70 hover:bg-white/10 hover:text-white transition-colors cursor-default"
+                className="px-4 py-2 rounded-full bg-black/5 dark:bg-white/5 border border-border text-sm text-foreground/80 font-medium hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-default"
               >
                 {brand.name}
               </motion.div>
@@ -99,17 +99,17 @@ export function ServiceCategory({ id, name, icon, brands, issues, accentColor }:
           </div>
 
           {/* Sample models preview */}
-          <div className="mt-6 pt-6 border-t border-white/10">
-            <p className="text-xs text-white/40 mb-3">{t("Popular models we repair:")}</p>
+          <div className="mt-6 pt-6 border-t border-border">
+            <p className="text-xs text-muted-foreground mb-3 font-medium">{t("Popular models we repair:")}</p>
             <div className="flex flex-wrap gap-2">
               {brands.slice(0, 3).flatMap((brand) =>
                 brand.models.slice(0, 2).map((model, idx) => (
-                  <span key={`${brand.id}-${idx}`} className="text-xs text-white/50 px-2 py-1 bg-white/5 rounded">
+                  <span key={`${brand.id}-${idx}`} className="text-xs text-foreground/70 px-2.5 py-1 bg-black/5 dark:bg-white/5 border border-border rounded-lg font-medium">
                     {model}
                   </span>
                 )),
               )}
-              <span className="text-xs text-white/40 px-2 py-1">{t("+ many more")}</span>
+              <span className="text-xs text-muted-foreground px-2 py-1">{t("+ many more")}</span>
             </div>
           </div>
         </GlassCard>

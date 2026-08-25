@@ -68,7 +68,7 @@ export async function getUnreadCount(userId: string) {
 }
 
 // Subscribe to notifications for a user
-export function subscribeToNotifications(userId: string, callback: (notifications: Notification[]) => void) {
+export function subscribeToNotifications(userId: string, callback: (_notifications: Notification[]) => void) {
     return onSnapshot(
         query(
             collection(db, "notifications"),
@@ -89,7 +89,7 @@ export function subscribeToNotifications(userId: string, callback: (notification
 }
 
 // Subscribe to notifications for admin (all admin notifications)
-export function subscribeToAdminNotifications(callback: (notifications: Notification[]) => void) {
+export function subscribeToAdminNotifications(callback: (_notifications: Notification[]) => void) {
     return onSnapshot(
         query(
             collection(db, "notifications"),
@@ -135,7 +135,7 @@ export async function notifyStatusUpdate(orderId: string, newStatus: string, cus
     }
 }
 
-export async function notifyTechnicianAssigned(orderId: string, technicianId: string, technicianName: string) {
+export async function notifyTechnicianAssigned(orderId: string, technicianId: string, _technicianName: string) {
     await createNotification({
         type: "assignment",
         title: "New Assignment",

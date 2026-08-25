@@ -1,6 +1,7 @@
 "use server"
 
 import { adminDb } from "@/lib/firebase-admin"
+import { verifyAdmin, verifyTechnician } from "@/lib/server-auth"
 
 export interface Notification {
     id: string
@@ -13,9 +14,15 @@ export interface Notification {
     role: "admin" | "technician"
 }
 
-export async function getNotificationsAction(role: "admin" | "technician"): Promise<{ notifications: Notification[], error?: string }> {
+async function authenticateNotificationUser(role: "admin" | "technician", idToken: string) {
+    return role === "admin" ? verifyAdmin(idToken) : verifyTechnician(idToken)
+}
+
+export async function getNotificationsAction(role: "admin" | "technician", idToken: string): Promise<{ notifications: Notification[], error?: string }> {
     try {
-        const cacheKey = `__kbi_notifications_${role}_cache_v1`
+        const actor = await authenticateNotificationUser(role, idToken)
+        if (!actor) return { notifications: [], error: "Unauthorized" }
+        const cacheKey = `__kbi_notifications_${role}_${actor.uid}_cache_v2`
         const now = Date.now()
         const ttlMs = 60 * 1000
         const backoffMs = 5 * 60 * 1000
@@ -25,8 +32,9 @@ export async function getNotificationsAction(role: "admin" | "technician"): Prom
         }
         if (cached && now - cached.ts < ttlMs) return { notifications: cached.value }
 
-        const snapshot = await adminDb.collection("notifications")
-            .where("role", "==", role)
+        let notificationQuery = adminDb.collection("notifications").where("role", "==", role)
+        if (role === "technician") notificationQuery = notificationQuery.where("userId", "==", actor.uid)
+        const snapshot = await notificationQuery
             .limit(50)
             .get()
 
@@ -43,20 +51,20 @@ export async function getNotificationsAction(role: "admin" | "technician"): Prom
         ;(globalThis as any)[cacheKey] = { value: notifications, ts: now, failedTs: 0 }
         return { notifications }
     } catch {
-        const cacheKey = `__kbi_notifications_${role}_cache_v1`
-        const now = Date.now()
-        const cached = (globalThis as any)[cacheKey] as { value: Notification[]; ts: number; failedTs?: number } | undefined
-        if (cached) {
-            ;(globalThis as any)[cacheKey] = { value: cached.value || [], ts: cached.ts || now, failedTs: now }
-            return { notifications: cached.value || [], error: "Using cached notifications" }
-        }
         return { notifications: [], error: "Failed to fetch notifications" }
     }
 }
 
-export async function markNotificationReadAction(notificationId: string): Promise<{ success: boolean, error?: string }> {
+export async function markNotificationReadAction(notificationId: string, role: "admin" | "technician", idToken: string): Promise<{ success: boolean, error?: string }> {
     try {
-        await adminDb.collection("notifications").doc(notificationId).update({
+        const actor = await authenticateNotificationUser(role, idToken)
+        if (!actor) return { success: false, error: "Unauthorized" }
+        const ref = adminDb.collection("notifications").doc(notificationId)
+        const snapshot = await ref.get()
+        if (!snapshot.exists || (role === "technician" && snapshot.data()?.userId !== actor.uid)) {
+            return { success: false, error: "Notification not found" }
+        }
+        await ref.update({
             read: true
         })
         return { success: true }
@@ -66,11 +74,14 @@ export async function markNotificationReadAction(notificationId: string): Promis
     }
 }
 
-export async function clearNotificationsAction(role: "admin" | "technician"): Promise<{ success: boolean, error?: string }> {
+export async function clearNotificationsAction(role: "admin" | "technician", idToken: string): Promise<{ success: boolean, error?: string }> {
     try {
+        const actor = await authenticateNotificationUser(role, idToken)
+        if (!actor) return { success: false, error: "Unauthorized" }
         while (true) {
-            const snapshot = await adminDb.collection("notifications")
-                .where("role", "==", role)
+            let notificationQuery = adminDb.collection("notifications").where("role", "==", role)
+            if (role === "technician") notificationQuery = notificationQuery.where("userId", "==", actor.uid)
+            const snapshot = await notificationQuery
                 .limit(500)
                 .get()
 
@@ -81,7 +92,7 @@ export async function clearNotificationsAction(role: "admin" | "technician"): Pr
             await batch.commit()
         }
 
-        const cacheKey = `__kbi_notifications_${role}_cache_v1`
+        const cacheKey = `__kbi_notifications_${role}_${actor.uid}_cache_v2`
         ;(globalThis as any)[cacheKey] = { value: [], ts: Date.now(), failedTs: 0 }
 
         return { success: true }
