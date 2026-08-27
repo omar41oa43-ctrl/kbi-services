@@ -150,37 +150,77 @@ export default function InteractiveMap({
           "></span>`
         : "";
 
-      const avatarImg = tech.avatar || "/technician-avatar.jpg";
-      const isBusy = tech.status === "ON_JOB";
-      const statusText = tech.isOnline ? (isBusy ? "BUSY" : "AVAILABLE") : "OFFLINE";
-      const statusBadgeBg = isBusy ? "#FEF3C7" : (tech.isOnline ? "#D1FAE5" : "#F1F5F9");
-      const statusBadgeColor = isBusy ? "#D97706" : (tech.isOnline ? "#059669" : "#64748B");
-      const subtitleText = tech.etaText || (isBusy ? "On assigned job" : (tech.isOnline ? "Ready for dispatch" : "Offline"));
+      const isBusy = tech.status === "ON_JOB" || Boolean(tech.currentOrder);
+      const isOnline = tech.isOnline;
+
+      let statusText = "OFFLINE";
+      let statusBadgeBg = "#F1F5F9";
+      let statusBadgeColor = "#64748B";
+      let pinBorderColor = "#CBD5E1";
+      let statusDotColor = "#94A3B8";
+      let subtitleColor = "#64748B";
+      let subtitleText = "Offline";
+
+      if (isOnline) {
+        if (isBusy) {
+          statusText = "BUSY";
+          statusBadgeBg = "#FEF3C7";
+          statusBadgeColor = "#B45309";
+          pinBorderColor = "#F59E0B";
+          statusDotColor = "#F59E0B";
+          subtitleColor = "#D97706";
+          subtitleText = tech.etaText || (tech.currentOrder ? `Job: ${tech.currentOrder}` : "On Active Job");
+        } else {
+          statusText = "ONLINE";
+          statusBadgeBg = "#DCFCE7";
+          statusBadgeColor = "#15803D";
+          pinBorderColor = "#10B981";
+          statusDotColor = "#10B981";
+          subtitleColor = "#059669";
+          subtitleText = tech.etaText || "Available / Ready";
+        }
+      }
+
+      const pulseDotHtml = isOnline
+        ? `<span style="
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: ${statusDotColor};
+            border: 2px solid #FFFFFF;
+            box-shadow: 0 0 8px ${statusDotColor};
+            z-index: 10;
+          "></span>`
+        : "";
 
       const iconHtml = `
         <div style="position: relative; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: transform 0.2s ease;">
           <div style="
             background: #FFFFFF;
-            border: ${isSelected ? '2px solid #0284C7' : '1px solid #E2E8F0'};
+            border: ${isSelected ? '2.5px solid #0284C7' : `2px solid ${pinBorderColor}`};
             border-radius: 9999px;
             padding: 5px 14px 5px 6px;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18), 0 4px 10px rgba(0, 0, 0, 0.08);
             display: flex;
             align-items: center;
             gap: 9px;
             font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
             color: #0F172A;
-            transform: ${isSelected ? 'scale(1.06)' : 'scale(1)'};
+            transform: ${isSelected ? 'scale(1.08)' : 'scale(1)'};
             white-space: nowrap;
           ">
-            <!-- Avatar -->
-            <div style="position: relative; width: 34px; height: 34px; border-radius: 50%; overflow: hidden; background: #0F172A; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1.5px solid #FFFFFF; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+            <!-- Avatar with Status Dot -->
+            <div style="position: relative; width: 34px; height: 34px; border-radius: 50%; background: #0F172A; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1.5px solid #FFFFFF; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
               ${tech.avatar ? `
-                <img src="${tech.avatar}" alt="${tech.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-                <div style="display: none; width: 100%; height: 100%; background: #0F172A; color: #FFFFFF; font-weight: 800; font-size: 13px; align-items: center; justify-content: center;">${tech.name.charAt(0).toUpperCase()}</div>
+                <img src="${tech.avatar}" alt="${tech.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                <div style="display: none; width: 100%; height: 100%; background: #0F172A; color: #FFFFFF; font-weight: 800; font-size: 13px; align-items: center; justify-content: center; border-radius: 50%;">${tech.name.charAt(0).toUpperCase()}</div>
               ` : `
-                <div style="width: 100%; height: 100%; background: #0F172A; color: #FFFFFF; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center;">${tech.name.charAt(0).toUpperCase()}</div>
+                <div style="width: 100%; height: 100%; background: #0F172A; color: #FFFFFF; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">${tech.name.charAt(0).toUpperCase()}</div>
               `}
+              ${pulseDotHtml}
             </div>
 
             <!-- Content Details -->
@@ -190,18 +230,23 @@ export default function InteractiveMap({
                 <span style="
                   background: ${statusBadgeBg};
                   color: ${statusBadgeColor};
-                  padding: 2px 7px;
+                  border: 1px solid ${statusBadgeColor}33;
+                  padding: 2px 8px;
                   border-radius: 9999px;
-                  font-size: 9px;
+                  font-size: 10px;
                   font-weight: 800;
                   text-transform: uppercase;
-                  letter-spacing: 0.3px;
+                  letter-spacing: 0.4px;
+                  display: flex;
+                  align-items: center;
+                  gap: 3.5px;
                 ">
+                  <span style="width: 6px; height: 6px; border-radius: 50%; background: ${statusDotColor}; display: inline-block;"></span>
                   ${statusText}
                 </span>
               </div>
-              <span style="font-size: 10px; color: #64748B; font-weight: 500;">
-                ${isBusy ? `<span style="color: #0284C7; font-weight: 600;">${subtitleText}</span>` : `<span style="color: #10B981; font-weight: 600;">${subtitleText}</span>`}
+              <span style="font-size: 10px; color: ${subtitleColor}; font-weight: 700; margin-top: 1px;">
+                ${subtitleText}
               </span>
             </div>
 
@@ -219,7 +264,7 @@ export default function InteractiveMap({
             height: 0; 
             border-left: 7px solid transparent;
             border-right: 7px solid transparent;
-            border-top: 9px solid #0F2850;
+            border-top: 9px solid ${isSelected ? '#0284C7' : pinBorderColor};
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
             margin-top: -1px;
           "></div>
@@ -229,8 +274,8 @@ export default function InteractiveMap({
       const customIcon = L.divIcon({
         html: iconHtml,
         className: "custom-tech-marker",
-        iconSize: [180, 56],
-        iconAnchor: [90, 52],
+        iconSize: [200, 58],
+        iconAnchor: [100, 54],
       });
 
       if (markersRef.current[tech.id]) {

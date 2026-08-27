@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
   const db = getAdminDb()
 
   // Generate a durable reference through a Firestore transaction. Starting new
-  // counters above the legacy four-digit range avoids collisions with old data.
+  // counters with standard 6-digit format KBI-000001
   const customRef = String(body.orderNumber || body.reference || "").trim().toUpperCase()
   let orderNumber: string
   if (customRef) {
@@ -79,13 +79,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: false, error: `${orderNumber} already exists.` }, { status: 409 })
     }
   } else {
-    const counterRef = db.collection("counters").doc("work_orders")
+    const counterRef = db.collection("counters").doc("orders")
     orderNumber = await db.runTransaction(async (transaction) => {
       const counter = await transaction.get(counterRef)
-      const previous = Number(counter.data()?.current || 10000)
-      const next = Number.isFinite(previous) ? Math.max(previous + 1, 10001) : 10001
+      const previous = Number(counter.data()?.current || 0)
+      const next = Number.isFinite(previous) ? previous + 1 : 1
       transaction.set(counterRef, { current: next, updatedAt: FieldValue.serverTimestamp() }, { merge: true })
-      return `KBI-${next}`
+      return `KBI-${String(next).padStart(6, "0")}`
     })
   }
 

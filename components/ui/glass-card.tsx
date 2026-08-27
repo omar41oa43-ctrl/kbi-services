@@ -10,7 +10,7 @@ export function GlassCard({ children, className, hoverEffect = true, as: Compone
   return (
     <Component
       className={cn(
-        "glass rounded-3xl p-6 sm:p-8 lg:p-10 relative overflow-hidden group transition-transform duration-300 will-change-transform",
+        "glass rounded-3xl p-6 sm:p-8 lg:p-10 relative overflow-hidden group transition-transform duration-300",
         hoverEffect && "glass-hover hover:-translate-y-1 hover:shadow-2xl",
         className
       )}

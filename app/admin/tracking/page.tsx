@@ -90,6 +90,11 @@ interface PendingBooking {
   customerName?: string;
   customerPhone?: string;
   address?: string;
+  country?: string;
+  emirateId?: string;
+  emirate?: string;
+  areaId?: string;
+  area?: string;
   latitude?: number;
   longitude?: number;
   status: string;
@@ -119,6 +124,7 @@ export default function LiveTrackingPage() {
   const [alertMessage, setAlertMessage] = useState("");
   const [notice, setNotice] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [emirateFilter, setEmirateFilter] = useState<"ALL" | "abu-dhabi" | "dubai" | "sharjah" | "ajman">("ALL");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ONLINE" | "AVAILABLE" | "ON_JOB" | "OFFLINE">("ALL");
   const [rightTab, setRightTab] = useState<"INSPECTOR" | "SMART_DISPATCH">("INSPECTOR");
 
@@ -137,6 +143,11 @@ export default function LiveTrackingPage() {
           customerName: data.customerName || data.clientName || "Customer",
           customerPhone: data.customerPhone || data.phone || "",
           address: data.address || data.locationName || data.city || "Abu Dhabi, UAE",
+          country: data.country || "UAE",
+          emirateId: data.emirateId || (data.address?.toLowerCase().includes("dubai") ? "dubai" : data.address?.toLowerCase().includes("sharjah") ? "sharjah" : data.address?.toLowerCase().includes("ajman") ? "ajman" : "abu-dhabi"),
+          emirate: data.emirate || (data.emirateId === "dubai" ? "Dubai" : data.emirateId === "sharjah" ? "Sharjah" : data.emirateId === "ajman" ? "Ajman" : "Abu Dhabi"),
+          areaId: data.areaId || "",
+          area: data.area || "",
           latitude: Number.isFinite(lat) ? lat : undefined,
           longitude: Number.isFinite(lng) ? lng : undefined,
           status: data.status || "pending",
@@ -161,7 +172,10 @@ export default function LiveTrackingPage() {
             const raw = d.data();
             const lat = Number(raw.latitude ?? raw.lat ?? raw.location?.lat ?? raw.lastKnownLatitude);
             const lng = Number(raw.longitude ?? raw.lng ?? raw.location?.lng ?? raw.lastKnownLongitude);
-            const isOnline = raw.online === true || raw.isOnline === true;
+            const cleanAvailability = String(raw.availability ?? "").toLowerCase().trim();
+            const cleanStatus = String(raw.status ?? "").toUpperCase().trim();
+            const isExplicitlyOffline = cleanAvailability === "offline" || cleanStatus === "OFFLINE" || raw.online === false || raw.isOnline === false;
+            const isOnline = !isExplicitlyOffline && (raw.online === true || raw.isOnline === true || cleanAvailability === "available" || cleanAvailability === "busy" || cleanStatus === "AVAILABLE" || cleanStatus === "BUSY");
             
             const avatar = raw.profile_photo || raw.avatar || raw.photoURL || raw.photo || "";
             const deviceModel =
@@ -192,7 +206,7 @@ export default function LiveTrackingPage() {
             const level = raw.level || raw.rank || (jobsCompleted > 50 ? "Gold" : jobsCompleted > 10 ? "Silver" : "Standard");
 
             const activeJobId = raw.currentJob || raw.currentOrder || raw.activeBookingId;
-            const isBusy = Boolean(activeJobId) || raw.status === "BUSY" || raw.status === "ON_JOB";
+            const isBusy = (cleanAvailability === "busy" || cleanStatus === "BUSY" || cleanStatus === "ON_JOB" || Boolean(activeJobId)) && cleanAvailability !== "available";
 
             return {
               id: d.id,
@@ -208,8 +222,8 @@ export default function LiveTrackingPage() {
               networkStatus: raw.networkStatus || (isOnline ? "Active" : "Offline"),
               speed: Number(raw.speed ?? 0),
               heading: Number(raw.heading ?? 0),
-              status: isBusy ? "ON_JOB" : (isOnline ? "AVAILABLE" : "OFFLINE"),
-              currentOrder: activeJobId,
+              status: isOnline ? (isBusy ? "ON_JOB" : "AVAILABLE") : "OFFLINE",
+              currentOrder: isBusy ? activeJobId : undefined,
               isOnline,
               specialization: raw.specialization || raw.experience_main_skill || "Certified Technician",
               lastActive: isOnline ? "Active Now (Realtime)" : (raw.lastSeen ? new Date(raw.lastSeen).toLocaleTimeString() : "Offline"),
@@ -578,6 +592,33 @@ export default function LiveTrackingPage() {
                 Offline
               </button>
             </div>
+          </div>
+
+          {/* Multi-Emirate Filter Tabs */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 scrollbar-none border-b border-border/50 pb-2">
+            <span className="text-xs font-bold text-muted-foreground shrink-0 mr-1">Emirate:</span>
+            {[
+              { id: "ALL", name: "All Emirates" },
+              { id: "abu-dhabi", name: "Abu Dhabi (أبوظبي)" },
+              { id: "dubai", name: "Dubai (دبي)" },
+              { id: "sharjah", name: "Sharjah (الشارقة)" },
+              { id: "ajman", name: "Ajman (عجمان)" },
+            ].map((em) => {
+              const active = emirateFilter === em.id
+              return (
+                <button
+                  key={em.id}
+                  onClick={() => setEmirateFilter(em.id as any)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 ${
+                    active
+                      ? "bg-cyan-500 text-black shadow-xs font-extrabold"
+                      : "bg-background border border-border text-foreground hover:bg-muted"
+                  }`}
+                >
+                  {em.name}
+                </button>
+              )
+            })}
           </div>
 
           {/* Filter Status Pills (All, Available, On Job, Busy, Offline) */}

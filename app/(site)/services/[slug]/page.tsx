@@ -1,6 +1,7 @@
 import { devices } from "@/lib/data"
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { GlassCard } from "@/components/ui/glass-card"
 import { Wrench, Clock, CheckCircle, ShieldCheck, Cpu, ArrowRight } from "lucide-react"
@@ -64,9 +65,9 @@ export default async function ServicePage({ params }: Props) {
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <Button asChild size="lg" className="h-14 px-8 text-lg rounded-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold w-full sm:w-auto">
-                            <a href={`/book?device=${device.id}`}>
+                            <Link href={`/book?device=${device.id}`}>
                                 Book {device.name} Repair
-                            </a>
+                            </Link>
                         </Button>
                     </div>
                 </div>
@@ -131,9 +132,9 @@ export default async function ServicePage({ params }: Props) {
                     </div>
                     <div className="mt-8">
                         <Button asChild variant="link" className="text-cyan-400">
-                            <a href={`/book?device=${device.id}`} className="flex items-center gap-2">
+                            <Link href={`/book?device=${device.id}`} className="flex items-center gap-2">
                                 Start Your Repair <ArrowRight className="w-4 h-4" />
-                            </a>
+                            </Link>
                         </Button>
                     </div>
                 </GlassCard>

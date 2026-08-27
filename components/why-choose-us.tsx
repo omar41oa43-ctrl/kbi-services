@@ -1,6 +1,5 @@
 "use client"
 
-import { motion } from "framer-motion"
 import { GlassCard } from "@/components/ui/glass-card"
 import { useT } from "@/components/language-provider"
 import { ShieldCheck, Zap, HeartHandshake, Clock, Award, Star } from "lucide-react"
@@ -47,7 +46,7 @@ const features = [
 export function WhyChooseUs() {
   const t = useT()
   return (
-    <section className="py-24 relative overflow-hidden bg-slate-50/60 dark:bg-black/50 transition-colors">
+    <section className="home-deferred py-24 relative overflow-hidden bg-slate-50/60 dark:bg-black/50 transition-colors">
       {/* Background Decorations */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] opacity-30" />
@@ -56,48 +55,22 @@ export function WhyChooseUs() {
 
       <div className="max-w-6xl mx-auto px-4 relative z-10">
         <div className="mb-20 text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="inline-block mb-4 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-700 dark:text-cyan-400 text-sm font-bold tracking-wider uppercase shadow-xs"
-          >
+          <div className="inline-block mb-4 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-700 dark:text-cyan-400 text-sm font-bold tracking-wider uppercase shadow-xs">
             {t("Why Choose Us")}
-          </motion.div>
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 tracking-tighter text-foreground leading-[1.1]"
-          >
+          </div>
+          <h2 className="text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 tracking-tighter text-foreground leading-[1.1]">
             {t("Why Choose KBI?")}
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed"
-          >
+          </h2>
+          <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed">
             {t("We're committed to providing the best repair experience in Abu Dhabi with professional on-site service.")}
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, width: 0 }}
-            whileInView={{ opacity: 1, width: "120px" }}
-            viewport={{ once: true }}
-            className="h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent mx-auto mt-8 shadow-[0_0_20px_rgba(6,182,212,0.6)]"
-          />
+          </p>
+          <div className="h-1 w-[120px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent mx-auto mt-8 shadow-[0_0_20px_rgba(6,182,212,0.6)]" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
-            <motion.div
+            <div
               key={index}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1, duration: 0.5 }}
-              whileHover={{ y: -6 }}
               className="group"
             >
               <GlassCard 
@@ -122,7 +95,7 @@ export function WhyChooseUs() {
                 {/* Bottom Bar Indicator */}
                 <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
               </GlassCard>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "framer-motion"
+import Link from "next/link"
 import { GlassCard } from "@/components/ui/glass-card"
 import { Phone, Mail, MapPin, Clock, MessageCircle, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -70,7 +70,7 @@ export function ContactContent({ contact }: ContactContentProps) {
       <div className="container mx-auto px-6 relative z-10">
         {/* Hero */}
         <div className="text-center mb-16">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+          <div>
             <h1 className="text-4xl md:text-6xl font-extrabold mb-6 text-foreground">
               {isAr ? (
                 t("Contact Us")
@@ -81,7 +81,7 @@ export function ContactContent({ contact }: ContactContentProps) {
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               {t("We're here to help! Reach out through any of the channels below or book a technician directly.")}
             </p>
-          </motion.div>
+          </div>
         </div>
 
         {/* Contact Methods */}
@@ -89,12 +89,8 @@ export function ContactContent({ contact }: ContactContentProps) {
           {contactMethods.map((method, index) => {
             const colors = colorMap[method.color]
             return (
-              <motion.div
+              <div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
               >
                 <a
                   href={method.href}
@@ -113,14 +109,14 @@ export function ContactContent({ contact }: ContactContentProps) {
                     <p className={`font-bold ${colors.text}`} dir={isAr && method.href.startsWith("tel:") ? "ltr" : undefined}>{t(method.value)}</p>
                   </GlassCard>
                 </a>
-              </motion.div>
+              </div>
             )
           })}
         </div>
 
         {/* Info Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
-          <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
+          <div>
             <GlassCard className="h-full">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-3 rounded-2xl bg-purple-500/10">
@@ -140,9 +136,9 @@ export function ContactContent({ contact }: ContactContentProps) {
                 ))}
               </div>
             </GlassCard>
-          </motion.div>
+          </div>
 
-          <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
+          <div>
             <GlassCard className="h-full">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-3 rounded-2xl bg-orange-500/10">
@@ -170,11 +166,11 @@ export function ContactContent({ contact }: ContactContentProps) {
                 )}
               </p>
             </GlassCard>
-          </motion.div>
+          </div>
         </div>
 
         {/* CTA */}
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+        <div>
           <GlassCard className="text-center cta-creative">
             <h2 className="text-2xl md:text-3xl font-extrabold mb-4 text-foreground">{t("Ready to Get Your Device Fixed?")}</h2>
             <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
@@ -184,9 +180,9 @@ export function ContactContent({ contact }: ContactContentProps) {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button asChild variant="primary">
-                <a href="/book" className="inline-flex items-center gap-2">
+                <Link href="/book" className="inline-flex items-center gap-2">
                   {t("Book a Technician")} <ArrowRight className="w-5 h-5" />
-                </a>
+                </Link>
               </Button>
               <Button asChild variant="secondary">
                 <a
@@ -201,7 +197,7 @@ export function ContactContent({ contact }: ContactContentProps) {
               </Button>
             </div>
           </GlassCard>
-        </motion.div>
+        </div>
       </div>
     </section>
   )

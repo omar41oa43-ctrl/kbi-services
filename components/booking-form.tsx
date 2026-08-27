@@ -3,6 +3,8 @@
 import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
+import dynamic from "next/dynamic"
+import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { useSearchParams } from "next/navigation"
 import { GlassCard } from "@/components/ui/glass-card"
@@ -14,7 +16,7 @@ import { useToast } from "@/hooks/use-toast"
 import { reverseGeocode } from "@/app/actions/geocode"
 import { createBookingAction } from "@/app/actions/booking"
 import { useSiteContact } from "@/components/contact-provider"
-import { WhatsAppChatbot } from "@/components/whatsapp-chatbot"
+import { getActiveEmirates, getAreasByEmirate, detectEmirateFromGPS } from "@/lib/locations"
 import {
   Smartphone,
   Laptop,
@@ -47,8 +49,15 @@ import {
   Plus,
   Trash2,
   Search,
+  Mail,
+  Headphones,
 } from "lucide-react"
 import type { ReactNode } from "react"
+
+const BookingWhatsAppChatbot = dynamic(
+  () => import("@/components/whatsapp-chatbot").then((mod) => mod.WhatsAppChatbot),
+  { ssr: false },
+)
 
 const iconMap: Record<string, ReactNode> = {
   Smartphone: <Smartphone className="w-6 h-6" />,
@@ -140,16 +149,39 @@ export function BookingForm() {
   const [deviceEntries, setDeviceEntries] = useState<DeviceEntry[]>([])
 
   const [mounted, setMounted] = useState(false)
+  const [chatReady, setChatReady] = useState(false)
 
   useEffect(() => {
     const id = requestAnimationFrame(() => setMounted(true))
     return () => cancelAnimationFrame(id)
   }, [])
 
+  useEffect(() => {
+    if (!mounted) return
+
+    const loadChat = () => setChatReady(true)
+    const runtime = globalThis as typeof globalThis & {
+      requestIdleCallback?: (_callback: () => void, _options?: { timeout: number }) => number
+      cancelIdleCallback?: (_id: number) => void
+    }
+
+    if (runtime.requestIdleCallback) {
+      const id = runtime.requestIdleCallback(loadChat, { timeout: 5000 })
+      return () => runtime.cancelIdleCallback?.(id)
+    }
+
+    const id = window.setTimeout(loadChat, 2200)
+    return () => window.clearTimeout(id)
+  }, [mounted])
+
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
     whatsapp: "",
+    emirateId: "abu-dhabi",
+    emirateName: "Abu Dhabi",
+    areaId: "",
+    areaName: "",
     address: "",
     locationLat: null as number | null,
     locationLng: null as number | null,
@@ -157,8 +189,8 @@ export function BookingForm() {
     companyName: "",
     unitNumber: "",
     notes: "",
-    preferredDate: "",
-    preferredTime: "",
+    preferredDate: new Date().toISOString().split("T")[0],
+    preferredTime: "afternoon",
   })
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [trackingNumber, setTrackingNumber] = useState("")
@@ -167,6 +199,7 @@ export function BookingForm() {
   const [customModel, setCustomModel] = useState("")
   const [deviceSearch, setDeviceSearch] = useState("")
   const [modelSearch, setModelSearch] = useState("")
+  const [areaSearch, setAreaSearch] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [issuePickingId, setIssuePickingId] = useState<string | null>(null)
   const [isDetectingLocation, setIsDetectingLocation] = useState(false)
@@ -362,11 +395,18 @@ export function BookingForm() {
     }
 
     const setAddressFromCoords = async (latitude: number, longitude: number) => {
+      const detected = detectEmirateFromGPS(latitude, longitude)
       const result = await reverseGeocode(latitude, longitude, lang === "ar" ? "ar" : "en")
       if ((result as any)?.error) throw new Error((result as any).error)
       const address = (result as any)?.address || ""
       if (!address) throw new Error("No address")
-      setFormData((prev) => ({ ...prev, address, locationLat: latitude, locationLng: longitude }))
+      setFormData((prev) => ({
+        ...prev,
+        address,
+        locationLat: latitude,
+        locationLng: longitude,
+        ...(detected ? { emirateId: detected.id, emirateName: detected.nameEn } : {})
+      }))
     }
 
     const fallbackToIpLocation = async () => {
@@ -473,12 +513,12 @@ export function BookingForm() {
       } else {
         throw new Error("No order IDs returned")
       }
-    } catch (err) {
+    } catch (err: any) {
       if (handleStaleServerActionError(err)) return
       toast({
         variant: "destructive",
         title: t("Error"),
-        description: t("Failed to create order. Please try again.")
+        description: err?.message || t("Failed to create order. Please try again.")
       })
     } finally {
       setIsSubmitting(false)
@@ -565,11 +605,11 @@ export function BookingForm() {
                 ))}
               </div>
 
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 mb-6">
                 <Button asChild variant="primary" className="w-full">
-                  <a href={`/track/${encodeURIComponent(trackingNumber)}`}>
+                  <Link href={`/track/${encodeURIComponent(trackingNumber)}`}>
                     {t("Track Your Order")}
-                  </a>
+                  </Link>
                 </Button>
                 <Button asChild variant="secondary" className="w-full">
                   <a
@@ -586,6 +626,57 @@ export function BookingForm() {
                     {isAr ? "قيّمنا على Google" : "Rate us on Google"}
                   </a>
                 </Button>
+              </div>
+
+              {/* Creative Support Card */}
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-500/10 via-primary/5 to-blue-500/10 border border-cyan-500/30 p-5 text-left text-foreground backdrop-blur-md shadow-lg shadow-cyan-500/5">
+                <div className="flex items-start gap-3.5 mb-3.5">
+                  <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-400 shrink-0 shadow-xs">
+                    <Headphones className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-foreground">
+                      {isAr ? "تحتاج مساعدة؟ فريق الدعم جاهز لخدمتك" : "Need help? Contact our support team"}
+                    </h4>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                      {isAr
+                        ? "تواصل مع فريق الدعم المباشر عبر الواتساب أو البريد الإلكتروني لأي استفسار أو تعديل على الطلب."
+                        : "Connect with our dedicated support team via WhatsApp or email for instant assistance."}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                  {/* WhatsApp Support Button */}
+                  <a
+                    href="https://wa.me/971502491034?text=Hi%20KBI%20Support,%20I%20need%20help%20with%20my%20order"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2.5 p-2.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-600 dark:text-emerald-300 transition-all text-xs font-semibold group cursor-pointer shadow-xs"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                      <MessageCircle className="w-4 h-4" />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">WhatsApp</span>
+                      <span className="text-xs font-bold font-mono truncate">050 249 1034</span>
+                    </div>
+                  </a>
+
+                  {/* Email Support Button */}
+                  <a
+                    href="mailto:support@kbi.services?subject=Support%20Request%20-%20Order%20Help"
+                    className="flex items-center gap-2.5 p-2.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-600 dark:text-cyan-300 transition-all text-xs font-semibold group cursor-pointer shadow-xs"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-cyan-500 text-black flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                      <Mail className="w-4 h-4" />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Email</span>
+                      <span className="text-xs font-bold truncate">support@kbi.services</span>
+                    </div>
+                  </a>
+                </div>
               </div>
             </GlassCard>
           </motion.div>
@@ -688,17 +779,17 @@ export function BookingForm() {
         )}
 
         {/* Progress Steps */}
-        <div className="sticky top-20 z-30 max-w-3xl mx-auto mb-8 rounded-2xl border border-border bg-background/85 px-3 py-3 shadow-lg backdrop-blur-2xl sm:px-5" dir={isAr ? 'rtl' : 'ltr'}>
-          <div className="flex items-center justify-between">
+        <div className="sticky top-20 z-30 max-w-3xl mx-auto mb-8 rounded-2xl border border-border bg-background/85 px-2 py-3 shadow-lg backdrop-blur-2xl sm:px-5" dir={isAr ? 'rtl' : 'ltr'}>
+          <div className="flex w-full items-center">
             {steps.map((step, index) => (
-              <div key={step.id} className="flex items-center">
+              <div key={step.id} className={`flex min-w-0 items-center ${index < steps.length - 1 ? "flex-1" : "shrink-0"}`}>
                 <button
                   onClick={() => goToStep(step.id)}
                   disabled={step.id > currentStep}
                   className={`flex flex-col items-center gap-2 ${step.id <= currentStep ? "cursor-pointer" : "cursor-not-allowed"}`}
                 >
                   <div
-                    className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-all ${step.id < currentStep
+                    className={`relative w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all ${step.id < currentStep
                       ? "bg-cyan-500 text-black"
                       : step.id === currentStep
                         ? "bg-cyan-500/20 border-2 border-cyan-500 text-cyan-400"
@@ -716,7 +807,7 @@ export function BookingForm() {
                 </button>
                 {index < steps.length - 1 && (
                   <div
-                    className={`w-7 md:w-14 lg:w-20 h-0.5 mx-1.5 sm:mx-2 ${step.id < currentStep ? "bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-500 shadow-[0_0_20px_rgba(6,182,212,0.25)]" : "bg-border"}`}
+                    className={`mx-1 h-0.5 min-w-2 flex-1 sm:mx-2 ${step.id < currentStep ? "bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-500 shadow-[0_0_20px_rgba(6,182,212,0.25)]" : "bg-border"}`}
                   />
                 )}
               </div>
@@ -1202,8 +1293,109 @@ export function BookingForm() {
                       </div>
                     </div>
 
+                    {/* Multi-Emirate Selection */}
                     <div>
-                      <label htmlFor="booking-address" className="block text-sm font-semibold text-foreground/80 mb-2">{t("Address / Location *")}</label>
+                      <label className="block text-sm font-semibold text-foreground/80 mb-2">
+                        {isAr ? "اختر الإمارة *" : "Select Emirate *"}
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5" dir={isAr ? "rtl" : "ltr"}>
+                        {getActiveEmirates().map((em) => {
+                          const isSelected = formData.emirateId === em.id
+                          return (
+                            <button
+                              key={em.id}
+                              type="button"
+                              onClick={() => {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  emirateId: em.id,
+                                  emirateName: em.nameEn,
+                                  areaId: "",
+                                  areaName: "",
+                                }))
+                                setAreaSearch("")
+                              }}
+                              className={cn(
+                                "flex flex-col items-center justify-center p-3 rounded-2xl border text-sm font-bold transition-all cursor-pointer relative overflow-hidden",
+                                isSelected
+                                  ? "bg-cyan-500/20 border-cyan-500 text-cyan-700 dark:text-cyan-300 shadow-xs"
+                                  : "bg-muted/40 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                              )}
+                            >
+                              <span className="text-sm font-bold">{isAr ? em.nameAr : em.nameEn}</span>
+                              <span className="text-[10px] font-normal text-muted-foreground mt-0.5">
+                                {isAr ? `${em.areas.length} منطقة` : `${em.areas.length} Areas`}
+                              </span>
+                              {isSelected && (
+                                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-cyan-500" />
+                              )}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Area Selection for the selected Emirate */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-semibold text-foreground/80">
+                          {isAr ? "المنطقة / الحي *" : "Area / Neighborhood *"}
+                        </label>
+                        <span className="text-xs text-muted-foreground font-medium">
+                          {isAr ? (formData.emirateId === "abu-dhabi" ? "أبوظبي" : formData.emirateId === "dubai" ? "دبي" : formData.emirateId === "sharjah" ? "الشارقة" : "عجمان") : formData.emirateName}
+                        </span>
+                      </div>
+
+                      {/* Search / Select Area */}
+                      <div className="relative mb-3">
+                        <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground ${isAr ? "right-3.5" : "left-3.5"}`} />
+                        <input
+                          type="text"
+                          value={areaSearch}
+                          onChange={(e) => setAreaSearch(e.target.value)}
+                          placeholder={isAr ? "ابحث عن منطقتك (مثال: مارينا، خليفة، النهدة...)" : "Search area (e.g. Marina, Khalifa, Nahda...)"}
+                          className={`w-full py-2.5 bg-background border border-input rounded-xl focus:outline-none focus:border-cyan-500 text-xs text-foreground ${isAr ? "pr-10 pl-4 text-right" : "pl-10 pr-4 text-left"}`}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1" dir={isAr ? "rtl" : "ltr"}>
+                        {getAreasByEmirate(formData.emirateId)
+                          .filter((area) => {
+                            if (!areaSearch.trim()) return true
+                            const q = areaSearch.trim().toLowerCase()
+                            return area.nameEn.toLowerCase().includes(q) || area.nameAr.includes(q)
+                          })
+                          .map((area) => {
+                            const isSelected = formData.areaId === area.id || formData.areaName === area.nameEn
+                            return (
+                              <button
+                                key={area.id}
+                                type="button"
+                                onClick={() => {
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    areaId: area.id,
+                                    areaName: area.nameEn,
+                                  }))
+                                }}
+                                className={cn(
+                                  "p-2.5 rounded-xl border text-xs font-semibold text-center transition-all truncate cursor-pointer",
+                                  isSelected
+                                    ? "bg-cyan-500/20 border-cyan-500 text-cyan-700 dark:text-cyan-300 font-bold shadow-xs"
+                                    : "bg-muted/30 border-border text-foreground/80 hover:bg-muted hover:text-foreground"
+                                )}
+                              >
+                                {isAr ? area.nameAr : area.nameEn}
+                              </button>
+                            )
+                          })}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label htmlFor="booking-address" className="block text-sm font-semibold text-foreground/80 mb-2">
+                        {isAr ? "العنوان بالتفصيل (الشارع، المبنى، المعلم) *" : "Detailed Address (Street, Building, Landmark) *"}
+                      </label>
                       <div className="relative">
                         <MapPin className={`absolute top-4 w-5 h-5 text-muted-foreground ${isAr ? "right-4" : "left-4"}`} />
                         <input
@@ -1214,7 +1406,7 @@ export function BookingForm() {
                           required
                           value={formData.address}
                           onChange={handleInputChange}
-                          placeholder={t("Your address in Abu Dhabi")}
+                          placeholder={isAr ? "اسم الشارع، رقم الفيلا/البناية أو معلم مميز" : "Street name, building/villa number, landmark"}
                           className={`w-full py-3.5 bg-background border border-input rounded-2xl focus:outline-none focus:border-cyan-500 transition-colors text-foreground text-base shadow-xs placeholder:text-muted-foreground/60 ${isAr ? "pr-12 pl-32 text-right" : "pl-12 pr-32 text-left"}`}
                         />
                         <button
@@ -1312,19 +1504,48 @@ export function BookingForm() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label htmlFor="booking-date" className="block text-sm font-semibold text-foreground/80 mb-2">{t("Preferred Date")}</label>
-                        <div className="relative">
-                          <Calendar className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground ${isAr ? "right-4" : "left-4"}`} />
-                          <input
-                              type="date"
-                              id="booking-date"
-                              name="preferredDate"
-                              required
-                              min={new Date().toISOString().split("T")[0]}
-                              value={formData.preferredDate}
-                              onChange={handleInputChange}
-                              className={`w-full py-3.5 bg-background border border-input rounded-2xl focus:outline-none focus:border-cyan-500 transition-colors text-foreground text-base cursor-pointer shadow-xs ${isAr ? "pr-12 pl-4 text-right" : "pl-12 pr-4 text-left"}`}
-                            />
+                        <label className="block text-sm font-semibold text-foreground/80 mb-2">
+                          {t("Service Day") || t("Preferred Date")}
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const todayStr = new Date().toISOString().split("T")[0]
+                              setFormData((p) => ({ ...p, preferredDate: todayStr }))
+                            }}
+                            className={cn(
+                              "h-[54px] px-4 rounded-2xl font-bold text-sm border flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs",
+                              formData.preferredDate === new Date().toISOString().split("T")[0]
+                                ? "bg-cyan-500 text-black border-cyan-400 ring-2 ring-cyan-500/20 shadow-md shadow-cyan-500/10"
+                                : "bg-background text-muted-foreground border-input hover:text-foreground hover:border-cyan-500/40"
+                            )}
+                          >
+                            <Calendar className="w-4 h-4" />
+                            <span>{isAr ? "اليوم (Today)" : "Today"}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const tomorrow = new Date()
+                              tomorrow.setDate(tomorrow.getDate() + 1)
+                              const tomorrowStr = tomorrow.toISOString().split("T")[0]
+                              setFormData((p) => ({ ...p, preferredDate: tomorrowStr }))
+                            }}
+                            className={cn(
+                              "h-[54px] px-4 rounded-2xl font-bold text-sm border flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs",
+                              (() => {
+                                const tom = new Date()
+                                tom.setDate(tom.getDate() + 1)
+                                return formData.preferredDate === tom.toISOString().split("T")[0]
+                              })()
+                                ? "bg-cyan-500 text-black border-cyan-400 ring-2 ring-cyan-500/20 shadow-md shadow-cyan-500/10"
+                                : "bg-background text-muted-foreground border-input hover:text-foreground hover:border-cyan-500/40"
+                            )}
+                          >
+                            <Calendar className="w-4 h-4" />
+                            <span>{isAr ? "غداً (Tomorrow)" : "Tomorrow"}</span>
+                          </button>
                         </div>
                       </div>
                       <div>
@@ -1462,8 +1683,8 @@ export function BookingForm() {
       </div>
       
       {/* Booking-specific WhatsApp chatbot with context */}
-        {mounted && (
-          <WhatsAppChatbot
+        {chatReady && (
+          <BookingWhatsAppChatbot
             bookingStep={currentStep}
             currentDevice={
               selectedDevice

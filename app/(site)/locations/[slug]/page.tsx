@@ -1,6 +1,7 @@
 import { locations } from "@/lib/locations"
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { GlassCard } from "@/components/ui/glass-card"
 import { MapPin, Clock, Star, ShieldCheck } from "lucide-react"
@@ -58,14 +59,14 @@ export default async function LocationPage({ params }: Props) {
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <Button asChild size="lg" className="h-14 px-8 text-lg rounded-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold w-full sm:w-auto">
-                            <a href={`/book?address=${encodeURIComponent(loc.name)}`}>
+                            <Link href={`/book?address=${encodeURIComponent(loc.name)}`}>
                                 Book Technician in {loc.name}
-                            </a>
+                            </Link>
                         </Button>
                         <Button asChild variant="outline" size="lg" className="h-14 px-8 text-lg rounded-full border-white/20 hover:bg-white/10 w-full sm:w-auto">
-                            <a href="/services">
+                            <Link href="/services">
                                 View All Services
-                            </a>
+                            </Link>
                         </Button>
                     </div>
                 </div>

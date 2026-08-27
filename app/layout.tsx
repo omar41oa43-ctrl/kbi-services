@@ -5,11 +5,10 @@ import "./globals.css"
 import { cn } from "@/lib/utils"
 import { LanguageProvider } from "@/components/language-provider"
 import { ThemeProvider } from "@/components/theme-provider"
-import { cookies } from "next/headers"
 
 const cairo = Cairo({ subsets: ["arabic", "latin"], variable: "--font-sans" })
 
-export const revalidate = 0
+export const revalidate = 600
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -22,8 +21,8 @@ export async function generateMetadata(): Promise<Metadata> {
     keywords: ["best mobile repair abu dhabi", "top rated laptop repair abu dhabi", "iphone screen replacement abu dhabi", "on-site printer repair", "CCTV installation abu dhabi", "TV repair services abu dhabi", "apple watch repair", "gaming console repair", "mobile repair near me", "laptop maintenance", "Abu Dhabi tech support"],
     metadataBase: new URL("https://kbi.services"),
     icons: {
-      icon: '/pwa-icon.png',
-      apple: '/pwa-icon.png',
+      icon: '/favicon-32.png',
+      apple: '/apple-touch-icon.png',
     },
     openGraph: {
       type: "website",
@@ -60,23 +59,20 @@ export const viewport: Viewport = {
   maximumScale: 5,
 }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const cookieStore = await cookies()
-  const cookieLang = (cookieStore.get("kbi_lang")?.value as "en" | "ar") || "en"
-
   return (
-    <html lang={cookieLang} dir={cookieLang === "ar" ? "rtl" : "ltr"} suppressHydrationWarning>
+    <html lang="en" dir="ltr" suppressHydrationWarning>
       <head />
       <body
         suppressHydrationWarning
         className={cn("min-h-screen font-sans antialiased selection:bg-cyan-500/20", cairo.variable)}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem={true}>
-          <LanguageProvider initialLang={cookieLang}>
+          <LanguageProvider>
             {children}
           </LanguageProvider>
         </ThemeProvider>

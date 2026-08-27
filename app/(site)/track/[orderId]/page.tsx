@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { getPublicOrderAction } from "@/app/actions/public-tracking";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -196,19 +197,19 @@ export default function PublicOrderTrackingPage() {
           {t("Please check the ID and try again.")}
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <a href="/track">
+          <Link href="/track">
             <Button className="bg-cyan-500 font-bold text-black hover:bg-cyan-400">
               {t("Try Another Order")}
             </Button>
-          </a>
-          <a href="/">
+          </Link>
+          <Link href="/">
             <Button
               variant="outline"
               className="border-border text-foreground hover:bg-muted"
             >
               {t("Back to Home")}
             </Button>
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -218,10 +219,10 @@ export default function PublicOrderTrackingPage() {
 
   return (
     <div
-      className="adaptive-theme-page min-h-screen bg-[#090D16] text-white p-4 md:p-8 flex justify-center items-start"
+      className="adaptive-theme-page min-h-[calc(100vh-80px)] bg-[#090D16] text-white p-4 md:p-8 flex justify-center items-center py-16"
       dir={lang === "ar" ? "rtl" : "ltr"}
     >
-      <Card className="w-full max-w-lg bg-[#0F172A] border-slate-800 text-white rounded-2xl shadow-2xl overflow-hidden">
+      <Card className="w-full max-w-lg mx-auto bg-[#0F172A] border-slate-800 text-white rounded-2xl shadow-2xl overflow-hidden my-auto">
         <CardHeader className="border-b border-slate-800/80 pb-4 bg-slate-950/60">
           <div className="flex items-center justify-between">
             <a
@@ -339,7 +340,9 @@ export default function PublicOrderTrackingPage() {
               </div>
               <div className="font-semibold text-sm text-white flex items-center gap-2 truncate">
                 <Smartphone className="w-4 h-4 text-cyan-400 shrink-0" />
-                <span className="truncate">{order.device || "Smartphone"}</span>
+                <span className="truncate">
+                  {order.deviceModel || order.device || order.deviceName || order.brand || "Device Repair"}
+                </span>
               </div>
             </div>
             <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800">
@@ -348,9 +351,11 @@ export default function PublicOrderTrackingPage() {
               </div>
               <div
                 className="font-semibold text-sm text-white truncate"
-                title={order.issue || order.service}
+                title={Array.isArray(order.deviceIssues) ? order.deviceIssues.join(", ") : (order.issue || order.service || order.issueType || "Diagnostic")}
               >
-                {order.issue || order.service || "Diagnostic"}
+                {Array.isArray(order.deviceIssues) && order.deviceIssues.length > 0
+                  ? order.deviceIssues.join(", ")
+                  : (order.issue || order.service || order.issueType || "Diagnostic & Repair")}
               </div>
             </div>
           </div>

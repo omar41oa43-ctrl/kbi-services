@@ -95,10 +95,15 @@ export const normalizeWorkOrder = (
     ? data.diagnostics
     : undefined
 
+  const rawRef = String(data.orderId || data.bookingId || data.orderNumber || data.reference || data.trackingCode || id).trim()
+  const reference = rawRef.toUpperCase().startsWith("KBI-")
+    ? `KBI-${rawRef.slice(4).trim()}`
+    : `KBI-${rawRef}`
+
   return {
     id,
     source,
-    reference: String(data.orderId || data.bookingId || data.orderNumber || id),
+    reference,
     customerName: String(data.customerName || data.name || data.customer?.name || "Not recorded"),
     customerPhone: String(data.customerPhone || data.phone || data.customer?.phone || ""),
     customerEmail: String(data.customerEmail || data.email || data.customer?.email || ""),

@@ -398,10 +398,9 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
 
                       // 2. COMPANY DETAILS & ORDER / INVOICE NO
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             // Left: Company Contacts
                             const Expanded(
@@ -409,18 +408,19 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('TEL : +971502491034',
-                                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: Color(0xFF0F172A))),
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text('TEL : +971502491034',
+                                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
+                                  ),
                                   Text('P.O. BOX : 88888',
-                                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: Color(0xFF0F172A))),
+                                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
                                   Text('UNITED ARAB EMIRATES',
-                                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: Color(0xFF0F172A))),
+                                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
                                   Text('EMIRATE : ABU DHABI',
-                                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: Color(0xFF0F172A))),
-                                  Text('EMAIL :',
-                                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: Color(0xFF0F172A))),
-                                  Text('INFO@KBI.SERVICES',
-                                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: Color(0xFF0F172A))),
+                                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
+                                  Text('EMAIL : INFO@KBI.SERVICES',
+                                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
                                 ],
                               ),
                             ),
@@ -432,10 +432,10 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                                 child: Text(
                                   'INVOICE',
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w900,
                                     color: Color(0xFF00C7BE),
-                                    letterSpacing: 1.2,
+                                    letterSpacing: 1.0,
                                   ),
                                 ),
                               ),
@@ -443,30 +443,33 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
 
                             // Right: ORDER NO
                             Expanded(
-                              flex: 5,
+                              flex: 4,
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Text('ORDER NO : KBI ',
-                                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: Color(0xFF0F172A))),
-                                      _isEditing
-                                          ? SizedBox(
-                                              width: 70,
-                                              height: 24,
-                                              child: TextField(
-                                                controller: _orderNoController,
-                                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                                                decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.all(2)),
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Text('ORDER: KBI ',
+                                            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
+                                        _isEditing
+                                            ? SizedBox(
+                                                width: 65,
+                                                height: 22,
+                                                child: TextField(
+                                                  controller: _orderNoController,
+                                                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                                                  decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.all(2)),
+                                                ),
+                                              )
+                                            : Text(
+                                                _orderNoController.text,
+                                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800),
                                               ),
-                                            )
-                                          : Text(
-                                              _orderNoController.text,
-                                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
-                                            ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
@@ -477,101 +480,108 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
 
                       // 3. ISSUED TO, INVOICE NO, LOCATION, DATE
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         child: Column(
                           children: [
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Expanded(
+                                  flex: 6,
                                   child: Row(
                                     children: [
                                       const Text('ISSUED TO: ',
-                                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: Color(0xFF0F172A))),
+                                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
                                       Expanded(
                                         child: _isEditing
                                             ? TextField(
                                                 controller: _issuedToController,
-                                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
                                                 decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.all(2)),
                                               )
                                             : Text(
                                                 _issuedToController.text,
-                                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, decoration: TextDecoration.underline),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, decoration: TextDecoration.underline),
                                               ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                const SizedBox(width: 16),
+                                const SizedBox(width: 8),
                                 Expanded(
+                                  flex: 5,
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
-                                      const Text('INVOICE NO: ',
-                                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: Color(0xFF0F172A))),
+                                      const Text('INV NO: ',
+                                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
                                       _isEditing
                                           ? SizedBox(
-                                              width: 90,
-                                              height: 24,
+                                              width: 75,
+                                              height: 22,
                                               child: TextField(
                                                 controller: _invoiceNoController,
-                                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
                                                 decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.all(2)),
                                               ),
                                             )
                                           : Text(
                                               _invoiceNoController.text,
-                                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+                                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800),
                                             ),
                                     ],
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: 8),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Expanded(
+                                  flex: 7,
                                   child: Row(
                                     children: [
-                                      const Text('LOCATION : ',
-                                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: Color(0xFF0F172A))),
+                                      const Text('LOCATION: ',
+                                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
                                       Expanded(
                                         child: _isEditing
                                             ? TextField(
                                                 controller: _locationController,
-                                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
                                                 decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.all(2)),
                                               )
                                             : Text(
                                                 _locationController.text,
-                                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
                                               ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                const SizedBox(width: 16),
+                                const SizedBox(width: 8),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
                                     const Text('DATE: ',
-                                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: Color(0xFF0F172A))),
+                                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
                                     _isEditing
                                         ? SizedBox(
-                                            width: 85,
-                                            height: 24,
+                                            width: 75,
+                                            height: 22,
                                             child: TextField(
                                               controller: _dateController,
-                                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
                                               decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.all(2)),
                                             ),
                                           )
                                         : Text(
                                             _dateController.text,
-                                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+                                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800),
                                           ),
                                   ],
                                 ),
@@ -853,21 +863,11 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                                 children: [
                                   Text('BANK DETAILS', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
                                   SizedBox(height: 4),
-                                  Text('ACCOUNT HOLDER: KBI GLOBAL TECHNOLOGIES',
-                                      textAlign: TextAlign.end,
-                                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 7.5, color: Color(0xFF0F172A))),
-                                  Text('IBAN: AE068090000000000623369',
-                                      textAlign: TextAlign.end,
-                                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 7.5, color: Color(0xFF0F172A))),
-                                  Text('ACCOUNT NUMBER: 623369',
-                                      textAlign: TextAlign.end,
-                                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 7.5, color: Color(0xFF0F172A))),
-                                  Text('CURRENCY: AED',
-                                      textAlign: TextAlign.end,
-                                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 7.5, color: Color(0xFF0F172A))),
-                                  Text('SWIFT CODE: EMDVAEADXXX',
-                                      textAlign: TextAlign.end,
-                                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 7.5, color: Color(0xFF0F172A))),
+                                  FittedBox(fit: BoxFit.scaleDown, child: Text('ACCOUNT HOLDER: KBI GLOBAL TECHNOLOGIES', textAlign: TextAlign.end, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 7.5, color: Color(0xFF0F172A)))),
+                                  FittedBox(fit: BoxFit.scaleDown, child: Text('IBAN: AE068090000000000623369', textAlign: TextAlign.end, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 7.5, color: Color(0xFF0F172A)))),
+                                  FittedBox(fit: BoxFit.scaleDown, child: Text('ACCOUNT NUMBER: 623369', textAlign: TextAlign.end, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 7.5, color: Color(0xFF0F172A)))),
+                                  FittedBox(fit: BoxFit.scaleDown, child: Text('CURRENCY: AED', textAlign: TextAlign.end, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 7.5, color: Color(0xFF0F172A)))),
+                                  FittedBox(fit: BoxFit.scaleDown, child: Text('SWIFT CODE: EMDVAEADXXX', textAlign: TextAlign.end, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 7.5, color: Color(0xFF0F172A)))),
                                 ],
                               ),
                             ),
@@ -877,7 +877,7 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
 
                       // 6. BRAND LOGOS & STAMP FOOTER
                       Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                         decoration: const BoxDecoration(
                           color: Color(0xFF00C7BE),
                           borderRadius: BorderRadius.vertical(bottom: Radius.circular(8)),
@@ -885,19 +885,29 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('HP • APPLE • LG • DELL • SAMSUNG • IFIXIT',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 10,
-                                  letterSpacing: 1.5,
-                                )),
-                            Text('KBI SEAL VERIFIED',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 9,
-                                )),
+                            Expanded(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text('HP • APPLE • LG • DELL • SAMSUNG • IFIXIT',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 9.5,
+                                      letterSpacing: 1.0,
+                                    )),
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text('KBI SEAL VERIFIED',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 8.5,
+                                  )),
+                            ),
                           ],
                         ),
                       ),

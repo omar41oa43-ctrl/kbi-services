@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { GlassCard } from "@/components/ui/glass-card"
 import { useLanguage, useT } from "@/components/language-provider"
 import { 
   MessageCircle, 

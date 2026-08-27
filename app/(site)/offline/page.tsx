@@ -1,6 +1,7 @@
 
 import { WifiOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 export default function OfflinePage() {
     return (
@@ -14,7 +15,7 @@ export default function OfflinePage() {
             </p>
             <div className="flex gap-4 pt-4">
                 <Button asChild variant="outline">
-                    <a href="/">Retry</a>
+                    <Link href="/">Retry</Link>
                 </Button>
             </div>
         </div>

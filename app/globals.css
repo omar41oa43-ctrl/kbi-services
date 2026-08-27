@@ -193,62 +193,65 @@
 
   .apple-nav {
     position: relative;
-    width: min(94vw, 640px);
+    width: min(90vw, 380px);
     margin: 0 auto calc(env(safe-area-inset-bottom) + 12px);
-    padding: 6px;
+    padding: 6px 10px;
     border-radius: 9999px;
-    background-color: rgba(255, 255, 255, 0.85);
-    -webkit-backdrop-filter: saturate(180%) blur(28px);
-    backdrop-filter: saturate(180%) blur(28px);
-    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.1);
+    background-color: rgba(255, 255, 255, 0.88);
+    -webkit-backdrop-filter: saturate(190%) blur(32px);
+    backdrop-filter: saturate(190%) blur(32px);
+    box-shadow: 0 14px 38px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.6);
     border: 1px solid rgba(0, 0, 0, 0.08);
   }
   .dark .apple-nav {
-    background-color: rgba(15, 23, 42, 0.8);
-    border-color: rgba(255, 255, 255, 0.12);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+    background-color: rgba(15, 23, 42, 0.85);
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
   }
   .apple-nav:before {
     content: "";
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+    background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.01));
     pointer-events: none;
   }
   .apple-nav-items {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 4px;
+    display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    width: 100%;
   }
   .apple-nav-item {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     border-radius: 9999px;
-    background-color: rgba(0, 0, 0, 0.04);
-    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+    background-color: rgba(0, 0, 0, 0.03);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .dark .apple-nav-item {
-    background-color: rgba(255, 255, 255, 0.06);
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+    background-color: rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
   }
   .apple-nav-item-inactive .icon {
     color: rgba(0, 0, 0, 0.65);
+    transition: color 0.2s ease;
   }
   .dark .apple-nav-item-inactive .icon {
     color: rgba(255, 255, 255, 0.65);
   }
   .apple-nav-item-active {
-    background-image: linear-gradient(135deg, #06b6d4, #3b82f6);
-    box-shadow: 0 6px 18px rgba(6, 182, 212, 0.35);
+    background-image: linear-gradient(135deg, #06b6d4, #2563eb);
+    box-shadow: 0 6px 20px rgba(6, 182, 212, 0.45);
   }
   .apple-nav-item-active .icon {
-    color: white;
+    color: #ffffff !important;
   }
 }
 
@@ -1471,6 +1474,81 @@ html:not(.dark) .adaptive-theme-page [class*="text-slate-2"] {
 
 html:not(.dark) .adaptive-theme-page [class*="from-white"][class*="text-transparent"] {
   background-image: linear-gradient(90deg, hsl(var(--foreground)), #0891b2) !important;
+}
+
+.circular-text {
+  animation: circular-text-spin var(--circular-text-duration, 20s) linear infinite;
+  transform-origin: center;
+}
+
+@keyframes circular-text-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (hover: hover) {
+  .circular-text[data-hover-mode="speedUp"]:hover,
+  .circular-text[data-hover-mode="slowDown"]:hover {
+    animation-duration: var(--circular-text-hover-duration, 20s);
+  }
+
+  .circular-text[data-hover-mode="pause"]:hover {
+    animation-play-state: paused;
+  }
+}
+
+/* Mobile browsers spend a disproportionate amount of time compositing blur
+   layers. Keep the glass palette but use opaque surfaces and static decor. */
+@media (max-width: 767px) {
+  .site-shell [class*="backdrop-blur"],
+  .adaptive-theme-page [class*="backdrop-blur"],
+  .site-shell .glass,
+  .site-shell .glass-nav,
+  .site-shell .glass-bottom-nav,
+  .site-shell .apple-nav {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .site-shell .sliding-marquee-blur {
+    display: none;
+  }
+
+  .site-shell .glass-nav {
+    background-color: hsl(var(--background) / 0.96);
+    box-shadow: 0 6px 18px hsl(218 30% 12% / 0.08);
+  }
+
+  .dark .site-shell .glass-nav {
+    background-color: hsl(var(--background) / 0.96);
+    box-shadow: 0 6px 18px rgb(0 0 0 / 0.28);
+  }
+
+  .site-shell .apple-nav {
+    background-color: hsl(var(--background) / 0.96);
+    box-shadow: 0 8px 22px hsl(218 30% 12% / 0.12);
+  }
+
+  .dark .site-shell .apple-nav {
+    background-color: hsl(var(--background) / 0.97);
+    box-shadow: 0 8px 22px rgb(0 0 0 / 0.34);
+  }
+
+  .home-deferred {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 760px;
+  }
+
+  .home-deferred [class*="blur-"] {
+    display: none;
+  }
+
+  .site-shell footer .animate-ping,
+  .site-shell footer .animate-spin,
+  .site-shell footer .circular-text {
+    animation: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

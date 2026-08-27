@@ -1,4 +1,5 @@
 import { adminDb } from "@/lib/firebase-admin"
+import { unstable_cache } from "next/cache"
 
 export type SiteContact = {
     companyName?: string;
@@ -28,14 +29,7 @@ export type SiteContact = {
     companyPresentationUrl?: string;
 }
 
-export async function getSiteContact(): Promise<SiteContact> {
-    const cacheKey = "__kbi_site_contact_cache_v1"
-    const now = Date.now()
-    const ttlMs = 10 * 60 * 1000
-    const cached = (globalThis as any)[cacheKey] as { value: SiteContact; ts: number } | undefined
-    if (cached && now - cached.ts < ttlMs) return cached.value
-
-    const defaults: SiteContact = {
+const DEFAULT_SITE_CONTACT: SiteContact = {
         companyName: "KBI GLOBAL TECHNOLOGIES",
         whatsapp: "971502491034",
         phone: "+971502491034",
@@ -65,7 +59,11 @@ export async function getSiteContact(): Promise<SiteContact> {
             tiktok: true
         },
         companyPresentationUrl: ""
-    }
+}
+
+const getCachedSiteContact = unstable_cache(
+  async (): Promise<SiteContact> => {
+    const defaults = DEFAULT_SITE_CONTACT
 
     try {
         const doc = await adminDb.collection("settings").doc("site").get()
@@ -114,10 +112,15 @@ export async function getSiteContact(): Promise<SiteContact> {
             },
             companyPresentationUrl: companyPresentationUrl
         }
-        ;(globalThis as any)[cacheKey] = { value, ts: now }
         return value
     } catch {
-        ;(globalThis as any)[cacheKey] = { value: defaults, ts: now }
         return defaults
     }
+  },
+  ["kbi-site-contact-v1"],
+  { revalidate: 600, tags: ["site-contact"] },
+)
+
+export async function getSiteContact(): Promise<SiteContact> {
+  return getCachedSiteContact()
 }

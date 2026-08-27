@@ -98,3 +98,9 @@ kbi_technician_app*/build/
 apps/*/build/
 **/*.xcuserstate
 **/hs_err_pid*.log
+
+# Large binaries and scratch fix artifacts
+*.apk
+*.ipa
+fix/
+

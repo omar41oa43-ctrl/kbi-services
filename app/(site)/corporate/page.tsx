@@ -47,7 +47,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-static"
 
 export default function CorporatePage() {
-  const hasHandshake = fs.existsSync(path.join(process.cwd(), "public", "handshake.jpg"))
+  const hasHandshake = fs.existsSync(path.join(process.cwd(), "public", "handshake-mobile.webp"))
   return (
     <PageEntrance className="min-h-screen bg-background text-foreground selection:bg-cyan-500/30 pb-16 lg:pb-0 font-sans text-start">
 
@@ -130,11 +130,12 @@ export default function CorporatePage() {
             <FadeIn delay={0.4} className="relative h-[500px] rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl order-1 lg:order-2 group">
               {hasHandshake && (
                 <Image
-                  src="/handshake.jpg"
+                  src="/handshake-mobile.webp"
                   alt="Corporate partnership handshake"
                   fill
                   priority
-                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  unoptimized
+                  sizes="(max-width: 767px) 92vw, (max-width: 1024px) 100vw, 50vw"
                   className="object-cover object-center scale-105 group-hover:scale-100 transition-transform duration-1000"
                 />
               )}

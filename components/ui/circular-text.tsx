@@ -1,7 +1,4 @@
-"use client";
-
-import React from "react";
-import { motion, useAnimation } from "framer-motion";
+import type React from "react";
 
 interface CircularTextProps {
   text: string;
@@ -17,60 +14,17 @@ export default function CircularText({
   className = "",
 }: CircularTextProps) {
   const letters = Array.from(text);
-  const controls = useAnimation();
-
-  React.useEffect(() => {
-    controls.start({
-      rotate: 360,
-      transition: {
-        repeat: Infinity,
-        ease: "linear",
-        duration: spinDuration,
-      },
-    });
-  }, [spinDuration, controls]);
-
-  const handleMouseEnter = () => {
-    if (onHover === "speedUp") {
-      controls.start({
-        rotate: 360,
-        transition: {
-          repeat: Infinity,
-          ease: "linear",
-          duration: spinDuration / 2,
-        },
-      });
-    } else if (onHover === "slowDown") {
-      controls.start({
-        rotate: 360,
-        transition: {
-          repeat: Infinity,
-          ease: "linear",
-          duration: spinDuration * 2,
-        },
-      });
-    } else if (onHover === "pause") {
-      controls.stop();
-    }
-  };
-
-  const handleMouseLeave = () => {
-    controls.start({
-      rotate: 360,
-      transition: {
-        repeat: Infinity,
-        ease: "linear",
-        duration: spinDuration,
-      },
-    });
-  };
 
   return (
-    <motion.div
-      className={`relative flex items-center justify-center rounded-full ${className}`}
-      animate={controls}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+    <div
+      className={`circular-text relative flex items-center justify-center rounded-full ${className}`}
+      data-hover-mode={onHover}
+      style={
+        {
+          "--circular-text-duration": `${spinDuration}s`,
+          "--circular-text-hover-duration": `${onHover === "speedUp" ? spinDuration / 2 : spinDuration * 2}s`,
+        } as React.CSSProperties
+      }
     >
       <div className="relative w-full h-full">
         {letters.map((letter, i) => {
@@ -90,6 +44,6 @@ export default function CircularText({
           );
         })}
       </div>
-    </motion.div>
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client"
 
-import { motion } from "framer-motion"
 import { ArrowRight, MessageCircle, Phone } from "lucide-react"
+import Link from "next/link"
 import { useT } from "@/components/language-provider"
 import { Button } from "@/components/ui/button"
 import { useSiteContact } from "@/components/contact-provider"
@@ -10,14 +10,9 @@ export function CTASection() {
   const t = useT()
   const contact = useSiteContact()
   return (
-    <section className="py-24 relative">
+    <section className="home-deferred py-24 relative">
       <div className="container mx-auto px-6 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="glass rounded-3xl p-8 md:p-12 text-center relative overflow-hidden"
-        >
+        <div className="glass rounded-3xl p-8 md:p-12 text-center relative overflow-hidden">
           {/* Background gradient */}
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-transparent to-blue-500/10 pointer-events-none" />
 
@@ -29,9 +24,9 @@ export function CTASection() {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button asChild variant="primary">
-                <a href="/book" className="inline-flex items-center gap-2 group">
+                <Link href="/book" className="inline-flex items-center gap-2 group">
                   {t("Book a Technician")} <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </a>
+                </Link>
               </Button>
               <Button asChild variant="secondary">
                 <a
@@ -55,7 +50,7 @@ export function CTASection() {
               </Button>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   )

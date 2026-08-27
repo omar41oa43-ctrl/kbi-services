@@ -1,6 +1,5 @@
 "use client"
 
-import { motion } from "framer-motion"
 import { GlassCard } from "@/components/ui/glass-card"
 import { ChevronRight, ChevronLeft } from "lucide-react"
 import Link from "next/link"
@@ -36,17 +35,12 @@ export function ServiceCategory({ id, name, icon, brands, issues, accentColor }:
 
   return (
     <section id={id} className="py-12 scroll-mt-24" suppressHydrationWarning>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        className="mb-8"
-      >
+      <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">
           <div className={`p-3 rounded-2xl ${colors.bg} ${colors.text}`}>{icon}</div>
           <h2 className="text-2xl md:text-3xl font-extrabold text-foreground">{isAr ? t(name) : name}</h2>
         </div>
-      </motion.div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Services/Issues */}
@@ -56,17 +50,13 @@ export function ServiceCategory({ id, name, icon, brands, issues, accentColor }:
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {issues.map((issue, index) => (
-              <motion.div
+              <div
                 key={index}
-                initial={{ opacity: 0, x: -10 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.03 }}
                 className={`flex items-center gap-2 p-3 rounded-xl ${colors.bg} border ${colors.border}`}
               >
                 {isAr ? <ChevronLeft className={`w-4 h-4 ${colors.text}`} /> : <ChevronRight className={`w-4 h-4 ${colors.text}`} />}
                 <span className="text-sm font-medium text-foreground/90">{isAr ? t(issue) : issue}</span>
-              </motion.div>
+              </div>
             ))}
           </div>
           <Link
@@ -84,17 +74,13 @@ export function ServiceCategory({ id, name, icon, brands, issues, accentColor }:
             <span className={colors.text}>{t("Brands We Service")}</span>
           </h3>
           <div className="flex flex-wrap gap-2">
-            {brands.map((brand, index) => (
-              <motion.div
+            {brands.map((brand) => (
+              <div
                 key={brand.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.03 }}
                 className="px-4 py-2 rounded-full bg-black/5 dark:bg-white/5 border border-border text-sm text-foreground/80 font-medium hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-default"
               >
                 {brand.name}
-              </motion.div>
+              </div>
             ))}
           </div>
 

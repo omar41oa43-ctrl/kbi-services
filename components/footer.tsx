@@ -154,14 +154,14 @@ export function Footer({ contact }: FooterProps) {
                 { key: "Gaming Console Repair", slug: "gaming" },
               ].map((service, i) => (
                 <li key={i} className="w-full flex justify-center text-center" style={{ textAlign: "center" }}>
-                  <a
+                  <Link
                     href={`/services#${service.slug}`}
                     className="text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center justify-center gap-2 group text-center mx-auto"
                     style={{ textAlign: "center" }}
                   >
                     <ArrowRight className="w-3 h-3 opacity-0 -ml-3 group-hover:opacity-100 group-hover:ml-0 rtl:rotate-180 transition-all duration-300 text-blue-500 shrink-0" />
                     <span>{t(service.key)}</span>
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>

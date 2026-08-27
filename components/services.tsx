@@ -1,6 +1,5 @@
 "use client"
 
-import { motion } from "framer-motion"
 import Link from "next/link"
 import { ArrowRight, Smartphone, Laptop, Printer, Tv, Gamepad2, Camera, MonitorUp, Wifi, Headset } from "lucide-react"
 import { useLanguage, useT } from "@/components/language-provider"
@@ -42,33 +41,23 @@ export function Services() {
   }
 
   return (
-    <section className="py-20">
+    <section className="home-deferred py-20">
       <div className="container mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
+        <div className="text-center mb-16">
           <h2 className="text-3xl md:text-5xl font-bold mb-6 text-foreground">
             {t("Our Services")}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             {t("Professional on-site repair and maintenance services for all your devices")}
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {devices.slice(0, 9).map((device, index) => {
+          {devices.slice(0, 9).map((device) => {
             const colors = colorMap[device.id] || colorMap.mobile
             return (
-              <motion.div
+              <div
                 key={device.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.05 }}
-                whileHover={{ y: -8 }}
                 className="group"
               >
                 <Link href={`/book?device=${device.id}`}>
@@ -97,17 +86,12 @@ export function Services() {
                     </div>
                   </div>
                 </Link>
-              </motion.div>
+              </div>
             )
           })}
         </div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="text-center mt-12"
-        >
+        <div className="text-center mt-12">
           <Link
             href="/services"
             className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-card border border-border hover:bg-muted text-foreground transition-all duration-300 font-semibold shadow-sm"
@@ -115,7 +99,7 @@ export function Services() {
             {t("View All Services")}
             {isAr ? <ArrowRight className="w-5 h-5 rotate-180" /> : <ArrowRight className="w-5 h-5" />}
           </Link>
-        </motion.div>
+        </div>
       </div>
     </section>
   )

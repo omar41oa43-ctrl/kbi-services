@@ -1,6 +1,5 @@
 "use client"
 
-import { motion } from "framer-motion"
 import { GlassCard } from "@/components/ui/glass-card"
 import { Award, Users, Clock, ShieldCheck, Target, Heart, ArrowRight, FileText } from "lucide-react"
 import Link from "next/link"
@@ -53,7 +52,7 @@ export function AboutContent({ pdfUrl }: { pdfUrl?: string }) {
       <div className="container mx-auto px-6 relative z-10">
         {/* Hero Section */}
         <div className="text-center mb-16">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+          <div>
             <h1 className="text-4xl md:text-6xl font-extrabold mb-6 text-foreground">
               {t("About")} <span className="text-cyan-500 dark:text-cyan-400">KBI</span>
             </h1>
@@ -62,27 +61,22 @@ export function AboutContent({ pdfUrl }: { pdfUrl?: string }) {
                 "KBI is Abu Dhabi's trusted on-site repair service provider. We bring professional device repair directly to your doorstep - whether it's your home, office, or anywhere in Abu Dhabi.",
               )}
             </p>
-          </motion.div>
+          </div>
         </div>
 
         {/* Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16"
-        >
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
           {stats.map((stat, index) => (
             <GlassCard key={index} className="text-center py-8" hoverEffect={false}>
               <p className="text-4xl md:text-5xl font-bold text-cyan-500 dark:text-cyan-400 mb-2">{stat.number}</p>
               <p className="text-muted-foreground font-medium">{t(stat.label)}</p>
             </GlassCard>
           ))}
-        </motion.div>
+        </div>
 
         {/* Who We Are */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
-          <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
+          <div>
             <GlassCard className="h-full">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-3 rounded-2xl bg-cyan-500/10">
@@ -108,9 +102,9 @@ export function AboutContent({ pdfUrl }: { pdfUrl?: string }) {
                 </p>
               </div>
             </GlassCard>
-          </motion.div>
+          </div>
 
-          <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
+          <div>
             <GlassCard className="h-full">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-3 rounded-2xl bg-orange-500/10">
@@ -145,40 +139,31 @@ export function AboutContent({ pdfUrl }: { pdfUrl?: string }) {
                 </ul>
               </div>
             </GlassCard>
-          </motion.div>
+          </div>
         </div>
 
         {/* Our Values */}
         <div className="mb-16">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-3xl font-bold text-center mb-10 text-foreground"
-          >
+          <h2 className="text-3xl font-bold text-center mb-10 text-foreground">
             {t("Our Values")}
-          </motion.h2>
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {values.map((value, index) => (
-              <motion.div
+              <div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
               >
                 <GlassCard className="h-full text-center">
                   <div className="p-3 rounded-2xl bg-black/5 dark:bg-white/5 w-fit mx-auto mb-4">{value.icon}</div>
                   <h3 className="text-xl font-bold mb-3 text-foreground">{t(value.title)}</h3>
                   <p className="text-muted-foreground leading-relaxed">{t(value.description)}</p>
                 </GlassCard>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
 
         {/* Our Guarantees */}
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+        <div>
           <GlassCard>
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 rounded-2xl bg-green-500/10">
@@ -220,7 +205,7 @@ export function AboutContent({ pdfUrl }: { pdfUrl?: string }) {
               )}
             </div>
           </GlassCard>
-        </motion.div>
+        </div>
       </div>
     </section>
   )

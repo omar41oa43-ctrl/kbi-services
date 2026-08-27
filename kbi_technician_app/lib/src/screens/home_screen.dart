@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../theme.dart';
-import '../widgets/liquid_glass.dart';
 import 'dashboard_screen.dart';
 import 'jobs_screen.dart';
 import 'notifications_screen.dart';
@@ -16,11 +15,13 @@ import 'wallet_screen.dart';
 class HomeScreen extends StatefulWidget {
   final Locale locale;
   final void Function(Locale) onLocaleChanged;
+  final int initialIndex;
 
   const HomeScreen({
     super.key,
     required this.onLocaleChanged,
     required this.locale,
+    this.initialIndex = 0,
   });
 
   @override
@@ -30,7 +31,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   static const _wideLayoutBreakpoint = 720.0;
 
-  int _index = 0;
+  late int _index;
   late List<Widget> _pages;
   late final Stream<List<ConnectivityResult>> _connectivityStream;
   List<ConnectivityResult> _lastConnectivity = const [ConnectivityResult.wifi];
@@ -39,6 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _index = widget.initialIndex;
     _buildPages();
     _connectivityStream = Connectivity().onConnectivityChanged;
     Connectivity().checkConnectivity().then((res) {
@@ -126,9 +128,12 @@ class _HomeScreenState extends State<HomeScreen> {
             }
 
             return Scaffold(
-              backgroundColor: Colors.transparent,
+              backgroundColor: const Color(0xFFF8FAFC),
               extendBody: true,
-              body: _pageBody(),
+              body: SafeArea(
+                bottom: false,
+                child: _pageBody(),
+              ),
               bottomNavigationBar: SafeArea(
                 minimum: const EdgeInsets.fromLTRB(12, 0, 12, 10),
                 child: _NavigationGlass(
@@ -285,11 +290,22 @@ class _NavigationGlass extends StatelessWidget {
       );
     });
 
-    return LiquidGlassSurface(
-      borderRadius: BorderRadius.circular(axis == Axis.horizontal ? 30 : 32),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(axis == Axis.horizontal ? 32 : 32),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       padding: EdgeInsets.symmetric(
-        horizontal: axis == Axis.horizontal ? 6 : 8,
-        vertical: axis == Axis.horizontal ? 6 : 12,
+        horizontal: axis == Axis.horizontal ? 12 : 8,
+        vertical: axis == Axis.horizontal ? 8 : 12,
       ),
       child: axis == Axis.horizontal
           ? Row(
@@ -352,7 +368,7 @@ class _NavigationItem extends StatelessWidget {
     final reduceMotion = MediaQuery.disableAnimationsOf(context) ||
         MediaQuery.accessibleNavigationOf(context);
     final duration =
-        reduceMotion ? Duration.zero : const Duration(milliseconds: 220);
+        reduceMotion ? Duration.zero : const Duration(milliseconds: 200);
 
     return Semantics(
       button: true,
@@ -367,20 +383,10 @@ class _NavigationItem extends StatelessWidget {
             duration: duration,
             curve: Curves.easeOutCubic,
             constraints: BoxConstraints(
-              minHeight: axis == Axis.horizontal ? 56 : 62,
-              minWidth: 52,
+              minHeight: axis == Axis.horizontal ? 52 : 62,
+              minWidth: 48,
             ),
-            margin: EdgeInsets.symmetric(
-              horizontal: axis == Axis.horizontal ? 1 : 0,
-              vertical: axis == Axis.vertical ? 2 : 0,
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-            decoration: BoxDecoration(
-              color: selected
-                  ? kbiBlue.withValues(alpha: 0.12)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(20),
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -393,22 +399,22 @@ class _NavigationItem extends StatelessWidget {
                       child: Icon(
                         selected ? selectedIcon : icon,
                         key: ValueKey(selected),
-                        size: 23,
-                        color: selected ? kbiBlue : const Color(0xFF8E8E93),
+                        size: 22,
+                        color: selected ? const Color(0xFF2563EB) : const Color(0xFF94A3B8),
                       ),
                     ),
                     if (badgeCount > 0)
                       PositionedDirectional(
-                        top: -7,
-                        end: -10,
+                        top: -6,
+                        end: -8,
                         child: Container(
-                          constraints: const BoxConstraints(minWidth: 17),
+                          constraints: const BoxConstraints(minWidth: 16),
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
+                            horizontal: 3,
                             vertical: 1,
                           ),
                           decoration: BoxDecoration(
-                            color: kbiRed,
+                            color: const Color(0xFF2563EB),
                             borderRadius: BorderRadius.circular(999),
                             border: Border.all(color: Colors.white, width: 1.5),
                           ),
@@ -417,26 +423,25 @@ class _NavigationItem extends StatelessWidget {
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 9,
-                              height: 1.25,
-                              fontWeight: FontWeight.w700,
+                              fontSize: 8.5,
+                              height: 1.2,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                         ),
                       ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 Text(
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: selected ? kbiBlue : const Color(0xFF636366),
+                    color: selected ? const Color(0xFF2563EB) : const Color(0xFF94A3B8),
                     fontSize: 10.5,
                     height: 1.1,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                    letterSpacing: -0.1,
+                    fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
                   ),
                 ),
               ],

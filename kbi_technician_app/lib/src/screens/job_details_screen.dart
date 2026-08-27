@@ -739,7 +739,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
     final amount = _job.totalAmount ?? 250.0;
 
     final receiptText = '''
-🧾 *KBI REPAIRS ABU DHABI - OFFICIAL SERVICE RECEIPT*
+🧾 *KBI SERVICES UAE - OFFICIAL SERVICE RECEIPT*
 ━━━━━━━━━━━━━━━━━━━━
 📌 *Order Reference:* #$orderRef
 👤 *Customer:* $customerName
@@ -750,10 +750,10 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
 ━━━━━━━━━━━━━━━━━━━━
 🛡️ *6-MONTH KBI WARRANTY INCLUDED:*
 • Replaced parts & service labor covered for 6 months.
-• Instant on-site support across Abu Dhabi & UAE.
+• Instant on-site doorstep support across UAE.
 • Need follow-up support? Reply directly to this chat!
 
-Thank you for choosing KBI On-Site Repairs!
+Thank you for choosing KBI Services!
 ''';
 
     final uri = Uri.parse(

@@ -1,6 +1,5 @@
 "use client"
 
-import { motion } from "framer-motion"
 import { ClipboardList, UserCheck, Truck, Search, Wrench, CreditCard, Zap } from "lucide-react"
 import { useT } from "@/components/language-provider"
 
@@ -17,18 +16,13 @@ export function HowItWorks() {
   ]
 
   return (
-    <section className="py-24 relative overflow-hidden bg-slate-50 dark:bg-[#030712] border-y border-slate-200/60 dark:border-slate-800/60 transition-colors">
+    <section className="home-deferred py-24 relative overflow-hidden bg-slate-50 dark:bg-[#030712] border-y border-slate-200/60 dark:border-slate-800/60 transition-colors">
       <div className="max-w-7xl mx-auto px-4 relative">
         <div className="text-center mb-16">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-700 dark:text-cyan-400 text-sm font-semibold mb-6 shadow-xs"
-          >
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-700 dark:text-cyan-400 text-sm font-semibold mb-6 shadow-xs">
             <Zap className="w-4 h-4" />
             {t("How Our Service Works")}
-          </motion.div>
+          </div>
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6 tracking-tight">
             {t("Simple, fast, and hassle-free repair process")}
           </h2>
@@ -40,12 +34,8 @@ export function HowItWorks() {
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             {steps.map((step, index) => (
-              <motion.div
+              <div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
                 className="flex flex-col items-center text-center"
               >
                 <div className="relative mb-4">
@@ -58,7 +48,7 @@ export function HowItWorks() {
                 </div>
                 <h3 className="text-base font-bold text-foreground mb-1" suppressHydrationWarning>{step.title}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed" suppressHydrationWarning>{step.description}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import {
   Star,
   CheckCircle,
@@ -151,16 +152,16 @@ export default function RateOrderPage() {
                 asChild
                 className="bg-cyan-500 font-bold text-black hover:bg-cyan-400"
               >
-                <a href="/track">Track another order</a>
+                <Link href="/track">Track another order</Link>
               </Button>
               <Button
                 asChild
                 variant="outline"
                 className="border-border text-foreground hover:bg-muted"
               >
-                <a href="/">
+                <Link href="/">
                   <ArrowLeft className="h-4 w-4" /> Back home
-                </a>
+                </Link>
               </Button>
             </div>
           </CardContent>

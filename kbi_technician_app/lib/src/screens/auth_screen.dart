@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'registration_screen.dart';
 
@@ -353,13 +354,13 @@ class _AuthScreenState extends State<AuthScreen>
   Widget _buildTechnicianBackground() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final targetHeight = constraints.maxHeight * 0.70;
-        final widthForTargetHeight = targetHeight * 1.5;
+        final targetHeight = constraints.maxHeight * 0.60;
+        final widthForTargetHeight = targetHeight * 1.35;
         final imageWidth = widthForTargetHeight > constraints.maxWidth
             ? widthForTargetHeight
             : constraints.maxWidth;
-        final imageHeight = imageWidth / 1.5;
-        final imageTopOffset = constraints.maxHeight < 650 ? 18.0 : 44.0;
+        final imageHeight = imageWidth / 1.35;
+        final imageTopOffset = constraints.maxHeight < 650 ? 10.0 : 26.0;
 
         return ColoredBox(
           color: const Color(0xFFF1F3F6),
@@ -377,13 +378,13 @@ class _AuthScreenState extends State<AuthScreen>
                   'assets/images/kbi_welcome_technician.png',
                   width: imageWidth,
                   height: imageHeight,
-                  fit: BoxFit.cover,
+                  fit: BoxFit.contain,
                   alignment: Alignment.topCenter,
                   errorBuilder: (_, __, ___) => Image.asset(
                     'assets/images/technician-login-bg-v2.png',
                     width: imageWidth,
                     height: imageHeight,
-                    fit: BoxFit.cover,
+                    fit: BoxFit.contain,
                     alignment: Alignment.topCenter,
                   ),
                 ),
@@ -674,12 +675,12 @@ class _AuthScreenState extends State<AuthScreen>
                 child: SingleChildScrollView(
                   keyboardDismissBehavior:
                       ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: const EdgeInsets.fromLTRB(18, 210, 18, 16),
+                  padding: const EdgeInsets.fromLTRB(18, 175, 18, 16),
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 430),
                     child: Container(
                       key: const Key('technician-login-form'),
-                      padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
+                      padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.96),
                         borderRadius: BorderRadius.circular(28),
@@ -974,6 +975,152 @@ class _AuthScreenState extends State<AuthScreen>
                                 ),
                               ),
                             ],
+                          ),
+                          const SizedBox(height: 14),
+
+                          // Customer Support Contact Section
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: const Color(0xFFE2E8F0),
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.headset_mic_outlined,
+                                      size: 14,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      isArabic
+                                          ? 'خدمة العملاء والدعم الفني'
+                                          : 'Customer & Technical Support',
+                                      style: const TextStyle(
+                                        color: Color(0xFF64748B),
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    // WhatsApp Support Button
+                                    Expanded(
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(10),
+                                        onTap: () async {
+                                          final uri = Uri.parse(
+                                              'https://wa.me/971502491034');
+                                          if (await canLaunchUrl(uri)) {
+                                            await launchUrl(uri,
+                                                mode: LaunchMode
+                                                    .externalApplication);
+                                          }
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 7),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFF0FDF4),
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            border: Border.all(
+                                              color: const Color(0xFFDCFCE7),
+                                            ),
+                                          ),
+                                          child: const Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                Icons.chat_bubble_outline_rounded,
+                                                color: Color(0xFF22C55E),
+                                                size: 14,
+                                              ),
+                                              SizedBox(width: 5),
+                                              Text(
+                                                '0502491034',
+                                                style: TextStyle(
+                                                  color: Color(0xFF15803D),
+                                                  fontSize: 11.5,
+                                                  fontWeight: FontWeight.w800,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+
+                                    // Email Support Button
+                                    Expanded(
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(10),
+                                        onTap: () async {
+                                          final uri = Uri.parse(
+                                              'mailto:support@kbi.services');
+                                          if (await canLaunchUrl(uri)) {
+                                            await launchUrl(uri,
+                                                mode: LaunchMode
+                                                    .externalApplication);
+                                          }
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 7),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFEFF6FF),
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            border: Border.all(
+                                              color: const Color(0xFFDBEAFE),
+                                            ),
+                                          ),
+                                          child: const Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                Icons.mail_outline_rounded,
+                                                color: Color(0xFF2563EB),
+                                                size: 14,
+                                              ),
+                                              SizedBox(width: 5),
+                                              Flexible(
+                                                child: Text(
+                                                  'support@kbi.services',
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    color: Color(0xFF1D4ED8),
+                                                    fontSize: 10.5,
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),

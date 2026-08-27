@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
+import { authenticateTechnician } from '@/lib/api-auth'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const identity = await authenticateTechnician(request)
+    if (!identity) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    }
+
     const snap = await adminDb.collection('parts').limit(1000).get()
     const parts = snap.docs.map((doc: any) => {
       const data = doc.data()
@@ -22,6 +28,11 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const identity = await authenticateTechnician(request)
+    if (!identity) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    }
+
     const body = await request.json()
     const { partId, orderId, quantity = 1 } = body
 

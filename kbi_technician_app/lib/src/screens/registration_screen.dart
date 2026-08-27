@@ -712,10 +712,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Widget _buildAccountTypeToggle() {
     final isEmp = _accountType == 'employee';
     return Container(
-      padding: const EdgeInsets.all(6),
+      padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
-        color: const Color(0xFFE2E8F0),
+        color: const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Row(
         children: [
@@ -724,16 +725,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               onTap: () => setState(() => _accountType = 'employee'),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 13),
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   color: isEmp ? Colors.white : Colors.transparent,
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: isEmp
                       ? [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.06),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
                         ]
                       : null,

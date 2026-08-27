@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { Pause, Play } from "lucide-react"
 
@@ -52,6 +52,19 @@ export function SlidingLogoMarquee({
   showControls = true,
 }: SlidingLogoMarqueeProps) {
   const [isPlaying, setIsPlaying] = useState(autoPlay)
+  const [canAnimate, setCanAnimate] = useState(false)
+
+  useEffect(() => {
+    const media = window.matchMedia("(pointer: coarse), (prefers-reduced-motion: reduce)")
+    const update = () => setCanAnimate(!media.matches)
+
+    update()
+    media.addEventListener("change", update)
+    return () => media.removeEventListener("change", update)
+  }, [])
+
+  const shouldAnimate = canAnimate && autoPlay
+  const renderedItems = shouldAnimate ? [...items, ...items] : items
 
   const handleItemClick = (item: SlidingLogoMarqueeItem) => {
     if (item.href) {
@@ -61,7 +74,7 @@ export function SlidingLogoMarquee({
   }
 
   const togglePlayState = () => {
-    setIsPlaying(!isPlaying)
+    setIsPlaying((playing) => !playing)
   }
 
   const blurDivs = Array.from({ length: animationSteps }, (_, index) => (
@@ -199,24 +212,24 @@ export function SlidingLogoMarquee({
         style={{ width, height }}
       >
         <div className="sliding-marquee-inner">
-          {enableBlur && (
+          {enableBlur && canAnimate && (
             <div className="sliding-marquee-blur sliding-marquee-blur--left">{blurDivs}</div>
           )}
-          {enableBlur && (
+          {enableBlur && canAnimate && (
             <div className="sliding-marquee-blur sliding-marquee-blur--right">{blurDivs}</div>
           )}
 
           <ul
             className="sliding-marquee-list"
             style={{
-              animationPlayState: isPlaying ? "running" : "paused",
-              animationName: direction === "vertical" ? "marqueeY" : "marqueeX",
+              animationPlayState: shouldAnimate && isPlaying ? "running" : "paused",
+              animationName: shouldAnimate ? (direction === "vertical" ? "marqueeY" : "marqueeX") : "none",
               animationDuration: `${speed}s`,
             }}
-            onMouseEnter={() => pauseOnHover && setIsPlaying(false)}
-            onMouseLeave={() => pauseOnHover && setIsPlaying(autoPlay)}
+            onMouseEnter={() => shouldAnimate && pauseOnHover && setIsPlaying(false)}
+            onMouseLeave={() => shouldAnimate && pauseOnHover && setIsPlaying(autoPlay)}
           >
-            {[...items, ...items].map((item, index) => (
+            {renderedItems.map((item, index) => (
               <li
                 key={`${item.id}-${index}`}
                 className="sliding-marquee-item"
@@ -227,7 +240,7 @@ export function SlidingLogoMarquee({
             ))}
           </ul>
 
-          {showControls && (
+          {showControls && canAnimate && (
             <button
               className="absolute right-4 bottom-4 z-10 bg-background/80 hover:bg-background border border-border text-foreground rounded-full p-2 shadow-xs transition-colors"
               onClick={togglePlayState}

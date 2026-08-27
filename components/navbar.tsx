@@ -1,17 +1,21 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { motion, useScroll, useMotionValueEvent } from "framer-motion"
-import { Phone, MessageCircle, Wrench, CalendarDays, Search, Mail, Home, Building2 } from "lucide-react"
+import dynamic from "next/dynamic"
+import { Phone, MessageCircle, CalendarDays, Search, Home, Building2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useLanguage, useT } from "@/components/language-provider"
-import { WhatsAppChatbot } from "@/components/whatsapp-chatbot"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 import { SiteContact } from "@/lib/site-contact"
+
+const WhatsAppChatbot = dynamic(
+  () => import("@/components/whatsapp-chatbot").then((mod) => mod.WhatsAppChatbot),
+  { ssr: false },
+)
 
 interface NavbarProps {
   contact: SiteContact
@@ -21,38 +25,60 @@ export function Navbar({ contact }: NavbarProps) {
   const { lang, setLang } = useLanguage()
   const t = useT()
   const [isScrolled, setIsScrolled] = useState(false)
-  const { scrollY } = useScroll()
   const pathname = usePathname()
   const router = useRouter()
 
-  const [mounted, setMounted] = useState(false)
+  const [supportReady, setSupportReady] = useState(false)
   const isExcluded = pathname?.startsWith("/admin") || pathname?.startsWith("/tech")
   const isBookingPage = pathname?.startsWith("/book")
 
   useEffect(() => {
-    const id = requestAnimationFrame(() => setMounted(true))
-    return () => cancelAnimationFrame(id)
-  }, [])
+    const updateScrolled = () => {
+      const next = window.scrollY > 50
+      setIsScrolled((current) => (current === next ? current : next))
+    }
 
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    setIsScrolled(latest > 50)
-  })
+    updateScrolled()
+    window.addEventListener("scroll", updateScrolled, { passive: true })
+    return () => window.removeEventListener("scroll", updateScrolled)
+  }, [])
 
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") return
     if (isExcluded) return
-    const routes = ["/services", "/book", "/track"]
+    const connection = (navigator as Navigator & {
+      connection?: { effectiveType?: string; saveData?: boolean }
+    }).connection
+
+    if (connection?.saveData || connection?.effectiveType?.includes("2g")) return
+
+    const routes = ["/services", "/book", "/track", "/corporate"]
     const doPrefetch = () => routes.forEach((r) => router.prefetch(r))
 
     const g = globalThis as any
     if (typeof g.requestIdleCallback === "function") {
-      const id = g.requestIdleCallback(doPrefetch, { timeout: 2000 })
+      const id = g.requestIdleCallback(doPrefetch, { timeout: 3500 })
       return () => g.cancelIdleCallback?.(id)
     }
 
-    const id = setTimeout(doPrefetch, 250)
+    const id = setTimeout(doPrefetch, 1800)
     return () => clearTimeout(id)
   }, [router, isExcluded])
+
+  useEffect(() => {
+    if (isExcluded || isBookingPage) return
+
+    const loadSupport = () => setSupportReady(true)
+    const g = globalThis as any
+
+    if (typeof g.requestIdleCallback === "function") {
+      const id = g.requestIdleCallback(loadSupport, { timeout: 4000 })
+      return () => g.cancelIdleCallback?.(id)
+    }
+
+    const id = window.setTimeout(loadSupport, 1800)
+    return () => window.clearTimeout(id)
+  }, [isBookingPage, isExcluded])
 
   const desktopLogo = (
     <Link href="/" className="relative z-50 hidden md:flex" dir="ltr">
@@ -96,10 +122,10 @@ export function Navbar({ contact }: NavbarProps) {
   const navLinks = [
     { name: t("Home"), raw: "Home", href: "/" },
     { name: t("Services"), raw: "Services", href: "/services" },
-    { name: t("Contact"), raw: "Contact", href: "/contact" },
     { name: t("Book Now"), raw: "Book Now", href: "/book" },
     { name: t("Corporate Services"), raw: "Corporate Services", href: "/corporate" },
     { name: t("About"), raw: "About", href: "/about" },
+    { name: t("Contact"), raw: "Contact", href: "/contact" },
     { name: t("Track Order"), raw: "Track Order", href: "/track" },
   ]
 
@@ -109,39 +135,33 @@ export function Navbar({ contact }: NavbarProps) {
 
   return (
     <>
-      <motion.nav
-        initial={false}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.5 }}
+      <nav
         className={cn(
-          "fixed top-0 inset-x-0 z-50 transition-all duration-300 px-4 md:px-6 py-3",
+          "fixed top-0 inset-x-0 z-50 transition-[padding] duration-200 px-4 md:px-6 py-3",
           isScrolled ? "py-3" : "py-4",
         )}
-        style={{ transform: "none" }}
         suppressHydrationWarning
       >
-        <motion.header
-          className={cn("max-w-7xl mx-auto relative flex items-center justify-between px-4 md:px-6 py-2 transition-all duration-300 glass-nav")}
+        <header
+          className={cn("max-w-7xl mx-auto relative flex items-center justify-between px-4 md:px-6 py-2 transition-[background-color,box-shadow] duration-200 glass-nav")}
           suppressHydrationWarning
           dir="ltr"
         >
 
-          {/* Mobile left-side: language button & theme toggle */}
-          <div className="flex items-center gap-2 relative">
-            <div className="md:hidden flex items-center gap-1.5">
-              {languageSwitcher}
-              <ThemeToggle />
-            </div>
+          {/* Left-side: Desktop Logo & Mobile Left Logo */}
+          <div className="flex items-center gap-2 relative z-50">
             {desktopLogo}
-          </div>
-
-          {/* Mobile centered logo */}
-          <div className="md:hidden absolute left-1/2 -translate-x-1/2 z-50" dir="ltr">
-            <Link href="/" className="relative">
+            <Link href="/" className="md:hidden relative flex items-center" dir="ltr">
               <span className="text-xl font-bold tracking-tighter text-foreground dark:text-white">
                 KBI<span className="text-cyan-500 dark:text-cyan-400">.</span>
               </span>
             </Link>
+          </div>
+
+          {/* Mobile Right-side: language button & theme toggle */}
+          <div className="md:hidden flex items-center gap-1.5 z-50" dir="ltr">
+            {languageSwitcher}
+            <ThemeToggle />
           </div>
 
           {/* Desktop Menu */}
@@ -153,6 +173,7 @@ export function Navbar({ contact }: NavbarProps) {
                   <li key={link.raw}>
                     <Link
                       href={link.href}
+                      prefetch={false}
                       className={cn(
                         "text-[13px] xl:text-sm font-medium transition-all duration-300 relative py-2 px-3 rounded-xl flex items-center gap-2 group",
                         active 
@@ -162,10 +183,9 @@ export function Navbar({ contact }: NavbarProps) {
                     >
                       <span suppressHydrationWarning className="relative z-10">{link.name}</span>
                       {active && (
-                        <motion.div
-                          layoutId="active-nav-desktop"
+                        <span
+                          aria-hidden="true"
                           className="absolute inset-0 border border-cyan-500/20 bg-cyan-500/5 rounded-xl -z-0"
-                          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                         />
                       )}
                     </Link>
@@ -201,18 +221,16 @@ export function Navbar({ contact }: NavbarProps) {
           </div>
 
 
-        </motion.header>
-      </motion.nav>
+        </header>
+      </nav>
       <nav className="lg:hidden fixed inset-x-0 bottom-0 z-40 pb-[env(safe-area-inset-bottom)]">
         <div className="apple-nav">
           <div className="apple-nav-items">
             {[
               { href: "/", label: "Home", icon: Home },
-              { href: "/services", label: "Services", icon: Wrench },
               { href: "/book", label: "Book Now", icon: CalendarDays },
               { href: "/corporate", label: "Corporate", icon: Building2 },
               { href: "/track", label: "Track Order", icon: Search },
-              { href: "/contact", label: "Contact", icon: Mail },
             ].map((item) => {
               const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href)
               const Icon = item.icon as any
@@ -220,14 +238,13 @@ export function Navbar({ contact }: NavbarProps) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  prefetch={false}
                   className={cn("group relative flex flex-col items-center justify-center gap-1.5 flex-1")}
                   aria-current={active ? "page" : undefined}
                   aria-label={t(item.label)}
                 >
-                  <motion.div
+                  <div
                     className="flex flex-col items-center justify-center"
-                    animate={active ? { scale: 1.05 } : { scale: 1 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   >
                     <div className={cn("apple-nav-item", active ? "apple-nav-item-active" : "apple-nav-item-inactive")}>
                       <Icon className={cn("icon w-5 h-5")} />
@@ -235,14 +252,14 @@ export function Navbar({ contact }: NavbarProps) {
                     <span className="block mt-1 text-[10px] sm:text-[11px] font-semibold tracking-tight text-foreground/80 dark:text-white/80 truncate w-full text-center" suppressHydrationWarning>
                       {t(item.label)}
                     </span>
-                  </motion.div>
+                  </div>
                 </Link>
               )
             })}
           </div>
         </div>
       </nav>
-      {mounted && !isBookingPage && <WhatsAppChatbot />}
+      {supportReady && !isBookingPage && <WhatsAppChatbot />}
     </>
   )
 }

@@ -3,7 +3,6 @@
 import type React from "react"
 
 import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
 import { GlassCard } from "@/components/ui/glass-card"
 import { Button } from "@/components/ui/button"
 import { orderStatuses } from "@/lib/data"
@@ -181,15 +180,10 @@ export function OrderTracker() {
             </form>
           </GlassCard>
 
-          <AnimatePresence mode="wait">
+          <>
             {/* Not Found */}
             {notFound && (
-              <motion.div
-                key="notfound"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
+              <div>
                 <GlassCard className="text-center">
                   <div className="w-16 h-16 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center mx-auto mb-4">
                     <AlertCircle className="w-8 h-8 text-red-500 dark:text-red-400" />
@@ -209,18 +203,12 @@ export function OrderTracker() {
                     </a>
                   </Button>
                 </GlassCard>
-              </motion.div>
+              </div>
             )}
 
             {/* Multiple Orders Found (Phone) */}
             {ordersList.length > 0 && (
-              <motion.div
-                key="list"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="space-y-4"
-              >
+              <div className="space-y-4">
                 <div className="text-center mb-4">
                   <h3 className="text-lg font-bold">{t("Found orders")} ({ordersList.length})</h3>
                   <p className="text-sm text-muted-foreground">{t("Select an order to view details")}</p>
@@ -249,18 +237,12 @@ export function OrderTracker() {
                     )
                   })()
                 ))}
-              </motion.div>
+              </div>
             )}
 
             {/* Single Order Found */}
             {orderData && (
-              <motion.div
-                key="found"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="space-y-6"
-              >
+              <div className="space-y-6">
                 {(() => {
                   const step = resolveStatusStep(orderData.status)
                   const currentIndex = step - 1
@@ -365,11 +347,8 @@ export function OrderTracker() {
                               const isPending = index > currentIndex
 
                               return (
-                                <motion.div
+                                <div
                                   key={status.id}
-                                  initial={{ opacity: 0, x: isAr ? 15 : -15 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  transition={{ delay: index * 0.05 }}
                                   className={`flex items-start gap-4 relative transition-all duration-300 ${
                                     isPending ? "opacity-35 grayscale" : "opacity-100"
                                   }`}
@@ -413,7 +392,7 @@ export function OrderTracker() {
                                       {isAr ? t(status.description) : status.description}
                                     </p>
                                   </div>
-                                </motion.div>
+                                </div>
                               )
                             })}
                           </div>
@@ -451,9 +430,9 @@ export function OrderTracker() {
                     {t("Back to list")}
                   </button>
                 )}
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
+          </>
         </div>
       </div>
     </section>

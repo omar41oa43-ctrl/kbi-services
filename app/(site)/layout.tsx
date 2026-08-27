@@ -4,10 +4,7 @@ import { getSiteContact } from "@/lib/site-contact"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { JsonLd } from "@/components/json-ld"
-import { GoogleAnalytics } from "@/components/google-analytics"
-import { CookieConsent } from "@/components/cookie-consent"
-import { UpdateNotification } from "@/components/update-notification"
-import { SafeAnalytics } from "@/components/safe-analytics"
+import { SiteRuntime } from "@/components/site-runtime"
 
 export default async function SiteLayout({
   children,
@@ -26,10 +23,7 @@ export default async function SiteLayout({
           {children}
         </main>
         <Footer contact={contact} />
-        <SafeAnalytics />
-        <GoogleAnalytics />
-        <CookieConsent />
-        <UpdateNotification />
+        <SiteRuntime />
       </div>
     </ContactProvider>
   )

@@ -244,24 +244,38 @@ class _JobsScreenState extends State<JobsScreen> {
 
   // --- SEARCH BAR ---
   Widget _buildSearchBar() {
-    return CupertinoSearchTextField(
-      controller: _searchController,
-      placeholder: widget.locale.languageCode == 'ar'
-          ? 'ابحث بالطلب أو العميل أو الجهاز'
-          : 'Order, customer, phone, device…',
-      backgroundColor: Colors.white.withValues(alpha: 0.82),
-      borderRadius: BorderRadius.circular(13),
-      style: const TextStyle(color: kbiLabel, fontSize: 16),
-      itemColor: const Color(0xFF8E8E93),
-      onSuffixTap: () {
-        _searchController.clear();
-        setState(() => _searchQuery = '');
-      },
-      onChanged: (val) {
-        setState(() {
-          _searchQuery = val.toLowerCase().trim();
-        });
-      },
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: CupertinoSearchTextField(
+        controller: _searchController,
+        placeholder: widget.locale.languageCode == 'ar'
+            ? 'ابحث برقم الطلب، العميل، أو الجهاز...'
+            : 'Search by order ID, customer, device…',
+        backgroundColor: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14.5, fontWeight: FontWeight.w600),
+        itemColor: const Color(0xFF2563EB),
+        onSuffixTap: () {
+          _searchController.clear();
+          setState(() => _searchQuery = '');
+        },
+        onChanged: (val) {
+          setState(() {
+            _searchQuery = val.toLowerCase().trim();
+          });
+        },
+      ),
     );
   }
 
