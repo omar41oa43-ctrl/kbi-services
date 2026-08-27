@@ -6,6 +6,7 @@ import { HowItWorks } from "@/components/how-it-works"
 import { CTASection } from "@/components/cta-section"
 import { SlidingLogoMarquee } from "@/components/sliding-logo-marquee"
 import { SiSamsung, SiApple, SiDell, SiHp, SiLenovo, SiSony } from "react-icons/si"
+import { MobileAppShell } from "@/components/mobile-app-shell"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -20,11 +21,13 @@ export const dynamic = "force-static"
 export default async function Home() {
   return (
     <main className="min-h-screen bg-background text-foreground selection:bg-cyan-500/30 pb-16 lg:pb-0">
-      <Hero />
-      <Services />
-      <WhyChooseUs />
-      <HowItWorks />
-      <section className="container mx-auto px-6 py-12">
+      <MobileAppShell />
+      <div className="hidden md:block">
+        <Hero />
+        <Services />
+        <WhyChooseUs />
+        <HowItWorks />
+        <section className="container mx-auto px-6 py-12">
         <h2 className="text-2xl md:text-3xl font-bold mb-2">Brands We Service</h2>
         <p className="text-sm text-muted-foreground mb-6">Brand names identify devices we repair and do not imply manufacturer authorization.</p>
         <SlidingLogoMarquee
@@ -51,8 +54,9 @@ export default async function Home() {
           animationSteps={8}
           showControls
         />
-      </section>
-      <CTASection />
+        </section>
+        <CTASection />
+      </div>
 
     </main>
   )
