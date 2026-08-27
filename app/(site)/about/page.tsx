@@ -4,7 +4,7 @@ import { getSiteContact } from "@/lib/site-contact"
 
 export const metadata: Metadata = {
   title: "About Us",
-  description: "Learn more about KBI Repairs Abu Dhabi. Our mission is to provide professional, convenient, and reliable on-site technical support and repair services for homes and businesses.",
+  description: "Learn about KBI's on-site device repair and technical support for homes and businesses in Abu Dhabi, Dubai, Sharjah, and Ajman.",
   alternates: {
     canonical: "/about",
   },

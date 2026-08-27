@@ -29,6 +29,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
+import { auth } from "@/firebase/firebaseConfig"
 
 interface CorporateRequest {
   id: string
@@ -64,7 +65,9 @@ export default function CorporateInboxPage() {
     const fetchRequests = async () => {
       setLoading(true)
       try {
-        const result = await getCorporateRequestsAction()
+        const idToken = await auth.currentUser?.getIdToken()
+        if (!idToken) throw new Error("Unauthorized")
+        const result = await getCorporateRequestsAction(idToken)
         if (result.success && result.data) {
           const list = result.data as CorporateRequest[]
           setRequests(list)
@@ -93,7 +96,9 @@ export default function CorporateInboxPage() {
     setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)))
     if (selectedRequest?.id === id) setSelectedRequest((prev) => (prev ? { ...prev, status } : null))
 
-    const result = await updateCorporateRequestStatusAction(id, status)
+    const idToken = await auth.currentUser?.getIdToken()
+    if (!idToken) return refreshData()
+    const result = await updateCorporateRequestStatusAction(id, status, idToken)
     if (!result.success) {
       refreshData()
     }
@@ -105,7 +110,9 @@ export default function CorporateInboxPage() {
     setRequests((prev) => prev.filter((r) => r.id !== id))
     if (selectedRequest?.id === id) setSelectedRequest(null)
 
-    const result = await deleteCorporateRequestAction(id)
+    const idToken = await auth.currentUser?.getIdToken()
+    if (!idToken) return refreshData()
+    const result = await deleteCorporateRequestAction(id, idToken)
     if (!result.success) {
       refreshData()
     }

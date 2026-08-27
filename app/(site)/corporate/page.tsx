@@ -1,4 +1,3 @@
-import { SlidingLogoMarquee } from "@/components/sliding-logo-marquee"
 import { GlassCard } from "@/components/ui/glass-card"
 import { CorporateBookingForm } from "@/components/corporate-booking-form"
 import Link from "next/link"
@@ -35,6 +34,7 @@ import {
 } from "lucide-react"
 import { CorporateContractsSection } from "@/components/corporate-contracts"
 import { T } from "@/components/i18n-text"
+import { getSiteContact } from "@/lib/site-contact"
 
 export const metadata: Metadata = {
   title: "Corporate IT Support & Maintenance",
@@ -46,8 +46,9 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-static"
 
-export default function CorporatePage() {
+export default async function CorporatePage() {
   const hasHandshake = fs.existsSync(path.join(process.cwd(), "public", "handshake-mobile.webp"))
+  const contact = await getSiteContact()
   return (
     <PageEntrance className="min-h-screen bg-background text-foreground selection:bg-cyan-500/30 pb-16 lg:pb-0 font-sans text-start">
 
@@ -84,7 +85,7 @@ export default function CorporatePage() {
                   <div className="p-3 rounded-2xl bg-cyan-500/10 text-cyan-500 dark:text-cyan-400 ring-1 ring-cyan-500/20 group-hover:bg-cyan-500/20 transition-colors"><CalendarClock className="w-6 h-6" /></div>
                   <div>
                     <h3 className="font-bold text-foreground mb-1"><T k="Priority SLA" /></h3>
-                    <p className="text-sm text-muted-foreground"><T k="Guaranteed response times" /></p>
+                    <p className="text-sm text-muted-foreground"><T k="Response targets defined in your SLA" /></p>
                   </div>
                 </StaggerItem>
                 <StaggerItem className="flex items-start gap-4 group">
@@ -116,13 +117,13 @@ export default function CorporatePage() {
                   <a href="#corporate-form" className="px-8 py-4 rounded-full bg-cyan-500 text-black font-bold hover:bg-cyan-400 transition-colors shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_35px_rgba(6,182,212,0.6)] block"><T k="Request Partnership" /></a>
                 </HoverScale>
                 <HoverScale>
-                  <Link href="/corporate/portal" className="px-8 py-4 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold hover:bg-cyan-500/20 transition-colors shadow-sm block">Client Portal</Link>
+                  <Link href="#corporate-form" className="px-8 py-4 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold hover:bg-cyan-500/20 transition-colors shadow-sm block">Corporate Enquiry</Link>
                 </HoverScale>
                 <HoverScale>
                   <Link href="/book" className="px-8 py-4 rounded-full border border-border bg-card/60 text-foreground font-semibold hover:bg-accent transition-colors shadow-sm block"><T k="Book Technician" /></Link>
                 </HoverScale>
                 <HoverScale>
-                  <a href="https://wa.me/971507313446" target="_blank" rel="noopener noreferrer" className="px-8 py-4 rounded-full bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_35px_rgba(34,197,94,0.6)] flex items-center gap-2"><MessageCircle className="w-5 h-5" /> <T k="WhatsApp" /></a>
+                  <a href={`https://wa.me/${contact.whatsappRaw}`} target="_blank" rel="noopener noreferrer" className="px-8 py-4 rounded-full bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_35px_rgba(34,197,94,0.6)] flex items-center gap-2"><MessageCircle className="w-5 h-5" /> <T k="WhatsApp" /></a>
                 </HoverScale>
               </FadeIn>
             </div>
@@ -144,16 +145,16 @@ export default function CorporatePage() {
               <div className="absolute bottom-0 left-0 right-0 p-8">
                 <div className="grid grid-cols-3 divide-x divide-white/10 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-4">
                   <div className="text-center px-2">
-                    <div className="text-3xl font-bold text-cyan-400 mb-1">2h</div>
-                    <div className="text-xs text-white/60 uppercase tracking-wider"><T k="Response" /></div>
+                    <div className="text-xl font-bold text-cyan-400 mb-1">Priority</div>
+                    <div className="text-xs text-white/60 uppercase tracking-wider">SLA targets</div>
                   </div>
                   <div className="text-center px-2">
-                    <div className="text-3xl font-bold text-cyan-400 mb-1">100+</div>
-                    <div className="text-xs text-white/60 uppercase tracking-wider"><T k="Techs" /></div>
+                    <div className="text-xl font-bold text-cyan-400 mb-1">Multi-site</div>
+                    <div className="text-xs text-white/60 uppercase tracking-wider">Coverage</div>
                   </div>
                   <div className="text-center px-2">
-                    <div className="text-3xl font-bold text-cyan-400 mb-1">1k+</div>
-                    <div className="text-xs text-white/60 uppercase tracking-wider"><T k="Devices/Mo" /></div>
+                    <div className="text-xl font-bold text-cyan-400 mb-1">Flexible</div>
+                    <div className="text-xs text-white/60 uppercase tracking-wider">Service plans</div>
                   </div>
                 </div>
               </div>
@@ -222,29 +223,11 @@ export default function CorporatePage() {
             <span><T k="The entities we deal with" /></span>
           </h2>
         </FadeIn>
-        <SlidingLogoMarquee
-          items={[
-            { id: "government", content: <div className="text-center"><div className="text-foreground font-semibold"><T k="Government" /></div></div> },
-            { id: "hospitals", content: <div className="text-center"><div className="text-foreground font-semibold"><T k="Hospitals" /></div></div> },
-            { id: "universities", content: <div className="text-center"><div className="text-foreground font-semibold"><T k="Universities" /></div></div> },
-            { id: "banks", content: <div className="text-center"><div className="text-foreground font-semibold"><T k="Banks" /></div></div> },
-            { id: "school", content: <div className="text-center"><div className="text-foreground font-semibold"><T k="School" /></div></div> },
-          ]}
-          speed={40}
-          pauseOnHover
-          enableBlur={false}
-          blurIntensity={1}
-          height="110px"
-          width="100%"
-          gap="1rem"
-          scale={1}
-          direction="horizontal"
-          autoPlay
-          showGridBackground
-          enableSpillEffect={false}
-          animationSteps={3}
-          showControls={true}
-        />
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+          {["Government", "Hospitals", "Universities", "Banks", "Schools"].map((sector) => (
+            <li key={sector} className="rounded-xl border border-border bg-card px-4 py-5 text-center font-semibold text-foreground"><T k={sector} /></li>
+          ))}
+        </ul>
       </section>
 
       {/* Comprehensive Device Support */}
@@ -480,35 +463,15 @@ export default function CorporatePage() {
       <section className="container mx-auto px-6 py-12">
         <FadeIn>
           <h2 className="text-2xl md:text-3xl font-bold mb-6 text-foreground">
-            <span><T k="Trusted by" /></span>
+            <span>Brands and platforms we support</span>
           </h2>
         </FadeIn>
-        <SlidingLogoMarquee
-          items={[
-            { id: "samsung", content: <span className="text-foreground/80 font-bold">Samsung</span>, href: "https://www.samsung.com" },
-            { id: "apple", content: <span className="text-foreground/80 font-bold">Apple</span>, href: "https://www.apple.com" },
-            { id: "dell", content: <span className="text-foreground/80 font-bold">Dell</span>, href: "https://www.dell.com" },
-            { id: "hp", content: <span className="text-foreground/80 font-bold">HP</span>, href: "https://www.hp.com" },
-            { id: "lg", content: <span className="text-foreground/80 font-bold">LG</span>, href: "https://www.lg.com" },
-            { id: "sony", content: <span className="text-foreground/80 font-bold">Sony</span>, href: "https://www.sony.com" },
-            { id: "xiaomi", content: <span className="text-foreground/80 font-bold">Xiaomi</span>, href: "https://www.mi.com" },
-            { id: "lenovo", content: <span className="text-foreground/80 font-bold">Lenovo</span>, href: "https://www.lenovo.com" },
-          ]}
-          speed={40}
-          pauseOnHover
-          enableBlur
-          blurIntensity={1}
-          height="110px"
-          width="100%"
-          gap="1rem"
-          scale={1}
-          direction="horizontal"
-          autoPlay
-          showGridBackground
-          enableSpillEffect={false}
-          animationSteps={8}
-          showControls={true}
-        />
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8" aria-label="Supported brands">
+          {["Samsung", "Apple", "Dell", "HP", "LG", "Sony", "Xiaomi", "Lenovo"].map((brand) => (
+            <li key={brand} className="rounded-xl border border-border bg-card px-4 py-5 text-center font-bold text-foreground/80">{brand}</li>
+          ))}
+        </ul>
+        <p className="mt-4 text-sm text-muted-foreground">Brand names identify devices we service and do not imply manufacturer authorization or endorsement.</p>
       </section>
 
       {/* CTA & Contact Information Section */}
@@ -529,17 +492,17 @@ export default function CorporatePage() {
                     <span className="px-3 py-1 rounded-full bg-card border border-border text-[11px] font-bold tracking-wide text-foreground"><T k="All UAE" /></span>
                   </div>
                   <div className="space-y-4 w-full">
-                    <a href="tel:+971502491034" className="relative overflow-hidden flex items-start gap-4 p-4 rounded-2xl bg-card border border-border hover:border-cyan-500/50 hover:shadow-sm transition-all group">
+                    <a href={`tel:${contact.phone}`} className="relative overflow-hidden flex items-start gap-4 p-4 rounded-2xl bg-card border border-border hover:border-cyan-500/50 hover:shadow-sm transition-all group">
                       <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                         <Phone className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
                       </div>
                       <div>
                         <div className="text-xs text-muted-foreground mb-1"><T k="Call Us (24/7)" /></div>
-                        <div className="text-lg font-bold text-foreground group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors" dir="ltr">+971 50 249 1034</div>
+                        <div className="text-lg font-bold text-foreground group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors" dir="ltr">{contact.phoneDisplay}</div>
                       </div>
                     </a>
 
-                    <a href="https://wa.me/971502491034" target="_blank" rel="noopener noreferrer" className="relative overflow-hidden flex items-start gap-4 p-4 rounded-2xl bg-card border border-border hover:border-green-500/50 hover:shadow-sm transition-all group">
+                    <a href={`https://wa.me/${contact.whatsappRaw}`} target="_blank" rel="noopener noreferrer" className="relative overflow-hidden flex items-start gap-4 p-4 rounded-2xl bg-card border border-border hover:border-green-500/50 hover:shadow-sm transition-all group">
                       <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                         <MessageCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
                       </div>
@@ -549,13 +512,13 @@ export default function CorporatePage() {
                       </div>
                     </a>
 
-                    <a href="mailto:omar.41@hotmail.com" className="relative overflow-hidden flex items-start gap-4 p-4 rounded-2xl bg-card border border-border hover:border-blue-500/50 hover:shadow-sm transition-all group">
+                    <a href={`mailto:${contact.email}`} className="relative overflow-hidden flex items-start gap-4 p-4 rounded-2xl bg-card border border-border hover:border-blue-500/50 hover:shadow-sm transition-all group">
                       <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                         <Mail className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                       </div>
                       <div>
                         <div className="text-xs text-muted-foreground mb-1"><T k="Email Us" /></div>
-                        <div className="text-lg font-bold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">omar.41@hotmail.com</div>
+                        <div className="text-lg font-bold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{contact.email}</div>
                       </div>
                     </a>
                   </div>
@@ -580,7 +543,7 @@ export default function CorporatePage() {
                   </p>
                   <div className="flex flex-wrap gap-4 justify-start">
                     <HoverScale>
-                      <a href="tel:+971502491034" className="px-8 py-4 rounded-full bg-cyan-500 text-black font-bold hover:bg-cyan-400 transition-colors shadow-md flex items-center gap-2">
+                      <a href={`tel:${contact.phone}`} className="px-8 py-4 rounded-full bg-cyan-500 text-black font-bold hover:bg-cyan-400 transition-colors shadow-md flex items-center gap-2">
                         <Phone className="w-4 h-4" /> <T k="Call Now" />
                       </a>
                     </HoverScale>

@@ -38,7 +38,7 @@ export function Hero() {
             </h1>
 
             <p className="text-lg md:text-xl text-slate-600 dark:text-gray-300 max-w-2xl mx-auto mb-10 leading-relaxed font-normal dark:font-light tracking-wide" suppressHydrationWarning>
-              {t("Professional repair and IT services across Abu Dhabi, Dubai, Sharjah & Ajman. We come to your home or office with genuine parts and same-day service.")}
+              {t("Professional repair and IT services across Abu Dhabi, Dubai, Sharjah & Ajman. We come to your home or office with quality-matched parts and same-day appointments subject to availability.")}
             </p>
 
             {/* Buttons */}
@@ -56,7 +56,7 @@ export function Hero() {
                 rel="noopener noreferrer"
                 className="w-full sm:w-auto px-8 py-4 rounded-full bg-slate-900/5 dark:bg-white/5 text-slate-800 dark:text-white font-medium text-lg hover:bg-slate-900/10 dark:hover:bg-white/10 border border-slate-900/10 dark:border-white/10 transition-all duration-300 flex items-center justify-center gap-2"
               >
-                {t("Contact Us")}
+                {t("WhatsApp")}
               </a>
             </div>
           </div>

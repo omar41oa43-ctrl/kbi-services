@@ -7,7 +7,7 @@ const defaultContact: SiteContact = {
   companyName: "KBI GLOBAL TECHNOLOGIES",
   whatsapp: "971502491034",
   phone: "+971502491034",
-  email: "info@kbi.ae",
+  email: "info@kbi.services",
   address: "Abu Dhabi, UAE",
   whatsappRaw: "971502491034",
   phoneDisplay: "+971 50 249 1034",

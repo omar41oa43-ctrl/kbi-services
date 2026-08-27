@@ -6,14 +6,14 @@ import { ShieldCheck, Zap, HeartHandshake, Clock, Award, Star } from "lucide-rea
 
 const features = [
   {
-    title: "Certified Experts",
-    description: "Our team consists of highly trained and certified technicians with years of experience.",
+    title: "Experienced Technicians",
+    description: "Your request is matched with a technician experienced in the relevant device category.",
     icon: <Award className="w-8 h-8 text-cyan-600 dark:text-cyan-400" />,
     bg: "bg-cyan-500/10",
   },
   {
     title: "Same-Day Service",
-    description: "We arrive at your location - home or office - the same day you book.",
+    description: "Same-day appointments are available in many areas, subject to technician and parts availability.",
     icon: <Clock className="w-8 h-8 text-blue-600 dark:text-blue-400" />,
     bg: "bg-blue-500/10",
   },
@@ -24,20 +24,20 @@ const features = [
     bg: "bg-amber-500/10",
   },
   {
-    title: "Genuine Parts",
-    description: "We only use high-quality, genuine parts for all our repairs.",
+    title: "Clear Parts Options",
+    description: "Available part grades and warranty terms are explained in your quote before work begins.",
     icon: <ShieldCheck className="w-8 h-8 text-emerald-600 dark:text-green-400" />,
     bg: "bg-emerald-500/10",
   },
   {
     title: "Warranty Included",
-    description: "All our repairs come with a solid 3-6 months warranty for your peace of mind.",
+    description: "Eligible repairs include a written service warranty whose duration is confirmed before repair.",
     icon: <Star className="w-8 h-8 text-purple-600 dark:text-purple-400" />,
     bg: "bg-purple-500/10",
   },
   {
     title: "Transparent Pricing",
-    description: "Know the cost upfront. No hidden fees or surprises after the work is done.",
+    description: "Diagnosis comes first, then you approve the final quote before any paid repair begins.",
     icon: <HeartHandshake className="w-8 h-8 text-rose-600 dark:text-pink-400" />,
     bg: "bg-rose-500/10",
   },
@@ -62,7 +62,7 @@ export function WhyChooseUs() {
             {t("Why Choose KBI?")}
           </h2>
           <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed">
-            {t("We're committed to providing the best repair experience in Abu Dhabi with professional on-site service.")}
+            {t("We focus on convenient on-site service, clear quotes, and careful handling of your devices.")}
           </p>
           <div className="h-1 w-[120px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent mx-auto mt-8 shadow-[0_0_20px_rgba(6,182,212,0.6)]" />
         </div>

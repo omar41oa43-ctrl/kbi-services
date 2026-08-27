@@ -99,7 +99,7 @@ export function CorporateContractsSection() {
           <StaggerItem>
             <GlassCard hoverEffect={false} className="border border-border bg-card/80 dark:bg-card/40 h-full p-6 shadow-xs">
               <div className="text-3xl font-extrabold text-foreground">
-                <span className="text-cyan-600 dark:text-cyan-400">2h</span> <span className="text-lg font-bold">{t("avg response")}</span>
+                <span className="text-cyan-600 dark:text-cyan-400">{t("Priority")}</span> <span className="text-lg font-bold">{t("dispatch")}</span>
               </div>
               <p className="text-muted-foreground text-sm mt-2 leading-relaxed">{t("Priority dispatch for corporate clients")}</p>
             </GlassCard>
@@ -107,7 +107,7 @@ export function CorporateContractsSection() {
           <StaggerItem>
             <GlassCard hoverEffect={false} className="border border-border bg-card/80 dark:bg-card/40 h-full p-6 shadow-xs">
               <div className="text-3xl font-extrabold text-foreground">
-                <span className="text-cyan-600 dark:text-cyan-400">100+</span> <span className="text-lg font-bold">{t("technicians")}</span>
+                <span className="text-cyan-600 dark:text-cyan-400">{t("Multi-site")}</span> <span className="text-lg font-bold">{t("coverage")}</span>
               </div>
               <p className="text-muted-foreground text-sm mt-2 leading-relaxed">{t("Coverage across all UAE regions")}</p>
             </GlassCard>
@@ -115,7 +115,7 @@ export function CorporateContractsSection() {
           <StaggerItem>
             <GlassCard hoverEffect={false} className="border border-border bg-card/80 dark:bg-card/40 h-full p-6 shadow-xs">
               <div className="text-3xl font-extrabold text-foreground">
-                <span className="text-cyan-600 dark:text-cyan-400">1000+</span> <span className="text-lg font-bold">{t("devices/month")}</span>
+                <span className="text-cyan-600 dark:text-cyan-400">{t("Flexible")}</span> <span className="text-lg font-bold">{t("capacity")}</span>
               </div>
               <p className="text-muted-foreground text-sm mt-2 leading-relaxed">{t("Enterprise-grade servicing capacity")}</p>
             </GlassCard>
@@ -125,4 +125,3 @@ export function CorporateContractsSection() {
     </section>
   )
 }
-

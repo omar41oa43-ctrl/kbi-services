@@ -21,6 +21,7 @@ import {
 } from "lucide-react"
 
 import { useLanguage, useT } from "@/components/language-provider"
+import { useSiteContact } from "@/components/contact-provider"
 
 function normalizeStatus(val: string) {
   return val.toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim()
@@ -62,12 +63,14 @@ const statusIcons = [
   <CheckCircle2 key={6} className="w-6 h-6" />,
 ]
 
-export function OrderTracker() {
+export function OrderTracker({ initialOrderId = "" }: { initialOrderId?: string }) {
   const { lang } = useLanguage()
   const isAr = lang === "ar"
   const t = useT()
 
-  const [inputVal, setInputVal] = useState("")
+  const contact = useSiteContact()
+  const [orderId, setOrderId] = useState(initialOrderId)
+  const [last4, setLast4] = useState("")
   const [isSearching, setIsSearching] = useState(false)
   const [orderData, setOrderData] = useState<any | null>(null)
   const [ordersList, setOrdersList] = useState<any[]>([])
@@ -76,7 +79,7 @@ export function OrderTracker() {
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inputVal.trim()) return
+    if (!orderId.trim() || last4.length !== 4) return
 
     setIsSearching(true)
     setNotFound(false)
@@ -86,17 +89,12 @@ export function OrderTracker() {
 
     try {
       try {
-        const res = await fetch(`/api/track?phone=${encodeURIComponent(inputVal.trim())}`)
+        const res = await fetch(`/api/track?orderId=${encodeURIComponent(orderId.trim())}&last4=${encodeURIComponent(last4)}`)
         const data = await res.json()
 
         if (data.error) {
           setErrorMessage(data.error)
-          // If "No match", show not found UI
-          if (data.error.includes("No match")) {
-            setNotFound(true)
-          } else {
-            setNotFound(true) // Show error in text
-          }
+          setNotFound(true)
         } else if (data.results && data.results.length > 0) {
           if (data.results.length === 1) {
             setOrderData(data.results[0])
@@ -107,12 +105,12 @@ export function OrderTracker() {
           setNotFound(true)
         }
 
-      } catch (fetchError: any) {
-        setErrorMessage(`Network Error: ${fetchError.message}`)
+      } catch {
+        setErrorMessage(isAr ? "تعذّر الاتصال بخدمة التتبّع. حاول مرة أخرى." : "Unable to reach tracking right now. Please try again.")
         setNotFound(true)
       }
-    } catch (e: any) {
-      setErrorMessage(`System Error: ${e.message || "Unknown error"}`)
+    } catch {
+      setErrorMessage(isAr ? "تعذّر التحقق من الطلب. حاول مرة أخرى." : "We could not verify the order. Please try again.")
       setNotFound(true)
     } finally {
       setIsSearching(false)
@@ -147,21 +145,40 @@ export function OrderTracker() {
         <div className="max-w-2xl mx-auto">
           {/* Search Form */}
           <GlassCard className="mb-8">
-            <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
+            <form onSubmit={handleSearch} className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_180px_auto]">
+              <label className="relative block">
+                <span className="sr-only">{isAr ? "رقم الطلب" : "Order ID"}</span>
                 <Search className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground ${isAr ? "right-4" : "left-4"}`} />
                 <input
                   type="text"
-                  value={inputVal}
-                  onChange={(e) => setInputVal(e.target.value)}
-                  placeholder={t("Enter order ID or phone number")}
+                  name="orderId"
+                  autoComplete="off"
+                  value={orderId}
+                  onChange={(e) => setOrderId(e.target.value)}
+                  placeholder={isAr ? "رقم الطلب (مثال KBI-123456)" : "Order ID (e.g. KBI-123456)"}
                   className={`w-full py-4 bg-background border border-input rounded-xl focus:outline-none focus:border-cyan-500 transition-colors text-foreground text-base shadow-xs placeholder:text-muted-foreground/60 ${isAr ? "pr-12 pl-4 text-right placeholder:text-right" : "pl-12 pr-4 text-left"}`}
                   dir={isAr ? "rtl" : "ltr"}
                 />
-              </div>
+              </label>
+              <label className="block">
+                <span className="sr-only">{isAr ? "آخر 4 أرقام من هاتف الحجز" : "Last 4 booking phone digits"}</span>
+                <input
+                  type="text"
+                  name="last4"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  maxLength={4}
+                  pattern="[0-9]{4}"
+                  value={last4}
+                  onChange={(e) => setLast4(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                  placeholder={isAr ? "آخر 4 أرقام من الهاتف" : "Last 4 phone digits"}
+                  className="w-full rounded-xl border border-input bg-background px-4 py-4 text-base text-foreground shadow-xs placeholder:text-muted-foreground/60 focus:border-cyan-500 focus:outline-none"
+                  dir="ltr"
+                />
+              </label>
               <Button
                 type="submit"
-                disabled={!inputVal || isSearching}
+                disabled={!orderId.trim() || last4.length !== 4 || isSearching}
                 className="rounded-xl px-8 min-w-[140px] bg-cyan-500 text-black hover:bg-cyan-400 font-bold shadow-md cursor-pointer"
               >
                 {isSearching ? (
@@ -190,11 +207,11 @@ export function OrderTracker() {
                   </div>
                   <h3 className="text-xl font-bold mb-2 text-foreground">{t("Order Not Found")}</h3>
                   <p className="text-muted-foreground mb-6">
-                    {errorMessage || (isAr ? `لم نعثر على أي طلب مطابق لـ "${inputVal}".` : `We couldn't find any order matching "${inputVal}".`)}
+                    {errorMessage || (isAr ? "تحقق من رقم الطلب وآخر أربعة أرقام من هاتف الحجز." : "Check the order ID and the last four digits of the booking phone number.")}
                   </p>
                   <Button asChild variant="secondary">
                     <a
-                      href="https://wa.me/971502491034"
+                      href={`https://wa.me/${contact.whatsappRaw}`}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -402,7 +419,7 @@ export function OrderTracker() {
                       {/* Contact Quick Action Buttons */}
                       <div className="flex flex-col sm:flex-row gap-3 pt-2">
                         <a
-                          href={`https://wa.me/971502491034?text=${encodeURIComponent(`Hello, I'm checking on my order ${orderData.orderId}`)}`}
+                          href={`https://wa.me/${contact.whatsappRaw}?text=${encodeURIComponent(`Hello, I'm checking on my order ${orderData.orderId}`)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex-1 flex items-center justify-center gap-2 py-3.5 px-6 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold text-sm shadow-md hover:shadow-emerald-500/25 active:scale-[0.98] transition-all"
@@ -411,7 +428,7 @@ export function OrderTracker() {
                           <span suppressHydrationWarning>{t("Chat on WhatsApp")}</span>
                         </a>
                         <a
-                          href="tel:+971502491034"
+                          href={`tel:${contact.phone}`}
                           className="flex-1 flex items-center justify-center gap-2 py-3.5 px-6 bg-muted hover:bg-accent border border-border text-foreground rounded-2xl font-bold text-sm shadow-xs hover:border-border active:scale-[0.98] transition-all"
                         >
                           <Phone className="w-4 h-4" />

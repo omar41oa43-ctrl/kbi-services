@@ -4,10 +4,11 @@ import type { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: "Book a Technician",
-  description: "Schedule a same-day on-site repair technician in Abu Dhabi. Easy online booking for mobile, laptop, and IT support services.",
+  description: "Request an on-site device repair or IT support appointment in Abu Dhabi, Dubai, Sharjah, or Ajman. Timing is confirmed after booking.",
   alternates: {
     canonical: "/book",
   },
+  robots: { index: false, follow: true },
 }
 
 // export const dynamic = "force-static"

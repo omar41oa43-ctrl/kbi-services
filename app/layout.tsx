@@ -6,19 +6,22 @@ import { cn } from "@/lib/utils"
 import { LanguageProvider } from "@/components/language-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 
-const cairo = Cairo({ subsets: ["arabic", "latin"], variable: "--font-sans" })
+const cairo = Cairo({
+  subsets: ["arabic", "latin"],
+  variable: "--font-sans",
+  display: "swap",
+})
 
 export const revalidate = 600
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: {
-      default: "Best On-Site Mobile & Laptop Repair Abu Dhabi | KBI Repairs",
-      template: "%s | KBI Repairs Abu Dhabi"
+      default: "On-Site Device Repair Across the UAE | KBI Repairs",
+      template: "%s | KBI Repairs"
     },
     description:
-      "Top-rated on-site repair services in Abu Dhabi. We fix iPhone screens, laptops, printers, TVs, and CCTV at your doorstep. Same-day service in Khalifa City, Al Reem, MBZ, and all Abu Dhabi areas.",
-    keywords: ["best mobile repair abu dhabi", "top rated laptop repair abu dhabi", "iphone screen replacement abu dhabi", "on-site printer repair", "CCTV installation abu dhabi", "TV repair services abu dhabi", "apple watch repair", "gaming console repair", "mobile repair near me", "laptop maintenance", "Abu Dhabi tech support"],
+      "On-site repair for phones, laptops, computers, printers, TVs, gaming consoles, networks, and CCTV across Abu Dhabi, Dubai, Sharjah, and Ajman.",
     metadataBase: new URL("https://kbi.services"),
     icons: {
       icon: '/favicon-32.png',
@@ -29,21 +32,21 @@ export async function generateMetadata(): Promise<Metadata> {
       locale: "en_AE",
       url: "https://kbi.services",
       siteName: "KBI Repairs",
-      title: "KBI | Professional On-Site Repair Services Abu Dhabi",
-      description: "Fast, certified on-site repair for all your devices in Abu Dhabi. Home or office service within the same day.",
+      title: "KBI | On-Site Device Repair Across the UAE",
+      description: "Book professional device repair at your home or office in Abu Dhabi, Dubai, Sharjah, and Ajman.",
       images: [
         {
           url: "/og-image.png",
           width: 1200,
           height: 630,
-          alt: "KBI Repairs Abu Dhabi",
+          alt: "KBI on-site device repair services",
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: "KBI | On-Site Repair Services Abu Dhabi",
-      description: "Professional on-site device repair in Abu Dhabi. We come to you!",
+      title: "KBI | On-Site Device Repair Across the UAE",
+      description: "Professional repair at your home or office in Abu Dhabi, Dubai, Sharjah, and Ajman.",
       images: ["/og-image.png"],
     },
   }

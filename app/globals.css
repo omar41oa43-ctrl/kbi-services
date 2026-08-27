@@ -1536,8 +1536,7 @@ html:not(.dark) .adaptive-theme-page [class*="from-white"][class*="text-transpar
   }
 
   .home-deferred {
-    content-visibility: auto;
-    contain-intrinsic-size: auto 760px;
+    content-visibility: visible;
   }
 
   .home-deferred [class*="blur-"] {

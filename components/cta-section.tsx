@@ -19,7 +19,7 @@ export function CTASection() {
           <div className="relative z-10" suppressHydrationWarning>
             <h2 className="text-3xl md:text-5xl font-extrabold mb-4 text-foreground">{t("Ready to Fix Your Device?")}</h2>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              {t("Book a technician now and get your device repaired at your doorstep. Fast, reliable, and guaranteed.")}
+              {t("Request an on-site appointment. We diagnose the issue and confirm the quote before any paid repair begins.")}
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

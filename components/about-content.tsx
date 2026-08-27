@@ -7,10 +7,10 @@ import { useT } from "@/components/language-provider"
 
 
 const stats = [
-  { number: "5+", label: "Years Experience" },
-  { number: "10K+", label: "Devices Repaired" },
-  { number: "98%", label: "Satisfaction Rate" },
-  { number: "24/7", label: "Service Available" },
+  { number: "On-site", label: "Home & Office Visits" },
+  { number: "4", label: "Emirates Served" },
+  { number: "Upfront", label: "Quote Before Repair" },
+  { number: "Written", label: "Eligible Repair Warranty" },
 ]
 
 const values = [
@@ -28,19 +28,19 @@ const values = [
   },
   {
     icon: <ShieldCheck className="w-7 h-7 text-green-400" />,
-    title: "Quality Guarantee",
+    title: "Clear Service Terms",
     description:
-      "We use only original or high-quality replacement parts and back all our repairs with a solid warranty for your peace of mind.",
+      "We explain the available parts options, confirm the quote before paid work begins, and document warranty coverage for eligible repairs.",
   },
 ]
 
 const guarantees = [
-  "Free diagnosis when repair is approved",
-  "Original & high-quality spare parts",
-  "3-6 months warranty on all repairs",
-  "Transparent pricing with no hidden fees",
-  "Same-day service for most repairs",
-  "Money-back guarantee if not satisfied",
+  "Diagnostic fees disclosed before the visit",
+  "Parts options explained in the quote",
+  "Written warranty terms for eligible repairs",
+  "No paid repair without quote approval",
+  "Same-day appointments subject to availability",
+  "Customer data handled under our privacy policy",
 ]
 
 export function AboutContent({ pdfUrl }: { pdfUrl?: string }) {
@@ -58,7 +58,7 @@ export function AboutContent({ pdfUrl }: { pdfUrl?: string }) {
             </h1>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               {t(
-                "KBI is Abu Dhabi's trusted on-site repair service provider. We bring professional device repair directly to your doorstep - whether it's your home, office, or anywhere in Abu Dhabi.",
+                "KBI provides on-site device repair and technical support at homes and offices across Abu Dhabi, Dubai, Sharjah, and Ajman.",
               )}
             </p>
           </div>
@@ -92,12 +92,12 @@ export function AboutContent({ pdfUrl }: { pdfUrl?: string }) {
                 </p>
                 <p>
                   {t(
-                    "That's why we created KBI - a mobile repair service that comes directly to you. Our team of certified technicians are equipped with the tools and expertise to fix most devices on the spot.",
+                    "That's why we created KBI—a mobile service that comes directly to you. Our technicians bring the tools and practical experience needed to diagnose many common device problems on site.",
                   )}
                 </p>
                 <p>
                   {t(
-                    "We serve all areas of Abu Dhabi, including Al Reem Island, Khalifa City, Mohammed Bin Zayed City, Al Shamkha, and everywhere in between.",
+                    "We take bookings across Abu Dhabi, Dubai, Sharjah, and Ajman. Appointment times depend on the location, technician capacity, and parts availability.",
                   )}
                 </p>
               </div>
@@ -110,12 +110,12 @@ export function AboutContent({ pdfUrl }: { pdfUrl?: string }) {
                 <div className="p-3 rounded-2xl bg-orange-500/10">
                   <Award className="w-7 h-7 text-orange-500 dark:text-orange-400" />
                 </div>
-                <h2 className="text-2xl font-bold text-foreground">{t("Certified Technicians")}</h2>
+                <h2 className="text-2xl font-bold text-foreground">{t("Experienced Technicians")}</h2>
               </div>
               <div className="space-y-4 text-muted-foreground leading-relaxed">
                 <p>
                   {t(
-                    "Our technicians undergo rigorous training and certification programs to ensure they can handle any repair challenge. From the latest iPhone to gaming consoles, we've got you covered.",
+                    "Our team handles a broad range of consumer and business devices. We assess each request first and confirm whether it can be completed on site or needs another service path.",
                   )}
                 </p>
                 <p className="font-semibold text-foreground">{t("Each technician specializes in specific device categories:")}</p>

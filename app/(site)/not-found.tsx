@@ -1,7 +1,9 @@
 import Link from "next/link"
 import { AlertCircle, Home } from "lucide-react"
+import { getSiteContact } from "@/lib/site-contact"
 
-export default function NotFound() {
+export default async function NotFound() {
+  const contact = await getSiteContact()
   return (
     <main className="adaptive-theme-page min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center relative overflow-hidden font-sans">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -39,7 +41,7 @@ export default function NotFound() {
             Go to Homepage / الرئيسية
           </Link>
           <a
-            href="https://wa.me/971502491034"
+            href={`https://wa.me/${contact.whatsappRaw}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-full border border-white/10 hover:bg-white/5 transition-colors text-sm"

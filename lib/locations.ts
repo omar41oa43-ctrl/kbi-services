@@ -276,7 +276,7 @@ export const locations: LegacyLocation[] = [
     slug: "sharjah",
     name: "Sharjah",
     nameAr: "الشارقة",
-    description: "Certified field technicians delivering same-day device repair across Sharjah.",
+    description: "On-site device diagnosis and repair appointments across Sharjah.",
     landmarks: ["Al Majaz", "Al Nahda", "Al Taawun", "Muwaileh", "Al Qasimia"],
   },
   {
@@ -308,7 +308,7 @@ export const locations: LegacyLocation[] = [
     slug: "dubai-marina",
     name: "Dubai Marina",
     nameAr: "دبي مارينا",
-    description: "Express mobile and laptop doorstep repair in Dubai Marina.",
+    description: "On-site mobile and laptop service appointments in Dubai Marina.",
     landmarks: ["Marina Walk", "Marina Mall", "JBR"],
   },
   {
@@ -320,4 +320,3 @@ export const locations: LegacyLocation[] = [
     landmarks: ["Burj Khalifa", "Dubai Mall", "Financial Centre"],
   },
 ];
-

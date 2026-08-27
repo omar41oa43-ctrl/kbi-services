@@ -23,9 +23,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const device = devices.find((d) => d.id === slug)
     if (!device) return {}
 
+    const serviceName = device.name.includes("Repair") || device.name.includes("Support") || device.name.includes("Installation") ? device.name : `${device.name} Repair`
+    const issueSummary = device.issues.slice(0, 3).join(", ")
     return {
-        title: `${device.name} Repair Service`,
-        description: `Professional ${device.name} repair in Abu Dhabi. We fix screens, batteries, motherboard issues, and software for all major brands on-site. Certified technicians, genuine parts, and same-day service.`,
+        title: `${serviceName} Across the UAE`,
+        description: `On-site ${serviceName.toLowerCase()} for ${issueSummary}. Appointments in Abu Dhabi, Dubai, Sharjah, and Ajman, with a quote confirmed before paid work.`,
         alternates: {
             canonical: `/services/${device.id}`,
         },
@@ -42,6 +44,15 @@ export default async function ServicePage({ params }: Props) {
 
     // Extract top issues for display
     const topIssues = device.issues.slice(0, 6)
+    const serviceName = device.name.includes("Repair") || device.name.includes("Support") || device.name.includes("Installation") ? device.name : `${device.name} Repair`
+    const schema = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Service",
+        "name": `${serviceName} Service`,
+        "provider": { "@type": "LocalBusiness", "name": "KBI Repairs", "url": "https://kbi.services" },
+        "description": `On-site ${serviceName.toLowerCase()} for ${device.issues.slice(0, 3).join(", ")}.`,
+        "areaServed": ["Abu Dhabi", "Dubai", "Sharjah", "Ajman"].map((name) => ({ "@type": "AdministrativeArea", name })),
+    }).replace(/</g, "\\u003c")
 
     return (
         <main className="adaptive-theme-page min-h-screen bg-black text-white pt-24 pb-12">
@@ -50,23 +61,23 @@ export default async function ServicePage({ params }: Props) {
                 <div className="max-w-4xl mx-auto text-center">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 mb-6">
                         <Wrench className="w-4 h-4" />
-                        <span className="font-semibold text-sm">Professional Repair Service</span>
+                        <span className="font-semibold text-sm">On-Site Technical Service</span>
                     </div>
 
                     <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white via-cyan-100 to-white/70">
-                        {device.name} Repair <br />
-                        <span className="text-cyan-400">in Abu Dhabi</span>
+                        {serviceName} <br />
+                        <span className="text-cyan-400">Across the UAE</span>
                     </h1>
 
                     <p className="text-xl text-white/70 mb-8 leading-relaxed max-w-2xl mx-auto">
-                        Fast, reliable, and on-site {device.name.toLowerCase()} repair services.
-                        Whether it's a {device.brands.slice(0, 3).map(b => b.name).join(", ")} or any other brand, we fix it at your doorstep.
+                        Request on-site help for {device.brands.slice(0, 3).map(b => b.name).join(", ")} and other supported brands.
+                        We diagnose the issue and confirm the quote and parts option before paid work begins.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <Button asChild size="lg" className="h-14 px-8 text-lg rounded-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold w-full sm:w-auto">
                             <Link href={`/book?device=${device.id}`}>
-                                Book {device.name} Repair
+                                Book {serviceName}
                             </Link>
                         </Button>
                     </div>
@@ -76,8 +87,8 @@ export default async function ServicePage({ params }: Props) {
             {/* Common Issues Section */}
             <section className="container mx-auto px-6 mb-16">
                 <div className="text-center mb-10">
-                    <h2 className="text-2xl font-bold mb-4">Common {device.name} Issues We Fix</h2>
-                    <p className="text-white/60">We handle hardware and software problems for all major brands.</p>
+                    <h2 className="text-2xl font-bold mb-4">Common {device.name} Service Requests</h2>
+                    <p className="text-white/70">Final repairability, timing, and price are confirmed after diagnosis.</p>
                 </div>
 
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
@@ -95,25 +106,25 @@ export default async function ServicePage({ params }: Props) {
                 <div className="grid md:grid-cols-3 gap-6">
                     <GlassCard className="p-6">
                         <Clock className="w-10 h-10 text-cyan-400 mb-4" />
-                        <h3 className="text-xl font-bold mb-2">Same-Day Service</h3>
-                        <p className="text-white/60">
-                            Most {device.name.toLowerCase()} repairs are completed within hours. We value your time.
+                        <h3 className="text-xl font-bold mb-2">Flexible Appointments</h3>
+                        <p className="text-white/70">
+                            Same-day slots may be available depending on location, technician capacity, and required parts.
                         </p>
                     </GlassCard>
 
                     <GlassCard className="p-6">
                         <Cpu className="w-10 h-10 text-cyan-400 mb-4" />
-                        <h3 className="text-xl font-bold mb-2">Original Quality Parts</h3>
-                        <p className="text-white/60">
-                            We use highest quality replacement parts for screens, batteries, and components to ensure longevity.
+                        <h3 className="text-xl font-bold mb-2">Clear Parts Options</h3>
+                        <p className="text-white/70">
+                            Where parts are needed, the available option and its price are described in your quote.
                         </p>
                     </GlassCard>
 
                     <GlassCard className="p-6">
                         <ShieldCheck className="w-10 h-10 text-cyan-400 mb-4" />
-                        <h3 className="text-xl font-bold mb-2">Warranty Included</h3>
-                        <p className="text-white/60">
-                            Peace of mind comes standard. All our {device.name.toLowerCase()} repairs are backed by our service warranty.
+                        <h3 className="text-xl font-bold mb-2">Written Warranty Terms</h3>
+                        <p className="text-white/70">
+                            Eligible repairs include written coverage and exclusions on the invoice or service record.
                         </p>
                     </GlassCard>
                 </div>
@@ -130,6 +141,7 @@ export default async function ServicePage({ params }: Props) {
                             </span>
                         ))}
                     </div>
+                    <p className="mt-5 text-sm text-white/60">Brand names identify supported devices and do not imply manufacturer authorization or endorsement.</p>
                     <div className="mt-8">
                         <Button asChild variant="link" className="text-cyan-400">
                             <Link href={`/book?device=${device.id}`} className="flex items-center gap-2">
@@ -144,23 +156,7 @@ export default async function ServicePage({ params }: Props) {
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{
-                    __html: JSON.stringify({
-                        "@context": "https://schema.org",
-                        "@type": "Service",
-                        "name": `${device.name} Repair Service`,
-                        "provider": {
-                            "@type": "LocalBusiness",
-                            "name": "KBI Repairs",
-                            "image": "https://kbi.services/pwa-icon.png"
-                        },
-                        "description": `Expert ${device.name} repair in Abu Dhabi. Services include ${device.issues.slice(0, 3).join(", ")}.`,
-                        "areaServed": "Abu Dhabi",
-                        "offers": {
-                            "@type": "Offer",
-                            "priceCurrency": "AED",
-                            "availability": "https://schema.org/InStock"
-                        }
-                    })
+                    __html: schema
                 }}
             />
         </main>

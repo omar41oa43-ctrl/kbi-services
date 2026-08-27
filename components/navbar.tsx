@@ -81,7 +81,7 @@ export function Navbar({ contact }: NavbarProps) {
   }, [isBookingPage, isExcluded])
 
   const desktopLogo = (
-    <Link href="/" className="relative z-50 hidden md:flex" dir="ltr">
+    <Link href="/" className="relative z-50 hidden min-h-11 min-w-11 items-center md:flex" dir="ltr" aria-label="KBI home">
       <span className="text-xl md:text-2xl font-bold tracking-tighter text-foreground dark:text-white">
         KBI<span className="text-cyan-500 dark:text-cyan-400">.</span>
       </span>
@@ -95,7 +95,7 @@ export function Navbar({ contact }: NavbarProps) {
         aria-label="Switch to English"
         aria-pressed={lang === "en"}
         className={cn(
-          "px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-300",
+          "min-h-11 min-w-11 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-300",
           lang === "en" ? "bg-cyan-500 text-black shadow-[0_0_15px_-3px_rgba(6,182,212,0.5)]" : "text-foreground/60 dark:text-white/50 hover:text-foreground dark:hover:text-white"
         )}
       >
@@ -106,7 +106,7 @@ export function Navbar({ contact }: NavbarProps) {
         aria-label="Switch to Arabic"
         aria-pressed={lang === "ar"}
         className={cn(
-          "px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-300",
+          "min-h-11 min-w-11 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-300",
           lang === "ar" ? "bg-cyan-500 text-black shadow-[0_0_15px_-3px_rgba(6,182,212,0.5)]" : "text-foreground/60 dark:text-white/50 hover:text-foreground dark:hover:text-white"
         )}
       >
@@ -151,7 +151,7 @@ export function Navbar({ contact }: NavbarProps) {
           {/* Left-side: Desktop Logo & Mobile Left Logo */}
           <div className="flex items-center gap-2 relative z-50">
             {desktopLogo}
-            <Link href="/" className="md:hidden relative flex items-center" dir="ltr">
+            <Link href="/" className="relative flex min-h-11 min-w-11 items-center md:hidden" dir="ltr" aria-label="KBI home">
               <span className="text-xl font-bold tracking-tighter text-foreground dark:text-white">
                 KBI<span className="text-cyan-500 dark:text-cyan-400">.</span>
               </span>
@@ -175,7 +175,7 @@ export function Navbar({ contact }: NavbarProps) {
                       href={link.href}
                       prefetch={false}
                       className={cn(
-                        "text-[13px] xl:text-sm font-medium transition-all duration-300 relative py-2 px-3 rounded-xl flex items-center gap-2 group",
+                        "min-h-11 text-[13px] xl:text-sm font-medium transition-all duration-300 relative py-2 px-3 rounded-xl flex items-center gap-2 group",
                         active 
                           ? "text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 dark:bg-white/5 shadow-xs" 
                           : "text-foreground/80 dark:text-white/70 hover:text-foreground dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5"

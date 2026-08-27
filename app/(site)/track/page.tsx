@@ -7,14 +7,14 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/track",
   },
+  robots: { index: false, follow: true },
 }
 
-export const dynamic = "force-static"
-
-export default function TrackPage() {
+export default async function TrackPage({ searchParams }: { searchParams: Promise<{ orderId?: string }> }) {
+  const { orderId = "" } = await searchParams
   return (
     <main className="min-h-screen bg-background text-foreground selection:bg-cyan-500/30 pb-16 lg:pb-0">
-      <OrderTracker />
+      <OrderTracker initialOrderId={orderId} />
     </main>
   )
 }

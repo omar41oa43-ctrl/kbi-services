@@ -1,4 +1,4 @@
-import { locations } from "@/lib/locations"
+import { locations, UAE_EMIRATES } from "@/lib/locations"
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import Link from "next/link"
@@ -16,16 +16,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params
     const loc = locations.find((l) => l.slug === slug)
     if (!loc) return {}
+    const emirate = UAE_EMIRATES.find((item) => item.id === loc.id || item.areas.some((area) => area.id === loc.id))?.nameEn || loc.name
 
     return {
         title: `Mobile & Phone Repair in ${loc.name}`,
-        description: `Expert mobile, laptop, and electronics repair in ${loc.name}, Abu Dhabi. Professional on-site service at your home or office. Same-day repair available for all major brands.`,
+        description: `On-site mobile, laptop, and electronics service in ${loc.name}, ${emirate}. Request a home or office appointment and approve the quote before paid repair.`,
         alternates: {
-            canonical: `https://kbi.services/locations/${loc.slug}`,
-            languages: {
-                "en-AE": `https://kbi.services/en/locations/${loc.slug}`,
-                "ar-AE": `https://kbi.services/ar/locations/${loc.slug}`,
-            }
+            canonical: `/locations/${loc.slug}`,
         },
     }
 }
@@ -37,6 +34,15 @@ export default async function LocationPage({ params }: Props) {
     if (!loc) {
         notFound()
     }
+    const emirate = UAE_EMIRATES.find((item) => item.id === loc.id || item.areas.some((area) => area.id === loc.id))?.nameEn || loc.name
+    const schema = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Service",
+        "name": `On-site device service in ${loc.name}`,
+        "provider": { "@type": "LocalBusiness", "name": "KBI Repairs", "url": "https://kbi.services" },
+        "areaServed": { "@type": "Place", "name": `${loc.name}, ${emirate}, UAE` },
+        "description": `On-site device diagnosis and repair appointments in ${loc.name}.`,
+    }).replace(/</g, "\\u003c")
 
     return (
         <main className="adaptive-theme-page min-h-screen bg-black text-white pt-24 pb-12">
@@ -54,7 +60,7 @@ export default async function LocationPage({ params }: Props) {
                     </h1>
 
                     <p className="text-xl text-white/70 mb-8 leading-relaxed max-w-2xl mx-auto">
-                        {loc.description} Don't waste time in traffic. KBI technicians come directly to your home or office in {loc.name}.
+                        {loc.description} Request a home or office visit in {loc.name}; we confirm the appointment window after checking coverage and availability.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -74,28 +80,29 @@ export default async function LocationPage({ params }: Props) {
 
             {/* Why Choose Us in Location */}
             <section className="container mx-auto px-6 mb-16">
+                <h2 className="mb-8 text-center text-3xl font-bold">What to expect from your visit</h2>
                 <div className="grid md:grid-cols-3 gap-6">
                     <GlassCard className="p-6">
                         <Clock className="w-10 h-10 text-cyan-400 mb-4" />
-                        <h3 className="text-xl font-bold mb-2">Fast Arrival</h3>
-                        <p className="text-white/60">
-                            Our technicians are patrolling {loc.name} daily. We can often arrive within 45-60 minutes of your booking.
+                        <h3 className="text-xl font-bold mb-2">Confirmed Arrival Window</h3>
+                        <p className="text-white/70">
+                            We confirm the available appointment window for {loc.name} after reviewing your request and location.
                         </p>
                     </GlassCard>
 
                     <GlassCard className="p-6">
                         <ShieldCheck className="w-10 h-10 text-cyan-400 mb-4" />
                         <h3 className="text-xl font-bold mb-2">On-Site Privacy</h3>
-                        <p className="text-white/60">
-                            Your device never leaves your sight. We repair it right in front of you at your {loc.name} location.
+                        <p className="text-white/70">
+                            When the service can be completed on site, the device remains at your {loc.name} location during the work.
                         </p>
                     </GlassCard>
 
                     <GlassCard className="p-6">
                         <Star className="w-10 h-10 text-cyan-400 mb-4" />
-                        <h3 className="text-xl font-bold mb-2">Certified Experts</h3>
-                        <p className="text-white/60">
-                            Highly trained technicians capable of fixing screens, batteries, motherboard issues, and more.
+                        <h3 className="text-xl font-bold mb-2">Experienced Technicians</h3>
+                        <p className="text-white/70">
+                            We diagnose the reported issue first, explain the available service path, and request approval before paid work.
                         </p>
                     </GlassCard>
                 </div>
@@ -105,21 +112,7 @@ export default async function LocationPage({ params }: Props) {
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{
-                    __html: JSON.stringify({
-                        "@context": "https://schema.org",
-                        "@type": "Service",
-                        "name": `Mobile Repair in ${loc.name}`,
-                        "provider": {
-                            "@type": "LocalBusiness",
-                            "name": "KBI Repairs",
-                            "image": "https://kbi.services/pwa-icon.png"
-                        },
-                        "areaServed": {
-                            "@type": "Place",
-                            "name": loc.name
-                        },
-                        "description": `Professional mobile and computer repair services available in ${loc.name}.`
-                    })
+                    __html: schema
                 }}
             />
         </main>

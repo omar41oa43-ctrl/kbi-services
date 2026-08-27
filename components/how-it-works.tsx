@@ -8,11 +8,11 @@ export function HowItWorks() {
 
   const steps = [
     { icon: <ClipboardList className="w-8 h-8" />, title: t("Submit Request"), description: t("Book via site or WhatsApp with device details") },
-    { icon: <UserCheck className="w-8 h-8" />, title: t("Assign Technician"), description: t("We assign a certified technician for your request") },
+    { icon: <UserCheck className="w-8 h-8" />, title: t("Assign Technician"), description: t("We assign an experienced technician suited to your request") },
     { icon: <Truck className="w-8 h-8" />, title: t("We Come to Your Location"), description: t("Technician arrives at your home or office") },
-    { icon: <Search className="w-8 h-8" />, title: t("Instant Diagnosis"), description: t("Free diagnosis to identify the problem") },
-    { icon: <Wrench className="w-8 h-8" />, title: t("Complete Repair"), description: t("Professional repair using high-quality parts") },
-    { icon: <CreditCard className="w-8 h-8" />, title: t("Pay After Repair"), description: t("Pay only when you are satisfied with the work") },
+    { icon: <Search className="w-8 h-8" />, title: t("Diagnosis"), description: t("We inspect the device and explain the available service options") },
+    { icon: <Wrench className="w-8 h-8" />, title: t("Approve & Repair"), description: t("Paid work begins only after you approve the quote") },
+    { icon: <CreditCard className="w-8 h-8" />, title: t("Service Record"), description: t("Receive the final charges and any eligible warranty terms in writing") },
   ]
 
   return (

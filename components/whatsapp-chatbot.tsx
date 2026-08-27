@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useLanguage, useT } from "@/components/language-provider"
+import { useSiteContact } from "@/components/contact-provider"
 import { 
   MessageCircle, 
   Send, 
@@ -37,7 +38,8 @@ export function WhatsAppChatbot({
   const [message, setMessage] = useState("")
   const [mounted, setMounted] = useState(false)
 
-  const phone = "971502491034"
+  const contact = useSiteContact()
+  const phone = contact.whatsappRaw
 
   useEffect(() => {
     const id = requestAnimationFrame(() => setMounted(true))

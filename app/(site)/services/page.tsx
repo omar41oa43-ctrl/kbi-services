@@ -9,7 +9,7 @@ import type { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: "Repair Services",
-  description: "Comprehensive on-site repair services in Abu Dhabi. We fix iPhones, Samsung, MacBooks, Dell/HP laptops, printers, CCTV systems, and smart TVs at your location.",
+  description: "Explore on-site mobile, laptop, computer, printer, TV, CCTV, networking, and installation services in Abu Dhabi, Dubai, Sharjah, and Ajman.",
   alternates: {
     canonical: "/services",
   },

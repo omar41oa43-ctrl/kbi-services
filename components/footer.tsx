@@ -98,9 +98,9 @@ export function Footer({ contact }: FooterProps) {
           {/* Quick Links (3 cols) */}
           <div className="lg:col-span-3 w-full flex flex-col items-center justify-center text-center mx-auto" style={{ textAlign: "center" }}>
             <div className="flex flex-col items-center justify-center mb-8 w-full">
-              <h4 className="font-bold text-foreground text-lg tracking-wide text-center w-full" style={{ textAlign: "center" }}>
+              <h2 className="font-bold text-foreground text-lg tracking-wide text-center w-full" style={{ textAlign: "center" }}>
                 {t("Quick Links")}
-              </h4>
+              </h2>
               <div className="mt-2.5 w-12 h-1 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full shadow-[0_0_12px_rgba(6,182,212,0.5)] mx-auto" />
             </div>
             <ul className="space-y-4 w-full flex flex-col items-center justify-center text-center" style={{ textAlign: "center" }}>
@@ -140,9 +140,9 @@ export function Footer({ contact }: FooterProps) {
           {/* Services (3 cols) */}
           <div className="lg:col-span-3 w-full flex flex-col items-center justify-center text-center mx-auto" style={{ textAlign: "center" }}>
             <div className="flex flex-col items-center justify-center mb-8 w-full">
-              <h4 className="font-bold text-foreground text-lg tracking-wide text-center w-full" style={{ textAlign: "center" }}>
+              <h2 className="font-bold text-foreground text-lg tracking-wide text-center w-full" style={{ textAlign: "center" }}>
                 {t("Services")}
-              </h4>
+              </h2>
               <div className="mt-2.5 w-12 h-1 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full shadow-[0_0_12px_rgba(59,130,246,0.5)] mx-auto" />
             </div>
             <ul className="space-y-4 w-full flex flex-col items-center justify-center text-center" style={{ textAlign: "center" }}>
@@ -170,9 +170,9 @@ export function Footer({ contact }: FooterProps) {
           {/* Contact (2 cols) */}
           <div className="lg:col-span-2 w-full flex flex-col items-center justify-center text-center mx-auto" style={{ textAlign: "center" }}>
             <div className="flex flex-col items-center justify-center mb-8 w-full">
-              <h4 className="font-bold text-foreground text-lg tracking-wide text-center w-full" style={{ textAlign: "center" }}>
+              <h2 className="font-bold text-foreground text-lg tracking-wide text-center w-full" style={{ textAlign: "center" }}>
                 {t("Contact")}
-              </h4>
+              </h2>
               <div className="mt-2.5 w-12 h-1 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full shadow-[0_0_12px_rgba(168,85,247,0.5)] mx-auto" />
             </div>
             <ul className="space-y-6 w-full flex flex-col items-center justify-center text-center" style={{ textAlign: "center" }}>
@@ -200,9 +200,12 @@ export function Footer({ contact }: FooterProps) {
 
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-6 relative" dir="ltr">
-          <p className="text-muted-foreground text-sm">
-            © {new Date().getFullYear()} {t("KBI Repair Services")}. {t("All rights reserved.")}
-          </p>
+          <div className="text-center md:text-start">
+            <p className="text-muted-foreground text-sm">
+              © {new Date().getFullYear()} {t("KBI Repair Services")}. {t("All rights reserved.")}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">{contact.companyName || "KBI GLOBAL TECHNOLOGIES"} · {contact.email}</p>
+          </div>
 
           {/* Center Circular Text - Absolute centered on Desktop */}
           <div className="md:absolute md:left-1/2 md:top-8 md:-translate-x-1/2 md:-translate-y-1/2 flex justify-center">
@@ -247,8 +250,11 @@ export function Footer({ contact }: FooterProps) {
           </div>
 
           <div className="flex gap-6 text-sm text-muted-foreground">
-            <Link href={isAr ? "/terms?lang=ar" : "/terms"} className="hover:text-foreground transition-colors">
+            <Link href="/terms" className="hover:text-foreground transition-colors">
               {t("Terms & Conditions")}
+            </Link>
+            <Link href="/privacy" className="hover:text-foreground transition-colors">
+              {t("Privacy Policy")}
             </Link>
           </div>
         </div>

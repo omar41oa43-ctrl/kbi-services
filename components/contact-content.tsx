@@ -175,7 +175,7 @@ export function ContactContent({ contact }: ContactContentProps) {
             <h2 className="text-2xl md:text-3xl font-extrabold mb-4 text-foreground">{t("Ready to Get Your Device Fixed?")}</h2>
             <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
               {t(
-                "Skip the wait. Book a certified technician to come to your location today. Fast, reliable, and guaranteed.",
+                "Request an on-site technician at your location. Appointment timing is confirmed based on coverage and availability.",
               )}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

@@ -33,7 +33,7 @@ export function Services() {
     tv: { bg: "bg-purple-500/10", border: "border-purple-500/30", text: "text-purple-700 dark:text-purple-400" },
     "apple-watch": { bg: "bg-pink-500/10", border: "border-pink-500/30", text: "text-pink-700 dark:text-pink-400" },
     gaming: { bg: "bg-red-500/10", border: "border-red-500/30", text: "text-red-700 dark:text-red-400" },
-    cctv: { bg: "bg-orange-500/10", border: "border-orange-500/30", text: "text-orange-700 dark:text-orange-400" },
+    cctv: { bg: "bg-orange-500/10", border: "border-orange-500/30", text: "text-orange-900 dark:text-orange-300" },
     "tv-install": { bg: "bg-green-500/10", border: "border-green-500/30", text: "text-green-700 dark:text-green-400" },
     tablet: { bg: "bg-blue-500/10", border: "border-blue-500/30", text: "text-blue-700 dark:text-blue-400" },
     networking: { bg: "bg-cyan-500/10", border: "border-cyan-500/30", text: "text-cyan-700 dark:text-cyan-400" },
@@ -71,7 +71,7 @@ export function Services() {
                       <h3 className="text-xl font-bold mb-2 text-center w-full text-foreground">
                         {isAr ? t(device.name) : device.name}
                       </h3>
-                      <p className="text-muted-foreground text-sm mb-4 text-center max-w-xs mx-auto">
+                      <p className="text-slate-700 dark:text-slate-300 text-sm mb-4 text-center max-w-xs mx-auto">
                         {device.issues.slice(0, 3).map((issue, i) => (
                           <span key={i}>
                             {isAr ? t(issue) : issue}

@@ -15,7 +15,7 @@ export function ThemeToggle({ className }: { className?: string }) {
 
   if (!mounted) {
     return (
-      <div className={cn("w-9 h-9 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40", className)}>
+      <div className={cn("w-11 h-11 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40", className)}>
         <Sun className="w-4 h-4" />
       </div>
     );
@@ -28,7 +28,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       type="button"
       onClick={() => setTheme(isDark ? "light" : "dark")}
       className={cn(
-        "relative w-9 h-9 rounded-2xl flex items-center justify-center transition-all duration-300 cursor-pointer group shadow-sm",
+        "relative w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-300 cursor-pointer group shadow-sm",
         "bg-white/10 hover:bg-white/20 border border-white/15 text-white/80 hover:text-white",
         "dark:bg-white/5 dark:hover:bg-white/10 dark:border-white/10 dark:text-white/80",
         className

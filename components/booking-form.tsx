@@ -204,6 +204,7 @@ export function BookingForm() {
   const [issuePickingId, setIssuePickingId] = useState<string | null>(null)
   const [isDetectingLocation, setIsDetectingLocation] = useState(false)
   const [locationError, setLocationError] = useState<string | null>(null)
+  const [privacyConsent, setPrivacyConsent] = useState(false)
 
   // Handle preselected device from URL
   useEffect(() => {
@@ -489,11 +490,19 @@ export function BookingForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!privacyConsent) {
+      toast({
+        variant: "destructive",
+        title: t("Error"),
+        description: isAr ? "يرجى الموافقة على سياسة الخصوصية والشروط لإرسال الطلب." : "Please accept the privacy policy and terms before submitting.",
+      })
+      return
+    }
     setIsSubmitting(true)
 
     try {
       // Use Server Action to bypass AdBlockers blocking Firestore API
-      const result = await createBookingAction(formData, deviceEntries)
+      const result = await createBookingAction({ ...formData, privacyConsent }, deviceEntries)
 
       if (result.error) throw new Error(result.error)
 
@@ -607,7 +616,7 @@ export function BookingForm() {
 
               <div className="flex flex-col gap-3 mb-6">
                 <Button asChild variant="primary" className="w-full">
-                  <Link href={`/track/${encodeURIComponent(trackingNumber)}`}>
+                  <Link href={`/track?orderId=${encodeURIComponent(trackingNumber)}`}>
                     {t("Track Your Order")}
                   </Link>
                 </Button>
@@ -649,7 +658,7 @@ export function BookingForm() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
                   {/* WhatsApp Support Button */}
                   <a
-                    href="https://wa.me/971502491034?text=Hi%20KBI%20Support,%20I%20need%20help%20with%20my%20order"
+                    href={`https://wa.me/${contact.whatsappRaw}?text=Hi%20KBI%20Support,%20I%20need%20help%20with%20my%20order`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2.5 p-2.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-600 dark:text-emerald-300 transition-all text-xs font-semibold group cursor-pointer shadow-xs"
@@ -737,7 +746,7 @@ export function BookingForm() {
             )}
           </h1>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            {t("Select your device, tell us the problem, and we'll send a certified technician to your location.")}
+            {t("Select your device, describe the problem, and we'll match an experienced technician to your request.")}
           </p>
         </div>
 
@@ -834,7 +843,7 @@ export function BookingForm() {
                         {t(deviceEntries.length > 0 ? "Add Another Device" : "Select Your Device")}
                       </h2>
                       <p className="mt-2 text-sm sm:text-base text-muted-foreground">
-                        {t("Select your device, tell us the problem, and we'll send a certified technician to your location.")}
+                        {t("Select your device, describe the problem, and we'll match an experienced technician to your request.")}
                       </p>
                     </div>
 
@@ -1235,7 +1244,7 @@ export function BookingForm() {
                 exit={{ opacity: 0, x: -20 }}
               >
                 <NeonPanel title={t("Your Details")} description={isAr ? "أدخل بياناتك لإتمام الطلب" : "Enter your details to complete the order"}>
-                  <form onSubmit={handleSubmit} className="mt-8 space-y-5" suppressHydrationWarning dir={isAr ? "rtl" : "ltr"}>
+                  <form method="post" onSubmit={handleSubmit} className="mt-8 space-y-5" suppressHydrationWarning dir={isAr ? "rtl" : "ltr"}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label htmlFor="booking-name" className="block text-sm font-semibold text-foreground/80 mb-2">{t("Full Name *")}</label>
@@ -1662,9 +1671,30 @@ export function BookingForm() {
                       ))}
                     </div>
 
+                    <label className="flex items-start gap-3 rounded-2xl border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+                      <input
+                        type="checkbox"
+                        name="privacyConsent"
+                        required
+                        checked={privacyConsent}
+                        onChange={(event) => setPrivacyConsent(event.target.checked)}
+                        className="mt-1 h-4 w-4 shrink-0 accent-cyan-500"
+                      />
+                      <span>
+                        {isAr ? "أوافق على استخدام بياناتي لإنشاء الطلب وتنسيق الزيارة وتحديث حالة الخدمة وفق " : "I agree to the use of my information to create the order, coordinate the visit, and provide service updates under the "}
+                        <Link href="/privacy" target="_blank" className="font-semibold text-cyan-700 underline dark:text-cyan-300">
+                          {t("Privacy Policy")}
+                        </Link>
+                        {isAr ? " و" : " and "}
+                        <Link href="/terms" target="_blank" className="font-semibold text-cyan-700 underline dark:text-cyan-300">
+                          {t("Terms & Conditions")}
+                        </Link>.
+                      </span>
+                    </label>
+
                     <button
                       type="submit"
-                      disabled={deviceEntries.length === 0 || isSubmitting}
+                      disabled={deviceEntries.length === 0 || !privacyConsent || isSubmitting}
                       className="w-full py-4 bg-cyan-500 text-black rounded-2xl font-semibold text-lg hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
@@ -1672,7 +1702,7 @@ export function BookingForm() {
                     </button>
 
                     <p className="text-center text-sm text-muted-foreground">
-                      {t("By booking, you agree to our terms. Payment is only after successful repair.")}
+                      {isAr ? "لا يوجد دفع عند الحجز. نؤكد عرض السعر قبل بدء أي إصلاح مدفوع." : "No payment is taken at booking. We confirm the quote before any paid repair begins."}
                     </p>
                   </form>
                 </NeonPanel>

@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: "Contact Us",
-  description: "Contact KBI for professional on-site device repair in Abu Dhabi. Call +971502491034 or book online for mobile, laptop, and IT support.",
+  description: "Contact KBI to request on-site mobile, laptop, electronics, and IT support in Abu Dhabi, Dubai, Sharjah, or Ajman.",
   alternates: {
     canonical: "/contact",
   },

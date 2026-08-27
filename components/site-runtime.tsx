@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic"
 import { useEffect, useState } from "react"
+import { CookieConsent, type CookieDecision } from "@/components/cookie-consent"
 
 const SafeAnalytics = dynamic(
   () => import("@/components/safe-analytics").then((mod) => mod.SafeAnalytics),
@@ -19,8 +20,16 @@ const UpdateNotification = dynamic(
 /** Loads non-essential monitoring and update UI after the first interaction frame. */
 export function SiteRuntime() {
   const [ready, setReady] = useState(false)
+  const [consent, setConsent] = useState<CookieDecision | null | "loading">("loading")
 
   useEffect(() => {
+    try {
+      const stored = localStorage.getItem("kbi_cookie_consent_v1")
+      setConsent(stored === "granted" || stored === "denied" ? stored : null)
+    } catch {
+      setConsent(null)
+    }
+
     const load = () => setReady(true)
     const runtime = globalThis as typeof globalThis & {
       requestIdleCallback?: (_callback: () => void, _options?: { timeout: number }) => number
@@ -36,13 +45,16 @@ export function SiteRuntime() {
     return () => window.clearTimeout(id)
   }, [])
 
-  if (!ready) return null
-
   return (
     <>
-      <SafeAnalytics />
-      <GoogleAnalytics />
-      <UpdateNotification />
+      {consent === null ? <CookieConsent onDecision={setConsent} /> : null}
+      {ready && consent === "granted" ? (
+        <>
+          <SafeAnalytics />
+          <GoogleAnalytics />
+        </>
+      ) : null}
+      {ready ? <UpdateNotification /> : null}
     </>
   )
 }

@@ -71,6 +71,24 @@ service cloud.firestore {
       );
     }
 
+    function belongsToMe() {
+      return signedIn() && (
+        resource.data.userId == request.auth.uid
+        || resource.data.customerId == request.auth.uid
+        || resource.data.customerUid == request.auth.uid
+        || resource.data.companyId == request.auth.uid
+      );
+    }
+
+    function newRecordBelongsToMe() {
+      return signedIn() && (
+        request.resource.data.userId == request.auth.uid
+        || request.resource.data.customerId == request.auth.uid
+        || request.resource.data.customerUid == request.auth.uid
+        || request.resource.data.companyId == request.auth.uid
+      );
+    }
+
     match /users/{uid} {
       allow read: if isOwner(uid) || isAdmin();
       allow create: if isOwner(uid)
@@ -112,18 +130,22 @@ service cloud.firestore {
     }
 
     match /bookings/{bookingId} {
-      allow read, create, update: if signedIn();
+      allow read: if isDispatcher() || isSupport() || assignedToMe() || belongsToMe();
+      allow create: if isDispatcher() || isSupport() || newRecordBelongsToMe();
+      allow update: if isDispatcher() || isSupport() || assignedToMe();
       allow delete: if isAdmin();
     }
 
     match /orders/{orderId} {
-      allow read, create, update: if signedIn();
+      allow read: if isDispatcher() || isSupport() || assignedToMe() || belongsToMe();
+      allow create: if isDispatcher() || isSupport() || newRecordBelongsToMe();
+      allow update: if isDispatcher() || isSupport() || assignedToMe();
       allow delete: if isAdmin();
     }
 
     match /parts/{partId} {
       allow read: if signedIn();
-      allow update: if signedIn();
+      allow update: if isAdmin();
       allow create, delete: if isAdmin();
     }
 

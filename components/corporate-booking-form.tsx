@@ -6,6 +6,7 @@ import { GlassCard } from "@/components/ui/glass-card"
 import { CheckCircle2, Loader2, AlertCircle } from "lucide-react"
 import { submitCorporateBookingAction } from "@/app/actions/corporate-booking"
 import { handleStaleServerActionError } from "@/lib/utils"
+import Link from "next/link"
 
 export function CorporateBookingForm() {
   const t = useT()
@@ -21,6 +22,7 @@ export function CorporateBookingForm() {
     urgency: "",
     preferredTime: "",
     notes: "",
+    privacyConsent: false,
   })
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -30,6 +32,10 @@ export function CorporateBookingForm() {
   ) => {
     const { name, value } = e.target
     setForm((f) => ({ ...f, [name]: value }))
+  }
+
+  const handleConsent = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm((current) => ({ ...current, privacyConsent: e.target.checked }))
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -68,7 +74,7 @@ export function CorporateBookingForm() {
               <CheckCircle2 className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
             </div>
             <h3 className="text-2xl font-bold mb-3 text-foreground">{t("Request Received")}</h3>
-            <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">{t("Thank you for choosing KBI Corporate. Our enterprise team has received your request and will contact you within 2 hours.")}</p>
+            <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">{t("Thank you for choosing KBI Corporate. Our team has received your request and will contact you using the details provided.")}</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6 text-foreground p-2">
@@ -182,6 +188,11 @@ export function CorporateBookingForm() {
               />
             </div>
 
+            <label className="flex items-start gap-3 rounded-2xl border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+              <input type="checkbox" checked={form.privacyConsent} onChange={handleConsent} required className="mt-1 h-4 w-4 accent-cyan-500" />
+              <span>I agree to KBI using these details to respond to this corporate request under the <Link href="/privacy" target="_blank" className="font-semibold text-cyan-700 underline dark:text-cyan-300">Privacy Policy</Link> and <Link href="/terms" target="_blank" className="font-semibold text-cyan-700 underline dark:text-cyan-300">Terms</Link>.</span>
+            </label>
+
             <div className="grid md:grid-cols-2 gap-6">
               <div className="group/input">
                 <label htmlFor="corporate-urgency" className="block text-xs font-bold text-cyan-700 dark:text-cyan-400 mb-2 uppercase tracking-wider ml-1">{t("Urgency")}</label>
@@ -196,7 +207,7 @@ export function CorporateBookingForm() {
                     <option value="" className="bg-popover text-popover-foreground">{t("Select Urgency Level")}</option>
                     <option value="Normal" className="bg-popover text-popover-foreground">{t("Normal (24-48h)")}</option>
                     <option value="High" className="bg-popover text-popover-foreground">{t("High (Same Day)")}</option>
-                    <option value="Critical" className="bg-popover text-popover-foreground">{t("Critical (Immediate - 2h)")}</option>
+                    <option value="Critical" className="bg-popover text-popover-foreground">{t("Critical / production blocker")}</option>
                   </select>
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
@@ -232,7 +243,7 @@ export function CorporateBookingForm() {
             <div className="flex justify-end pt-2">
               <button
                 type="submit"
-                disabled={isPending}
+                disabled={isPending || !form.privacyConsent}
                 className="relative px-8 py-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold tracking-wide hover:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm shadow-md"
               >
                 {isPending && <Loader2 className="w-4 h-4 animate-spin" />}

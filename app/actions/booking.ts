@@ -4,20 +4,56 @@ import { adminDb } from "@/lib/firebase-admin"
 import { Timestamp } from "firebase-admin/firestore"
 import { getNextOrderNumberAction } from "./admin-orders"
 import prisma from "@/lib/prisma"
+import { z } from "zod"
+import { randomBytes } from "node:crypto"
+
+const bookingSchema = z.object({
+    name: z.string().trim().min(2).max(100),
+    phone: z.string().trim().min(7).max(24).regex(/^[+\d][\d\s()-]+$/),
+    whatsapp: z.string().trim().max(24).optional().default(""),
+    email: z.string().trim().email().max(254).optional().or(z.literal("")),
+    emirateId: z.enum(["abu-dhabi", "dubai", "sharjah", "ajman"]),
+    emirateName: z.string().trim().min(2).max(40),
+    areaId: z.string().trim().max(80).optional().default(""),
+    areaName: z.string().trim().min(2).max(100),
+    address: z.string().trim().min(5).max(500),
+    locationLat: z.number().min(-90).max(90).nullable().optional(),
+    locationLng: z.number().min(-180).max(180).nullable().optional(),
+    locationType: z.enum(["home", "office"]).default("home"),
+    companyName: z.string().trim().max(120).optional().default(""),
+    unitNumber: z.string().trim().max(60).optional().default(""),
+    notes: z.string().trim().max(1500).optional().default(""),
+    preferredDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    preferredTime: z.string().trim().min(2).max(40),
+    privacyConsent: z.literal(true),
+})
+
+const deviceEntrySchema = z.object({
+    id: z.string().trim().min(1).max(100),
+    deviceId: z.string().trim().min(1).max(80),
+    deviceName: z.string().trim().min(1).max(100),
+    brandId: z.string().trim().min(1).max(80),
+    brandName: z.string().trim().min(1).max(100),
+    model: z.string().trim().min(1).max(160),
+    issues: z.array(z.string().trim().min(1).max(200)).min(1).max(12),
+})
 
 export async function createBookingAction(formData: any, deviceEntries: any[]) {
     try {
+        const validated = z.object({
+            formData: bookingSchema,
+            deviceEntries: z.array(deviceEntrySchema).min(1).max(10),
+        }).safeParse({ formData, deviceEntries })
+
+        if (!validated.success) {
+            return { error: "Please review the booking details and try again." }
+        }
+
+        formData = validated.data.formData
+        deviceEntries = validated.data.deviceEntries
         const createdIds: string[] = []
         const customerName = String(formData?.name || "Customer").trim() || "Customer"
         const customerPhone = String(formData?.phone || "").trim()
-
-        if (!customerPhone) {
-            return { error: "Phone number is required" }
-        }
-
-        if (!Array.isArray(deviceEntries) || deviceEntries.length === 0) {
-            return { error: "At least one device is required" }
-        }
 
         // Generate clean atomic unique order number
         let pgOrderNumber = ""
@@ -92,11 +128,12 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
             console.error("Prisma order creation fallback:", pgErr)
         }
 
-        createdIds.push(pgOrderNumber)
+        const publicTrackingCode = `KBI-${randomBytes(8).toString("hex").toUpperCase()}`
+        createdIds.push(publicTrackingCode)
 
         // Continue with Firebase for backward compatibility
         for (const entry of deviceEntries) {
-            const orderId = pgOrderNumber
+            const orderId = publicTrackingCode
 
             const lat = typeof formData.locationLat === "number" ? formData.locationLat : null
             const lng = typeof formData.locationLng === "number" ? formData.locationLng : null
@@ -110,6 +147,8 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
 
             const payload = {
                 orderId,
+                orderNumber: pgOrderNumber,
+                trackingCode: publicTrackingCode,
                 country: "UAE",
                 emirateId,
                 emirate,
@@ -143,6 +182,8 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
                 const bookingPayload: any = {
                     bookingId: orderId,
                     orderId,
+                    orderNumber: pgOrderNumber,
+                    trackingCode: publicTrackingCode,
                     country: "UAE",
                     emirateId,
                     emirate,
@@ -224,7 +265,7 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
             }
         }
 
-        return { success: true, orderIds: createdIds, primaryOrderId: pgOrderNumber }
+        return { success: true, orderIds: createdIds, primaryOrderId: publicTrackingCode }
 
     } catch (error: any) {
         console.error("Error in createBookingAction:", error)
