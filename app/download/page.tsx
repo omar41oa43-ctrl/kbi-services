@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 
 export default function DownloadAppPage() {
   const [copied, setCopied] = useState(false);
-  const apkDownloadUrl = 'https://github.com/mohanadatshan-lab/kbi-services/releases/download/v1.0.0/kbi-technician.apk';
-  const ipaDownloadUrl = 'https://github.com/mohanadatshan-lab/kbi-services/releases/download/v1.0.0/kbi-technician.ipa';
+  const apkDownloadUrl = 'https://github.com/omar41oa43-ctrl/kbi-services/releases/download/v1.0.0/kbi-technician.apk';
+  const ipaDownloadUrl = 'https://github.com/omar41oa43-ctrl/kbi-services/releases/download/v1.0.0/kbi-technician.ipa';
 
   const copyToClipboard = (url: string) => {
     navigator.clipboard.writeText(url);
