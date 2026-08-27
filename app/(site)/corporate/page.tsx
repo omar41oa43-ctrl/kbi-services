@@ -1,3 +1,4 @@
+import { SlidingLogoMarquee } from "@/components/sliding-logo-marquee"
 import { GlassCard } from "@/components/ui/glass-card"
 import { CorporateBookingForm } from "@/components/corporate-booking-form"
 import Link from "next/link"
@@ -145,15 +146,15 @@ export default async function CorporatePage() {
               <div className="absolute bottom-0 left-0 right-0 p-8">
                 <div className="grid grid-cols-3 divide-x divide-white/10 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-4">
                   <div className="text-center px-2">
-                    <div className="text-xl font-bold text-cyan-400 mb-1">Priority</div>
+                    <div className="text-3xl font-bold text-cyan-400 mb-1">Priority</div>
                     <div className="text-xs text-white/60 uppercase tracking-wider">SLA targets</div>
                   </div>
                   <div className="text-center px-2">
-                    <div className="text-xl font-bold text-cyan-400 mb-1">Multi-site</div>
+                    <div className="text-3xl font-bold text-cyan-400 mb-1">Multi-site</div>
                     <div className="text-xs text-white/60 uppercase tracking-wider">Coverage</div>
                   </div>
                   <div className="text-center px-2">
-                    <div className="text-xl font-bold text-cyan-400 mb-1">Flexible</div>
+                    <div className="text-3xl font-bold text-cyan-400 mb-1">Flexible</div>
                     <div className="text-xs text-white/60 uppercase tracking-wider">Service plans</div>
                   </div>
                 </div>
@@ -223,11 +224,29 @@ export default async function CorporatePage() {
             <span><T k="The entities we deal with" /></span>
           </h2>
         </FadeIn>
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          {["Government", "Hospitals", "Universities", "Banks", "Schools"].map((sector) => (
-            <li key={sector} className="rounded-xl border border-border bg-card px-4 py-5 text-center font-semibold text-foreground"><T k={sector} /></li>
-          ))}
-        </ul>
+        <SlidingLogoMarquee
+          items={[
+            { id: "government", label: "Government", content: <span className="text-foreground font-semibold"><T k="Government" /></span> },
+            { id: "hospitals", label: "Hospitals", content: <span className="text-foreground font-semibold"><T k="Hospitals" /></span> },
+            { id: "universities", label: "Universities", content: <span className="text-foreground font-semibold"><T k="Universities" /></span> },
+            { id: "banks", label: "Banks", content: <span className="text-foreground font-semibold"><T k="Banks" /></span> },
+            { id: "schools", label: "Schools", content: <span className="text-foreground font-semibold"><T k="Schools" /></span> },
+          ]}
+          speed={40}
+          pauseOnHover
+          enableBlur={false}
+          blurIntensity={1}
+          height="110px"
+          width="100%"
+          gap="1rem"
+          scale={1}
+          direction="horizontal"
+          autoPlay
+          showGridBackground
+          enableSpillEffect={false}
+          animationSteps={3}
+          showControls
+        />
       </section>
 
       {/* Comprehensive Device Support */}
@@ -466,11 +485,27 @@ export default async function CorporatePage() {
             <span>Brands and platforms we support</span>
           </h2>
         </FadeIn>
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8" aria-label="Supported brands">
-          {["Samsung", "Apple", "Dell", "HP", "LG", "Sony", "Xiaomi", "Lenovo"].map((brand) => (
-            <li key={brand} className="rounded-xl border border-border bg-card px-4 py-5 text-center font-bold text-foreground/80">{brand}</li>
-          ))}
-        </ul>
+        <SlidingLogoMarquee
+          items={["Samsung", "Apple", "Dell", "HP", "LG", "Sony", "Xiaomi", "Lenovo"].map((brand) => ({
+            id: brand.toLowerCase(),
+            label: brand,
+            content: <span className="text-foreground/80 font-bold">{brand}</span>,
+          }))}
+          speed={40}
+          pauseOnHover
+          enableBlur
+          blurIntensity={1}
+          height="110px"
+          width="100%"
+          gap="1rem"
+          scale={1}
+          direction="horizontal"
+          autoPlay
+          showGridBackground
+          enableSpillEffect={false}
+          animationSteps={8}
+          showControls
+        />
         <p className="mt-4 text-sm text-muted-foreground">Brand names identify devices we service and do not imply manufacturer authorization or endorsement.</p>
       </section>
 

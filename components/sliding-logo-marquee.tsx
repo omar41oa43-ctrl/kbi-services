@@ -8,6 +8,7 @@ export interface SlidingLogoMarqueeItem {
   id: string
   content: React.ReactNode
   href?: string
+  label?: string
 }
 
 export interface SlidingLogoMarqueeProps {
@@ -189,13 +190,22 @@ export function SlidingLogoMarquee({
            font-size: clamp(1rem, 3vw + 0.5rem, 4rem);
            display: grid;
            place-items: center;
-           cursor: pointer;
            transition: transform 0.2s ease;
            pointer-events: auto;
            color: currentColor;
          }
          .sliding-marquee-item:hover { transform: scale(1.05); }
          .sliding-marquee-item svg { height: 65%; }
+         .sliding-marquee-item > a,
+         .sliding-marquee-item > button,
+         .sliding-marquee-item > span {
+           width: 100%;
+           height: 100%;
+           display: grid;
+           place-items: center;
+         }
+         .sliding-marquee-item > a,
+         .sliding-marquee-item > button { cursor: pointer; }
 
          @media (max-width: 767px) {
            .sliding-marquee-list { gap: 0.25rem !important; }
@@ -233,9 +243,18 @@ export function SlidingLogoMarquee({
               <li
                 key={`${item.id}-${index}`}
                 className="sliding-marquee-item"
-                onClick={() => handleItemClick(item)}
               >
-                {item.content}
+                {item.href ? (
+                  <a href={item.href} target="_blank" rel="noopener noreferrer" aria-label={item.label || item.id}>
+                    {item.content}
+                  </a>
+                ) : onItemClick ? (
+                  <button type="button" onClick={() => handleItemClick(item)} aria-label={item.label || item.id}>
+                    {item.content}
+                  </button>
+                ) : (
+                  <span>{item.content}</span>
+                )}
               </li>
             ))}
           </ul>
