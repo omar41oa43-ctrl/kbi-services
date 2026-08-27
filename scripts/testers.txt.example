@@ -1,0 +1,6 @@
+# Example list of technician tester emails (one per line or comma-separated)
+# Copy this file to testers.txt and enter real email addresses.
+# DO NOT commit testers.txt with private contact info.
+technician1@kbi.services
+technician2@kbi.services
+dispatcher@kbi.services

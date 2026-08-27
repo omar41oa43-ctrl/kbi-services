@@ -1,0 +1,13 @@
+KBI Technician App v1.0.0
+
+Initial internal release for field technicians.
+
+Included Features:
+- Technician authentication with biometric Face ID / Touch ID and remember-me support.
+- Emergency technical support direct contacts (WhatsApp & Email).
+- Real-time availability switcher (Available, Busy, Offline) with GPS heartbeat.
+- Live radar map with turn-by-turn routing and real driving distance (km) calculation.
+- Dynamic Job Lifecycle: Accept, On The Way, Arrived, Checklist, Before/After photos, Invoice & E-Signature.
+- Equalized KPI metrics: Jobs Today, Daily Earnings, Active Tasks.
+- Van field inventory management and spare parts tracking.
+- Arabic & English full bilingual localization (RTL/LTR).

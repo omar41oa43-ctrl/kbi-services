@@ -57,7 +57,10 @@ abstract final class DefaultFirebaseOptions {
         apiKey: _apiKey,
         appId: _requiredEnvironmentValue(
           'FIREBASE_ANDROID_APP_ID',
-          const String.fromEnvironment('FIREBASE_ANDROID_APP_ID'),
+          const String.fromEnvironment(
+            'FIREBASE_ANDROID_APP_ID',
+            defaultValue: '1:1078380307626:android:5df8faeb875a00defa9cd3',
+          ),
         ),
         messagingSenderId: _messagingSenderId,
         projectId: _projectId,

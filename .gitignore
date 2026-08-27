@@ -104,3 +104,13 @@ apps/*/build/
 *.ipa
 fix/
 
+# Signing credentials
+key.properties
+*.jks
+*.keystore
+
+# Private tester lists
+scripts/testers.txt
+
+
+
