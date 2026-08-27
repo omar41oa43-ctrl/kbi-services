@@ -4,12 +4,11 @@ import React, { useState } from 'react';
 
 export default function DownloadAppPage() {
   const [copied, setCopied] = useState(false);
-  const downloadUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}/download/kbi-technician.apk`
-    : 'http://10.101.23.206:3000/download/kbi-technician.apk';
+  const apkDownloadUrl = 'https://github.com/mohanadatshan-lab/kbi-services/releases/download/v1.0.0/kbi-technician.apk';
+  const ipaDownloadUrl = 'https://github.com/mohanadatshan-lab/kbi-services/releases/download/v1.0.0/kbi-technician.ipa';
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(downloadUrl);
+  const copyToClipboard = (url: string) => {
+    navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 3000);
   };
@@ -33,7 +32,7 @@ export default function DownloadAppPage() {
             </div>
           </div>
           <span className="px-3 py-1 bg-teal-500/10 border border-teal-500/20 text-teal-400 text-xs font-semibold rounded-full uppercase tracking-wider mb-2">
-            Technician Portal App
+            Technician Portal App • v1.0.0
           </span>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-2">
             Download KBI Technician App
@@ -47,33 +46,42 @@ export default function DownloadAppPage() {
         <div className="my-6 bg-slate-950/70 border border-slate-800 rounded-2xl p-5 flex flex-col items-center justify-center">
           <div className="bg-white p-3 rounded-xl shadow-md mb-3">
             <img 
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(downloadUrl)}`} 
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(apkDownloadUrl)}`} 
               alt="Scan to download KBI Technician APK"
               className="w-40 h-40"
             />
           </div>
           <p className="text-xs text-slate-400 font-medium text-center">
-            Scan with your phone camera to download directly
+            Scan with phone camera to download APK directly
           </p>
         </div>
 
-        {/* Direct Download Action Button */}
+        {/* Direct Download Action Buttons */}
         <div className="space-y-3">
           <a
-            href="/download/kbi-technician.apk"
-            download="kbi-technician.apk"
+            href={apkDownloadUrl}
             className="w-full flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-blue-600/30 transition-all"
           >
             <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
               <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.551 0 .9992.4482.9992.9993s-.4482.9997-.9992.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993s-.4482.9997-.9993.9997m11.4045-6.02l1.996-3.4563c.0991-.1716.0402-.3908-.1314-.49-.1716-.0992-.3908-.0403-.49.1314l-2.0232 3.5042c-1.4284-.652-3.0237-1.0183-4.7329-1.0183-1.7092 0-3.3045.3663-4.7329 1.0183l-2.0232-3.5042c-.0992-.1717-.3184-.2306-.49-.1314-.1716.0992-.2305.3184-.1314.49l1.996 3.4563C3.5936 10.597 1.5 13.9068 1.5 17.75h21c0-3.8432-2.0936-7.153-5.6185-8.4286"/>
             </svg>
-            <span>Download Android APK (64.8 MB)</span>
+            <span>Download Android APK (64 MB)</span>
+          </a>
+
+          <a
+            href={ipaDownloadUrl}
+            className="w-full flex items-center justify-center gap-3 bg-slate-800 hover:bg-slate-700 active:scale-[0.98] border border-slate-700 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg transition-all"
+          >
+            <svg className="w-5 h-5 text-slate-300" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 0.92-2.85-.9.04-1.99.6-2.63 1.35-.57.65-1.06 1.72-.93 2.74 1.01.08 2.02-.49 2.64-1.24z"/>
+            </svg>
+            <span>Download iOS Package (IPA - 24 MB)</span>
           </a>
 
           {/* Copy Direct Link */}
           <button
-            onClick={copyToClipboard}
-            className="w-full flex items-center justify-center gap-2 bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-200 font-medium py-3 px-4 rounded-xl text-xs transition-colors"
+            onClick={() => copyToClipboard(apkDownloadUrl)}
+            className="w-full flex items-center justify-center gap-2 bg-slate-800/50 hover:bg-slate-700/60 border border-slate-800 text-slate-400 hover:text-slate-200 font-medium py-2.5 px-4 rounded-xl text-xs transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
