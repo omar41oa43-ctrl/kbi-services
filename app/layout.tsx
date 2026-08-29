@@ -21,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
       template: "%s | KBI Repairs"
     },
     description:
-      "On-site repair for phones, laptops, computers, printers, TVs, gaming consoles, networks, and CCTV across Abu Dhabi, Dubai, Sharjah, and Ajman.",
+      "On-site repair for phones, laptops, computers, printers, TVs, gaming consoles, networks, and CCTV across all 7 Emirates in the UAE.",
     metadataBase: new URL("https://kbi.services"),
     icons: {
       icon: '/favicon-32.png',

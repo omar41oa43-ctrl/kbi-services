@@ -63,18 +63,18 @@ export function Footer({ contact }: FooterProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 mb-20 justify-items-center items-center text-center w-full" style={{ textAlign: "center" }}>
           {/* Brand Column (4 cols) */}
           <div className="lg:col-span-4 w-full flex flex-col items-center justify-center text-center mx-auto" style={{ textAlign: "center" }}>
-            <Link href="/" className="inline-block mb-6 group relative">
+            <Link href="/" className="inline-block mb-6 group relative" dir="ltr">
               <div className="absolute -inset-4 bg-gradient-to-r from-cyan-500/20 to-blue-600/20 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
-              <div className="relative text-5xl font-bold tracking-tighter text-foreground group-hover:text-cyan-500 transition-all duration-300">
-                KBI<span className="text-cyan-500 group-hover:text-blue-400 transition-colors">.</span>
+              <div className="relative text-5xl font-bold tracking-tighter text-foreground group-hover:text-cyan-500 transition-all duration-300 inline-flex items-center" dir="ltr" style={{ direction: "ltr", unicodeBidi: "isolate" }}>
+                <span>KBI</span><span className="text-cyan-500 group-hover:text-blue-400 transition-colors">.</span>
               </div>
             </Link>
 
             <div className="px-4 mb-8 w-full flex justify-center">
               <p className="text-muted-foreground leading-relaxed max-w-sm text-center mx-auto" style={{ textAlign: "center" }} suppressHydrationWarning>
                 {(isAr ? (contact.footerTextAr || contact.footerText) : contact.footerText) || (isAr
-                  ? "شريكك التقني الموثوق للإصلاح الميداني في أبوظبي. متخصصون في صيانة الهواتف، الحواسيب، الطابعات والشبكات."
-                  : "Your trusted technical partner for on-site repairs in Abu Dhabi. Experts in mobile, laptop, printer, and network maintenance.")}
+                  ? "شريكك التقني الموثوق للإصلاح الميداني في كافة أنحاء الإمارات. متخصصون في صيانة الهواتف، الحواسيب، الطابعات والشبكات."
+                  : "Your trusted technical partner for on-site repairs across all 7 Emirates in the UAE. Experts in mobile, laptop, printer, and network maintenance.")}
               </p>
             </div>
 

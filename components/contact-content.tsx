@@ -125,7 +125,7 @@ export function ContactContent({ contact }: ContactContentProps) {
                 <h2 className="text-2xl font-bold text-foreground">{t("Service Area")}</h2>
               </div>
               <p className="text-muted-foreground mb-4">
-                {t("We provide on-site repair services across all areas of Abu Dhabi, including:")}
+                {t("We provide on-site repair services across all 7 Emirates in the UAE, including:")}
               </p>
               <div className="grid grid-cols-2 gap-3">
                 {(contact.serviceAreas || []).map((area, index) => (

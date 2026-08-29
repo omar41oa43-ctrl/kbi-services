@@ -81,9 +81,9 @@ export function Navbar({ contact }: NavbarProps) {
   }, [isBookingPage, isExcluded])
 
   const desktopLogo = (
-    <Link href="/" className="relative z-50 hidden min-h-11 min-w-11 items-center md:flex" dir="ltr" aria-label="KBI home">
-      <span className="text-xl md:text-2xl font-bold tracking-tighter text-foreground dark:text-white">
-        KBI<span className="text-cyan-500 dark:text-cyan-400">.</span>
+    <Link href="/" className="hidden md:flex items-center gap-2 group" dir="ltr" aria-label="KBI home">
+      <span className="text-2xl font-bold tracking-tighter text-foreground dark:text-white inline-flex items-center" dir="ltr" style={{ direction: "ltr", unicodeBidi: "isolate" }}>
+        <span>KBI</span><span className="text-cyan-500 dark:text-cyan-400">.</span>
       </span>
     </Link>
   )
@@ -147,10 +147,10 @@ export function Navbar({ contact }: NavbarProps) {
           </div>
 
           {/* Mobile Centered Logo */}
-          <div className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-auto">
-            <Link href="/" className="flex items-center justify-center py-1" dir="ltr" aria-label="KBI home">
-              <span className="text-lg font-bold tracking-tighter text-foreground dark:text-white">
-                KBI<span className="text-cyan-500 dark:text-cyan-400">.</span>
+          <div className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-auto" dir="ltr">
+            <Link href="/" className="flex items-center justify-center py-1" dir="ltr" style={{ direction: "ltr", unicodeBidi: "isolate" }} aria-label="KBI home">
+              <span className="text-lg font-bold tracking-tighter text-foreground dark:text-white inline-flex items-center" dir="ltr" style={{ direction: "ltr", unicodeBidi: "isolate" }}>
+                <span>KBI</span><span className="text-cyan-500 dark:text-cyan-400">.</span>
               </span>
             </Link>
           </div>

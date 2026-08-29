@@ -58,7 +58,7 @@ export function AboutContent({ pdfUrl }: { pdfUrl?: string }) {
             </h1>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               {t(
-                "KBI provides on-site device repair and technical support at homes and offices across Abu Dhabi, Dubai, Sharjah, and Ajman.",
+                "KBI provides on-site device repair and technical support at homes and offices across all 7 Emirates in the UAE.",
               )}
             </p>
           </div>
@@ -97,7 +97,7 @@ export function AboutContent({ pdfUrl }: { pdfUrl?: string }) {
                 </p>
                 <p>
                   {t(
-                    "We take bookings across Abu Dhabi, Dubai, Sharjah, and Ajman. Appointment times depend on the location, technician capacity, and parts availability.",
+                    "We take bookings across all 7 Emirates in the UAE. Appointment times depend on the location, technician capacity, and parts availability.",
                   )}
                 </p>
               </div>
