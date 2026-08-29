@@ -278,6 +278,7 @@ const DICTIONARY: Record<string, string> = {
   "Searching...": "جاري البحث...",
   "Enter registered phone number": "أدخل رقم الهاتف المسجل",
   "Order Tracking": "تتبع الطلب",
+  "Enter your KBI order number and phone number to see the live status of your repair.": "أدخل رقم طلب KBI ورقم الهاتف المسجل لمتابعة الحالة المباشرة لطلبك.",
   "Order ID or phone number": "رقم الطلب أو الهاتف",
   "Enter order ID or phone number": "أدخل رقم الطلب أو رقم الهاتف",
   "Tip: Search by order ID (KBI-XXXX) or phone number": "نصيحة: يمكنك البحث برقم الطلب أو رقم الهاتف",

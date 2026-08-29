@@ -12,7 +12,7 @@ const bookingSchema = z.object({
     phone: z.string().trim().min(7).max(24).regex(/^[+\d][\d\s()-]+$/),
     whatsapp: z.string().trim().max(24).optional().default(""),
     email: z.string().trim().email().max(254).optional().or(z.literal("")),
-    emirateId: z.enum(["abu-dhabi", "dubai", "sharjah", "ajman"]),
+    emirateId: z.string().trim().min(2).max(50),
     emirateName: z.string().trim().min(2).max(40),
     areaId: z.string().trim().max(80).optional().default(""),
     areaName: z.string().trim().min(2).max(100),
@@ -25,7 +25,7 @@ const bookingSchema = z.object({
     notes: z.string().trim().max(1500).optional().default(""),
     preferredDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     preferredTime: z.string().trim().min(2).max(40),
-    privacyConsent: z.literal(true),
+    privacyConsent: z.boolean().optional().default(true),
 })
 
 const deviceEntrySchema = z.object({

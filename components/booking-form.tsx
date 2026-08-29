@@ -490,14 +490,6 @@ export function BookingForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!privacyConsent) {
-      toast({
-        variant: "destructive",
-        title: t("Error"),
-        description: isAr ? "يرجى الموافقة على سياسة الخصوصية والشروط لإرسال الطلب." : "Please accept the privacy policy and terms before submitting.",
-      })
-      return
-    }
     setIsSubmitting(true)
 
     try {
@@ -1663,7 +1655,7 @@ export function BookingForm() {
                     </div>
 
                     <div className="grid gap-2 rounded-2xl border border-cyan-500/20 bg-cyan-500/8 px-4 py-4 text-sm text-foreground sm:grid-cols-3">
-                      {["No payment today", "Quote confirmed before repair", "On-site service in Abu Dhabi"].map((item) => (
+                      {["No payment today", "Quote confirmed before repair", "On-site service across UAE"].map((item) => (
                         <div key={item} className="flex items-center gap-2">
                           <CheckCircle2 className="h-4 w-4 shrink-0 text-cyan-600 dark:text-cyan-400" />
                           <span>{t(item)}</span>
@@ -1671,31 +1663,10 @@ export function BookingForm() {
                       ))}
                     </div>
 
-                    <label className="flex items-start gap-3 rounded-2xl border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
-                      <input
-                        type="checkbox"
-                        name="privacyConsent"
-                        required
-                        checked={privacyConsent}
-                        onChange={(event) => setPrivacyConsent(event.target.checked)}
-                        className="mt-1 h-4 w-4 shrink-0 accent-cyan-500"
-                      />
-                      <span>
-                        {isAr ? "أوافق على استخدام بياناتي لإنشاء الطلب وتنسيق الزيارة وتحديث حالة الخدمة وفق " : "I agree to the use of my information to create the order, coordinate the visit, and provide service updates under the "}
-                        <Link href="/privacy" target="_blank" className="font-semibold text-cyan-700 underline dark:text-cyan-300">
-                          {t("Privacy Policy")}
-                        </Link>
-                        {isAr ? " و" : " and "}
-                        <Link href="/terms" target="_blank" className="font-semibold text-cyan-700 underline dark:text-cyan-300">
-                          {t("Terms & Conditions")}
-                        </Link>.
-                      </span>
-                    </label>
-
                     <button
                       type="submit"
-                      disabled={deviceEntries.length === 0 || !privacyConsent || isSubmitting}
-                      className="w-full py-4 bg-cyan-500 text-black rounded-2xl font-semibold text-lg hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      disabled={deviceEntries.length === 0 || isSubmitting}
+                      className="w-full py-4 bg-cyan-500 text-black rounded-2xl font-semibold text-lg hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md hover:shadow-cyan-500/20"
                     >
                       {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
                       {t("Create Order")}

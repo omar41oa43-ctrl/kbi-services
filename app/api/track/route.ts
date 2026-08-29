@@ -31,14 +31,16 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const orderId = normalizeOrderId(searchParams.get("orderId") || "")
-    const verification = (searchParams.get("last4") || "").replace(/\D/g, "")
+    const rawPhone = (searchParams.get("phone") || searchParams.get("last4") || "").replace(/\D/g, "")
 
-    if (!/^[A-Z0-9-]{4,64}$/.test(orderId) || verification.length !== 4) {
+    if (!/^[A-Z0-9-]{3,64}$/.test(orderId) || rawPhone.length < 4) {
       return NextResponse.json(
-        { success: false, error: "Enter a valid order ID and the last 4 digits of the booking phone number." },
+        { success: false, error: "Please enter your KBI order number and phone number." },
         { status: 400 },
       )
     }
+
+    const verificationLast4 = rawPhone.slice(-4)
 
     const db = getAdminDb()
     const [bookingDoc, orderIdSnap, orderNumberSnap, trackingCodeSnap] = await Promise.all([
@@ -56,12 +58,13 @@ export async function GET(request: NextRequest) {
 
     const verified = [...documents.values()].filter((doc) => {
       const data = doc.data() || {}
-      return lastFour(data.phone || data.customerPhone || data.whatsapp) === verification
+      const docPhone = String(data.phone || data.customerPhone || data.whatsapp || "").replace(/\D/g, "")
+      return docPhone.endsWith(verificationLast4) || (rawPhone.length >= 7 && (docPhone.includes(rawPhone) || rawPhone.includes(docPhone)))
     })
 
     if (verified.length === 0) {
       return NextResponse.json(
-        { success: false, error: "We could not verify those details. Check the order ID and phone digits, or contact support." },
+        { success: false, error: "We could not find an order matching that KBI order number and phone number." },
         { status: 404 },
       )
     }

@@ -70,7 +70,7 @@ export function OrderTracker({ initialOrderId = "" }: { initialOrderId?: string 
 
   const contact = useSiteContact()
   const [orderId, setOrderId] = useState(initialOrderId)
-  const [last4, setLast4] = useState("")
+  const [phone, setPhone] = useState("")
   const [isSearching, setIsSearching] = useState(false)
   const [orderData, setOrderData] = useState<any | null>(null)
   const [ordersList, setOrdersList] = useState<any[]>([])
@@ -79,7 +79,9 @@ export function OrderTracker({ initialOrderId = "" }: { initialOrderId?: string 
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!orderId.trim() || last4.length !== 4) return
+    const cleanOrderId = orderId.trim()
+    const cleanPhone = phone.replace(/\D/g, "")
+    if (!cleanOrderId || cleanPhone.length < 4) return
 
     setIsSearching(true)
     setNotFound(false)
@@ -89,7 +91,7 @@ export function OrderTracker({ initialOrderId = "" }: { initialOrderId?: string 
 
     try {
       try {
-        const res = await fetch(`/api/track?orderId=${encodeURIComponent(orderId.trim())}&last4=${encodeURIComponent(last4)}`)
+        const res = await fetch(`/api/track?orderId=${encodeURIComponent(cleanOrderId)}&phone=${encodeURIComponent(cleanPhone)}`)
         const data = await res.json()
 
         if (data.error) {
@@ -129,57 +131,58 @@ export function OrderTracker({ initialOrderId = "" }: { initialOrderId?: string 
         <div className="absolute bottom-[-10%] right-[-10%] w-[30vw] h-[30vw] bg-blue-600/10 rounded-full blur-[120px]" />
       </div>
 
-      <div className="container mx-auto px-6 relative z-10">
-        <div className="text-center mb-10">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
+        <div className="text-center mb-8 sm:mb-10">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-cyan-500/10 mb-6 border border-cyan-500/20">
             <Search className="w-8 h-8 text-cyan-500 dark:text-cyan-400" />
           </div>
           <h1 className="text-3xl md:text-5xl font-extrabold mb-4 text-foreground">
             {t("Track Order")}
           </h1>
-          <p className="text-muted-foreground max-w-xl mx-auto">
-            {t("Enter your tracking number to see the live status of your repair order.")}
+          <p className="text-muted-foreground max-w-xl mx-auto text-sm sm:text-base">
+            {t("Enter your KBI order number and phone number to see the live status of your repair.")}
           </p>
         </div>
 
         <div className="max-w-2xl mx-auto">
           {/* Search Form */}
-          <GlassCard className="mb-8">
-            <form onSubmit={handleSearch} className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_180px_auto]">
-              <label className="relative block">
-                <span className="sr-only">{isAr ? "رقم الطلب" : "Order ID"}</span>
-                <Search className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground ${isAr ? "right-4" : "left-4"}`} />
+          <GlassCard className="mb-8 p-4 sm:p-6">
+            <form onSubmit={handleSearch} className="flex flex-col sm:flex-row items-stretch gap-3">
+              <div className="relative flex-1">
+                <span className="sr-only">{isAr ? "رقم الطلب" : "KBI Order Number"}</span>
+                <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground ${isAr ? "right-4" : "left-4"}`} />
                 <input
                   type="text"
                   name="orderId"
                   autoComplete="off"
                   value={orderId}
                   onChange={(e) => setOrderId(e.target.value)}
-                  placeholder={isAr ? "رقم الطلب (مثال KBI-123456)" : "Order ID (e.g. KBI-123456)"}
-                  className={`w-full py-4 bg-background border border-input rounded-xl focus:outline-none focus:border-cyan-500 transition-colors text-foreground text-base shadow-xs placeholder:text-muted-foreground/60 ${isAr ? "pr-12 pl-4 text-right placeholder:text-right" : "pl-12 pr-4 text-left"}`}
-                  dir={isAr ? "rtl" : "ltr"}
-                />
-              </label>
-              <label className="block">
-                <span className="sr-only">{isAr ? "آخر 4 أرقام من هاتف الحجز" : "Last 4 booking phone digits"}</span>
-                <input
-                  type="text"
-                  name="last4"
-                  inputMode="numeric"
-                  autoComplete="off"
-                  maxLength={4}
-                  pattern="[0-9]{4}"
-                  value={last4}
-                  onChange={(e) => setLast4(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                  placeholder={isAr ? "آخر 4 أرقام من الهاتف" : "Last 4 phone digits"}
-                  className="w-full rounded-xl border border-input bg-background px-4 py-4 text-base text-foreground shadow-xs placeholder:text-muted-foreground/60 focus:border-cyan-500 focus:outline-none"
+                  placeholder={isAr ? "رقم الطلب (KBI-XXXXXX)" : "Order ID (e.g. KBI-123456)"}
+                  className={`w-full py-3.5 sm:py-4 bg-background border border-input rounded-xl focus:outline-none focus:border-cyan-500 transition-colors text-foreground text-sm sm:text-base shadow-xs placeholder:text-muted-foreground/60 ${isAr ? "pr-11 pl-4 text-right" : "pl-11 pr-4 text-left"}`}
                   dir="ltr"
+                  required
                 />
-              </label>
+              </div>
+              <div className="relative flex-1">
+                <span className="sr-only">{isAr ? "رقم الهاتف" : "Phone Number"}</span>
+                <Phone className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground ${isAr ? "right-4" : "left-4"}`} />
+                <input
+                  type="tel"
+                  name="phone"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder={isAr ? "رقم الهاتف (05X XXX XXXX)" : "Phone # (e.g. 050 123 4567)"}
+                  className={`w-full py-3.5 sm:py-4 bg-background border border-input rounded-xl focus:outline-none focus:border-cyan-500 transition-colors text-foreground text-sm sm:text-base shadow-xs placeholder:text-muted-foreground/60 ${isAr ? "pr-11 pl-4 text-right" : "pl-11 pr-4 text-left"}`}
+                  dir="ltr"
+                  required
+                />
+              </div>
               <Button
                 type="submit"
-                disabled={!orderId.trim() || last4.length !== 4 || isSearching}
-                className="rounded-xl px-8 min-w-[140px] bg-cyan-500 text-black hover:bg-cyan-400 font-bold shadow-md cursor-pointer"
+                disabled={!orderId.trim() || phone.replace(/\D/g, "").length < 4 || isSearching}
+                className="rounded-xl px-6 sm:px-8 py-3.5 sm:py-4 bg-cyan-500 text-black hover:bg-cyan-400 font-bold shadow-md cursor-pointer flex items-center justify-center gap-2 text-sm sm:text-base shrink-0 w-full sm:w-auto"
               >
                 {isSearching ? (
                   <div className="flex items-center gap-2">
@@ -188,8 +191,7 @@ export function OrderTracker({ initialOrderId = "" }: { initialOrderId?: string 
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    {/* Icon placement based on locale: LTR = Icon Left (mr-2), RTL = Icon Right (ml-2) */}
-                    <Search className={`w-5 h-5 ${isAr ? "ml-2" : "mr-2"}`} />
+                    <Search className="w-4 h-4" />
                     <span>{t("Track Order")}</span>
                   </div>
                 )}
