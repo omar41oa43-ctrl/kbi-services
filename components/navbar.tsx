@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import dynamic from "next/dynamic"
-import { Phone, MessageCircle, CalendarDays, Search, Home, Building2 } from "lucide-react"
+import { Phone, MessageCircle, CalendarDays, Search, Home, Building2, Globe } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -89,32 +89,22 @@ export function Navbar({ contact }: NavbarProps) {
   )
 
   const languageSwitcher = (
-    <div className="flex items-center h-9 md:h-10 gap-1 rounded-xl md:rounded-2xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 p-0.5 md:p-1" dir="ltr">
-      <button
-        type="button"
-        onClick={() => setLang("en")}
-        aria-label="Switch to English"
-        aria-pressed={lang === "en"}
-        className={cn(
-          "h-full px-2.5 md:px-3 rounded-lg md:rounded-xl text-[11px] md:text-xs font-bold transition-all duration-200 cursor-pointer flex items-center justify-center",
-          lang === "en" ? "bg-cyan-500 text-black shadow-xs font-extrabold" : "text-foreground/60 dark:text-white/50 hover:text-foreground dark:hover:text-white"
-        )}
-      >
-        EN
-      </button>
-      <button
-        type="button"
-        onClick={() => setLang("ar")}
-        aria-label="Switch to Arabic"
-        aria-pressed={lang === "ar"}
-        className={cn(
-          "h-full px-2.5 md:px-3 rounded-lg md:rounded-xl text-[11px] md:text-xs font-bold transition-all duration-200 cursor-pointer flex items-center justify-center",
-          lang === "ar" ? "bg-cyan-500 text-black shadow-xs font-extrabold" : "text-foreground/60 dark:text-white/50 hover:text-foreground dark:hover:text-white"
-        )}
-      >
-        AR
-      </button>
-    </div>
+    <button
+      type="button"
+      onClick={() => setLang(lang === "en" ? "ar" : "en")}
+      title={lang === "en" ? "التغيير إلى العربية" : "Switch to English"}
+      aria-label={lang === "en" ? "Switch to Arabic" : "Switch to English"}
+      className={cn(
+        "relative h-9 px-2.5 md:h-10 md:px-3 rounded-xl md:rounded-2xl flex items-center gap-1.5 transition-all duration-300 cursor-pointer group shadow-sm",
+        "bg-white/10 hover:bg-white/20 border border-white/15 text-white/80 hover:text-white",
+        "dark:bg-white/5 dark:hover:bg-white/10 dark:border-white/10 dark:text-white/80"
+      )}
+    >
+      <Globe className="w-3.5 h-3.5 md:w-4 md:h-4 text-cyan-500 dark:text-cyan-400 group-hover:rotate-45 transition-transform duration-300" />
+      <span className="text-[11px] md:text-xs font-bold text-foreground dark:text-white">
+        {lang === "en" ? "عربي" : "EN"}
+      </span>
+    </button>
   )
 
   if (isExcluded) {
