@@ -16,7 +16,7 @@ const bookingSchema = z.object({
     emirateName: z.string().trim().min(2).max(40),
     areaId: z.string().trim().max(80).optional().default(""),
     areaName: z.string().trim().min(2).max(100),
-    address: z.string().trim().min(5).max(500),
+    address: z.string().trim().max(500).optional().default("On-site Doorstep"),
     locationLat: z.number().min(-90).max(90).nullable().optional(),
     locationLng: z.number().min(-180).max(180).nullable().optional(),
     locationType: z.enum(["home", "office"]).default("home"),

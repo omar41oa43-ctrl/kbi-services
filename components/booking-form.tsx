@@ -1,1708 +1,1479 @@
 "use client"
 
 import type React from "react"
-
-import { useState, useEffect, useRef } from "react"
-import dynamic from "next/dynamic"
+import { useState, useEffect, useTransition } from "react"
 import Link from "next/link"
-import { motion, AnimatePresence } from "framer-motion"
 import { useSearchParams } from "next/navigation"
-import { GlassCard } from "@/components/ui/glass-card"
+import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { devices, getAllRepairTimes, getRepairTime } from "@/lib/data"
-import { cn, handleStaleServerActionError } from "@/lib/utils"
+import { cn } from "@/lib/utils"
 import { useLanguage, useT } from "@/components/language-provider"
 import { useToast } from "@/hooks/use-toast"
-import { reverseGeocode } from "@/app/actions/geocode"
 import { createBookingAction } from "@/app/actions/booking"
+import { reverseGeocode } from "@/app/actions/geocode"
 import { useSiteContact } from "@/components/contact-provider"
-import { getActiveEmirates, getAreasByEmirate, detectEmirateFromGPS } from "@/lib/locations"
+import { detectEmirateFromGPS, UAE_EMIRATES } from "@/lib/locations"
 import {
   Smartphone,
   Laptop,
-  Tablet,
-  Cctv,
   PcCase,
   Printer,
-  Monitor,
   Tv,
-  Watch,
+  Monitor,
   Gamepad2,
-  Camera,
-  MonitorUp,
-  Wifi,
-  Headset,
+  Cctv,
+  Wrench,
+  Check,
   ChevronRight,
   ChevronLeft,
-  Check,
-  User,
-  Phone,
   MapPin,
+  Phone,
+  User,
+  Mail,
   MessageSquare,
   MessageCircle,
-  Calendar,
-  Clock,
   CheckCircle2,
   Copy,
   Loader2,
-  Star,
-  Plus,
-  Trash2,
-  Search,
-  Mail,
-  Headphones,
+  Navigation,
+  Sparkles,
+  Zap,
+  Sunrise,
+  Sun,
+  Sunset,
+  Moon,
+  ShieldCheck,
+  HelpCircle,
+  Clock,
+  ArrowRight,
+  QrCode,
+  Flame,
 } from "lucide-react"
-import type { ReactNode } from "react"
 
-const BookingWhatsAppChatbot = dynamic(
-  () => import("@/components/whatsapp-chatbot").then((mod) => mod.WhatsAppChatbot),
-  { ssr: false },
-)
-
-const iconMap: Record<string, ReactNode> = {
-  Smartphone: <Smartphone className="w-6 h-6" />,
-  Laptop: <Laptop className="w-6 h-6" />,
-  Printer: <Printer className="w-6 h-6" />,
-  Monitor: <Monitor className="w-6 h-6" />,
-  Tv: <Tv className="w-6 h-6" />,
-  Watch: <Watch className="w-6 h-6" />,
-  Gamepad2: <Gamepad2 className="w-6 h-6" />,
-  Camera: <Camera className="w-6 h-6" />,
-  MonitorUp: <MonitorUp className="w-6 h-6" />,
-  Wifi: <Wifi className="w-6 h-6" />,
-  Headset: <Headset className="w-6 h-6" />,
-}
-
-const steps = [
-  { id: 1, name: "Device", icon: <Smartphone className="w-4 h-4" /> },
-  { id: 2, name: "Brand", icon: <Check className="w-4 h-4" /> },
-  { id: 3, name: "Model", icon: <Check className="w-4 h-4" /> },
-  { id: 4, name: "Issue", icon: <Check className="w-4 h-4" /> },
-  { id: 5, name: "Details", icon: <User className="w-4 h-4" /> },
-]
-
-interface DeviceEntry {
-  id: string
+export interface BookingState {
   deviceId: string
   deviceName: string
-  brandId: string
-  brandName: string
+  problem: string
+  brand: string
   model: string
-  issues: string[]
+  emirateId: string
+  emirateName: string
+  area: string
+  latitude: number | null
+  longitude: number | null
+  appointmentDay: "today" | "tomorrow" | "custom"
+  customDate: string
+  timeSlot: string
+  customerName: string
+  phone: string
+  email: string
+  notes: string
 }
 
-function NeonPanel({
-  title,
-  description,
-  top,
-  children,
-  className,
-}: {
-  title?: React.ReactNode
-  description?: React.ReactNode
-  top?: React.ReactNode
-  children: React.ReactNode
-  className?: string
-}) {
-  return (
-    <div
-      className={cn(
-        "relative overflow-hidden rounded-[32px] border border-border bg-card/80 backdrop-blur-xl shadow-lg",
-        className
-      )}
-    >
-      <div className="pointer-events-none absolute -inset-px bg-gradient-to-br from-cyan-500/10 via-transparent to-transparent opacity-80" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_60%_at_50%_0%,rgba(6,182,212,0.12),rgba(0,0,0,0)_60%)]" />
-      <div className="relative p-6 sm:p-8 lg:p-10">
-        {top ? <div className="mb-6">{top}</div> : null}
-        {title ? (
-          <div className="text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">{title}</h2>
-            {description ? <p className="mt-2 text-sm sm:text-base text-muted-foreground">{description}</p> : null}
-          </div>
-        ) : null}
-        {children}
-      </div>
-    </div>
-  )
+const DEVICE_CONFIGS = [
+  {
+    id: "mobile",
+    name: "Mobile Phone",
+    nameAr: "هاتف ذكي",
+    icon: Smartphone,
+    popular: true,
+    quickBrands: ["Apple", "Samsung", "Huawei", "Xiaomi"],
+    issues: [
+      "Screen",
+      "Battery",
+      "Charging Port",
+      "Camera",
+      "Speaker / Microphone",
+      "Software",
+      "Water Damage",
+      "Other",
+      "Not Sure",
+    ],
+  },
+  {
+    id: "laptop",
+    name: "Laptop",
+    nameAr: "كمبيوتر محمول",
+    icon: Laptop,
+    popular: true,
+    quickBrands: ["Apple", "Dell", "HP", "Lenovo", "ASUS"],
+    issues: [
+      "Screen",
+      "Keyboard",
+      "Battery",
+      "Charging",
+      "Overheating",
+      "Windows / Software",
+      "Ports",
+      "Other",
+      "Not Sure",
+    ],
+  },
+  {
+    id: "pc",
+    name: "PC / Desktop",
+    nameAr: "كمبيوتر مكتبي",
+    icon: PcCase,
+    quickBrands: ["Custom Gaming", "HP", "Dell", "Lenovo"],
+    issues: [
+      "Won't Turn On",
+      "Slow Performance",
+      "Overheating",
+      "Windows / Software",
+      "Hardware Upgrade",
+      "Ports",
+      "Other",
+      "Not Sure",
+    ],
+  },
+  {
+    id: "printer",
+    name: "Printer",
+    nameAr: "طابعة",
+    icon: Printer,
+    quickBrands: ["HP", "Canon", "Epson", "Brother"],
+    issues: [
+      "Not Printing",
+      "Paper Jam",
+      "Ink / Toner",
+      "Connection Problem",
+      "Poor Print Quality",
+      "Maintenance",
+      "Other",
+      "Not Sure",
+    ],
+  },
+  {
+    id: "tv",
+    name: "TV",
+    nameAr: "تلفاز",
+    icon: Tv,
+    quickBrands: ["Samsung", "LG", "Sony", "TCL"],
+    issues: [
+      "No Display",
+      "No Power",
+      "Sound Problem",
+      "HDMI Problem",
+      "Screen Issue",
+      "Installation",
+      "Other",
+      "Not Sure",
+    ],
+  },
+  {
+    id: "monitor",
+    name: "Monitor",
+    nameAr: "شاشة عرض",
+    icon: Monitor,
+    quickBrands: ["Dell", "Samsung", "LG", "BenQ"],
+    issues: [
+      "No Display",
+      "No Power",
+      "Screen Issue",
+      "Display Issues",
+      "Cables / Ports",
+      "Other",
+      "Not Sure",
+    ],
+  },
+  {
+    id: "gaming",
+    name: "PlayStation / Xbox",
+    nameAr: "أجهزة ألعاب",
+    icon: Gamepad2,
+    quickBrands: ["Sony PS5", "Sony PS4", "Xbox Series X", "Nintendo Switch"],
+    issues: [
+      "HDMI Port",
+      "Overheating",
+      "No Power",
+      "Controller",
+      "Software",
+      "Other",
+      "Not Sure",
+    ],
+  },
+  {
+    id: "cctv",
+    name: "CCTV",
+    nameAr: "كاميرات مراقبة",
+    icon: Cctv,
+    quickBrands: ["Hikvision", "Dahua", "Ezviz", "Imou"],
+    issues: [
+      "Installation",
+      "Camera Not Working",
+      "No Recording",
+      "Remote Access",
+      "Network Issue",
+      "Maintenance",
+      "Other",
+      "Not Sure",
+    ],
+  },
+  {
+    id: "other",
+    name: "Other",
+    nameAr: "أجهزة أخرى",
+    icon: Wrench,
+    quickBrands: ["Smart Home", "Sound System", "Server", "UPS"],
+    issues: [
+      "Won't Turn On",
+      "Power Issue",
+      "Hardware Issue",
+      "Maintenance",
+      "Other",
+      "Not Sure",
+    ],
+  },
+]
+
+const TIME_SLOTS = [
+  { id: "slot1", label: "9 AM – 12 PM", period: "Morning", periodAr: "صباحاً", icon: Sunrise, tag: "Early Arrival" },
+  { id: "slot2", label: "12 PM – 3 PM", period: "Afternoon", periodAr: "ظهراً", icon: Sun, tag: "Most Popular" },
+  { id: "slot3", label: "3 PM – 6 PM", period: "Late Afternoon", periodAr: "عصراً", icon: Sunset, tag: "Fast Track" },
+  { id: "slot4", label: "6 PM – 9 PM", period: "Evening", periodAr: "مساءً", icon: Moon, tag: "After Work" },
+]
+
+function getFormattedDate(offsetDays: number = 0) {
+  const d = new Date()
+  d.setDate(d.getDate() + offsetDays)
+  return d.toISOString().split("T")[0]
 }
 
 export function BookingForm() {
   const { lang } = useLanguage()
-  const { toast } = useToast()
   const isAr = lang === "ar"
   const t = useT()
-  const ChevronIcon = isAr ? ChevronLeft : ChevronRight
   const searchParams = useSearchParams()
   const contact = useSiteContact()
-  const preselectedDevice = searchParams.get("device")
-  const reviewUrl = "https://g.page/r/CWG_uPaqr-MjEAI/review"
-  const stepsRef = useRef<HTMLDivElement | null>(null)
+  const { toast } = useToast()
 
-  const [currentStep, setCurrentStep] = useState(1)
-  
-  const [selectedDevice, setSelectedDevice] = useState<string | null>(preselectedDevice)
-  const [selectedBrand, setSelectedBrand] = useState<string | null>(null)
-  const [selectedModel, setSelectedModel] = useState<string | null>(null)
-  const [selectedIssues, setSelectedIssues] = useState<string[]>([])
-
-  const [deviceEntries, setDeviceEntries] = useState<DeviceEntry[]>([])
-
-  const [mounted, setMounted] = useState(false)
-  const [chatReady, setChatReady] = useState(false)
-
-  useEffect(() => {
-    const id = requestAnimationFrame(() => setMounted(true))
-    return () => cancelAnimationFrame(id)
-  }, [])
-
-  useEffect(() => {
-    if (!mounted) return
-
-    const loadChat = () => setChatReady(true)
-    const runtime = globalThis as typeof globalThis & {
-      requestIdleCallback?: (_callback: () => void, _options?: { timeout: number }) => number
-      cancelIdleCallback?: (_id: number) => void
-    }
-
-    if (runtime.requestIdleCallback) {
-      const id = runtime.requestIdleCallback(loadChat, { timeout: 5000 })
-      return () => runtime.cancelIdleCallback?.(id)
-    }
-
-    const id = window.setTimeout(loadChat, 2200)
-    return () => window.clearTimeout(id)
-  }, [mounted])
-
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    whatsapp: "",
-    emirateId: "abu-dhabi",
-    emirateName: "Abu Dhabi",
-    areaId: "",
-    areaName: "",
-    address: "",
-    locationLat: null as number | null,
-    locationLng: null as number | null,
-    locationType: "home" as "home" | "office",
-    companyName: "",
-    unitNumber: "",
-    notes: "",
-    preferredDate: new Date().toISOString().split("T")[0],
-    preferredTime: "afternoon",
-  })
-  const [isSubmitted, setIsSubmitted] = useState(false)
-  const [trackingNumber, setTrackingNumber] = useState("")
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
+  const [isPending, startTransition] = useTransition()
+  const [isLocating, setIsLocating] = useState(false)
+  const [showModelDetails, setShowModelDetails] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [confirmedOrderId, setConfirmedOrderId] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
-  const [isOtherModel, setIsOtherModel] = useState(false)
-  const [customModel, setCustomModel] = useState("")
-  const [deviceSearch, setDeviceSearch] = useState("")
-  const [modelSearch, setModelSearch] = useState("")
-  const [areaSearch, setAreaSearch] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [issuePickingId, setIssuePickingId] = useState<string | null>(null)
-  const [isDetectingLocation, setIsDetectingLocation] = useState(false)
-  const [locationError, setLocationError] = useState<string | null>(null)
-  const [privacyConsent, setPrivacyConsent] = useState(false)
 
-  // Handle preselected device from URL
-  useEffect(() => {
-    if (preselectedDevice && devices.find((d) => d.id === preselectedDevice)) {
-      setSelectedDevice(preselectedDevice)
-      setCurrentStep(2)
-    }
-  }, [preselectedDevice])
-
-  const currentDeviceData = devices.find((d) => d.id === selectedDevice)
-  const currentBrandData = currentDeviceData?.brands.find((b) => b.id === selectedBrand)
-  const visibleDevices = devices.filter((device) => {
-    const query = deviceSearch.trim().toLowerCase()
-    if (!query) return true
-    return [device.name, ...device.brands.map((brand) => brand.name), ...device.issues]
-      .join(" ")
-      .toLowerCase()
-      .includes(query)
+  // Booking Data State
+  const [state, setState] = useState<BookingState>({
+    deviceId: "",
+    deviceName: "",
+    problem: "",
+    brand: "",
+    model: "",
+    emirateId: "dubai",
+    emirateName: "Dubai",
+    area: "",
+    latitude: null,
+    longitude: null,
+    appointmentDay: "today",
+    customDate: getFormattedDate(2),
+    timeSlot: "12 PM – 3 PM",
+    customerName: "",
+    phone: "",
+    email: "",
+    notes: "",
   })
-  const repairEstimateLabel = (deviceId: string, issue: string) => {
-    const configuredMinutes = getAllRepairTimes()[`${deviceId}|${issue}`]
-    const hasCategoryEstimate = /^(Hardware|Software|Physical):/.test(issue)
-    if (configuredMinutes == null && !hasCategoryEstimate) {
-      return t("Estimate after diagnosis")
-    }
-    return t("~60 min").replace("60", String(getRepairTime(deviceId, issue)))
-  }
 
-  const handleDeviceSelect = (deviceId: string) => {
-    setSelectedDevice(deviceId)
-    setSelectedBrand(null)
-    setSelectedModel(null)
-    setSelectedIssues([])
-    setCurrentStep(2)
-  }
+  // Pre-select device from query parameters
+  useEffect(() => {
+    const devParam = searchParams.get("device")?.toLowerCase() || ""
+    if (devParam) {
+      let matchedId = ""
+      if (devParam.includes("mobile") || devParam.includes("phone")) matchedId = "mobile"
+      else if (devParam.includes("laptop") || devParam.includes("macbook")) matchedId = "laptop"
+      else if (devParam.includes("pc") || devParam.includes("desktop")) matchedId = "pc"
+      else if (devParam.includes("print")) matchedId = "printer"
+      else if (devParam.includes("tv")) matchedId = "tv"
+      else if (devParam.includes("monitor") || devParam.includes("screen")) matchedId = "monitor"
+      else if (devParam.includes("game") || devParam.includes("playstation") || devParam.includes("xbox")) matchedId = "gaming"
+      else if (devParam.includes("cctv") || devParam.includes("cam")) matchedId = "cctv"
+      else if (devParam.includes("other")) matchedId = "other"
 
-  const handleDevicePick = (deviceId: string) => handleDeviceSelect(deviceId)
-
-  const handleBrandSelect = (brandId: string) => {
-    setSelectedBrand(brandId)
-    setSelectedModel(null)
-    setModelSearch("")
-    setCurrentStep(3)
-  }
-
-  const handleBrandPick = (brandId: string) => handleBrandSelect(brandId)
-
-  const handleModelSelect = (model: string) => {
-    setSelectedModel(model)
-    setIsOtherModel(false)
-    setCurrentStep(4)
-  }
-
-  const handleModelPick = (model: string) => handleModelSelect(model)
-
-  const handleIssueToggle = (issue: string) => {
-    setSelectedIssues(prev =>
-      prev.includes(issue)
-        ? prev.filter(i => i !== issue)
-        : [...prev, issue]
-    )
-  }
-
-  const handleIssuePick = (issue: string) => {
-    setIssuePickingId(issue)
-    handleIssueToggle(issue)
-    setTimeout(() => setIssuePickingId(null), 160)
-  }
-
-  const generateYearRangeModels = (prefix: string, start: number, end: number) => {
-    const list: string[] = []
-    for (let y = start; y <= end; y++) {
-      list.push(`${prefix} (${y})`)
-    }
-    return list
-  }
-
-  const generateIphoneModelsUpTo2025 = (): string[] => {
-    return [
-      "iPhone 6 (2014)",
-      "iPhone 7 (2016)",
-      "iPhone 8 (2017)",
-      "iPhone X (2017)",
-      "iPhone XR (2018)",
-      "iPhone XS (2018)",
-      "iPhone 11 (2019)",
-      "iPhone 12 (2020)",
-      "iPhone 13 (2021)",
-      "iPhone 14 (2022)",
-      "iPhone 15 (2023)",
-      "iPhone 16 (2024)",
-      "iPhone 17 (2025)",
-      "iPhone 17 Pro Max (2025)",
-    ]
-  }
-
-  const generateSamsungSModelsUpTo2025 = (): string[] => {
-    return [
-      "Galaxy S10 (2019)",
-      "Galaxy S20 (2020)",
-      "Galaxy S21 (2021)",
-      "Galaxy S22 (2022)",
-      "Galaxy S23 (2023)",
-      "Galaxy S24 (2024)",
-      "Galaxy S25 (2025)",
-    ]
-  }
-
-  const addDeviceToList = () => {
-    if (selectedDevice && selectedBrand && selectedModel && selectedIssues.length > 0 && currentDeviceData && currentBrandData) {
-      const isDuplicate = deviceEntries.some(
-        (entry) =>
-          entry.deviceId === selectedDevice &&
-          entry.brandId === selectedBrand &&
-          entry.model === selectedModel &&
-          entry.issues.length === selectedIssues.length &&
-          entry.issues.every((issue) => selectedIssues.includes(issue))
-      )
-      if (!isDuplicate) {
-        const newEntry: DeviceEntry = {
-          id: Date.now().toString(),
-          deviceId: selectedDevice,
-          deviceName: currentDeviceData.name,
-          brandId: selectedBrand,
-          brandName: currentBrandData.name,
-          model: selectedModel,
-          issues: selectedIssues,
+      if (matchedId) {
+        const found = DEVICE_CONFIGS.find((d) => d.id === matchedId)
+        if (found) {
+          setState((prev) => ({
+            ...prev,
+            deviceId: found.id,
+            deviceName: found.name,
+          }))
         }
-        setDeviceEntries([...deviceEntries, newEntry])
       }
-      // Reset selections for adding another device
-      setSelectedDevice(null)
-      setSelectedBrand(null)
-      setSelectedModel(null)
-      setSelectedIssues([])
-      setCurrentStep(1)
     }
-  }
+  }, [searchParams])
 
-  const removeDeviceEntry = (id: string) => {
-    setDeviceEntries(deviceEntries.filter((entry) => entry.id !== id))
-  }
-
-  const proceedToDetails = () => {
-    if (selectedDevice && selectedBrand && selectedModel && selectedIssues.length > 0 && currentDeviceData && currentBrandData) {
-      const isDuplicate = deviceEntries.some(
-        (entry) =>
-          entry.deviceId === selectedDevice &&
-          entry.brandId === selectedBrand &&
-          entry.model === selectedModel &&
-          entry.issues.length === selectedIssues.length &&
-          entry.issues.every((issue) => selectedIssues.includes(issue))
-      )
-      if (!isDuplicate) {
-        const newEntry: DeviceEntry = {
-          id: Date.now().toString(),
-          deviceId: selectedDevice,
-          deviceName: currentDeviceData.name,
-          brandId: selectedBrand,
-          brandName: currentBrandData.name,
-          model: selectedModel,
-          issues: selectedIssues,
-        }
-        setDeviceEntries([...deviceEntries, newEntry])
+  // Analytics helper
+  const trackEvent = (name: string, params?: Record<string, any>) => {
+    if (typeof window !== "undefined") {
+      if ((window as any).gtag) {
+        ;(window as any).gtag("event", name, params)
       }
-      // Reset selections so going back doesn't add the same device again
-      setSelectedDevice(null)
-      setSelectedBrand(null)
-      setSelectedModel(null)
-      setSelectedIssues([])
+      if ((window as any).fbq) {
+        ;(window as any).fbq("trackCustom", name, params)
+      }
     }
-    setCurrentStep(5)
   }
 
-  const detectLocation = async () => {
-    setIsDetectingLocation(true)
-    setLocationError(null)
-
-    if (typeof window !== "undefined" && !window.isSecureContext) {
-      setLocationError(t("Location requires HTTPS. Please open via https or enter address manually."))
-      setIsDetectingLocation(false)
-      return
-    }
-
+  // Handle GPS location click
+  const handleUseMyLocation = () => {
     if (!navigator.geolocation) {
-      setLocationError(t("Geolocation is not supported by your browser"))
-      setIsDetectingLocation(false)
-      return
-    }
-
-    const setAddressFromCoords = async (latitude: number, longitude: number) => {
-      const detected = detectEmirateFromGPS(latitude, longitude)
-      const result = await reverseGeocode(latitude, longitude, lang === "ar" ? "ar" : "en")
-      if ((result as any)?.error) throw new Error((result as any).error)
-      const address = (result as any)?.address || ""
-      if (!address) throw new Error("No address")
-      setFormData((prev) => ({
-        ...prev,
-        address,
-        locationLat: latitude,
-        locationLng: longitude,
-        ...(detected ? { emirateId: detected.id, emirateName: detected.nameEn } : {})
-      }))
-    }
-
-    const fallbackToIpLocation = async () => {
-      const res = await fetch("https://ipwho.is/")
-      const json = await res.json().catch(() => null)
-      const latitude = json?.latitude
-      const longitude = json?.longitude
-      if (typeof latitude !== "number" || typeof longitude !== "number") throw new Error("No coordinates")
-      await setAddressFromCoords(latitude, longitude)
-    }
-
-    try {
-      const perms = (navigator as any).permissions
-      if (perms?.query) {
-        const status = await perms.query({ name: "geolocation" })
-        if (status?.state === "denied") {
-          try {
-            await fallbackToIpLocation()
-            setLocationError(null)
-          } catch {
-            setLocationError(t("Location permission denied. Please allow access or enter address manually."))
-          }
-          setIsDetectingLocation(false)
-          return
-        }
-      }
-    } catch {
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords
-          await setAddressFromCoords(latitude, longitude)
-        } catch {
-          try {
-            await fallbackToIpLocation()
-            setLocationError(null)
-          } catch {
-            setLocationError(t("Failed to detect address. Please enter manually."))
-          }
-        } finally {
-          setIsDetectingLocation(false)
-        }
-      },
-      (error) => {
-        ;(async () => {
-          try {
-            if (error.code === error.PERMISSION_DENIED) {
-              await fallbackToIpLocation()
-              setLocationError(null)
-              return
-            }
-
-            if (error.code === error.POSITION_UNAVAILABLE || error.code === error.TIMEOUT) {
-              await fallbackToIpLocation()
-              setLocationError(null)
-              return
-            }
-
-            setLocationError(t("Failed to get location"))
-          } catch {
-            if (error.code === error.PERMISSION_DENIED) {
-              setLocationError(t("Location permission denied. Please allow access or enter address manually."))
-              return
-            }
-            setLocationError(t("Location unavailable. Please enter address manually."))
-          } finally {
-            setIsDetectingLocation(false)
-          }
-        })()
-      },
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 }
-    )
-  }
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-
-    try {
-      // Use Server Action to bypass AdBlockers blocking Firestore API
-      const result = await createBookingAction({ ...formData, privacyConsent }, deviceEntries)
-
-      if (result.error) throw new Error(result.error)
-
-      if (result.orderIds && result.orderIds.length > 0) {
-        setTrackingNumber(result.orderIds.join(", "))
-
-        // Google Ads / Analytics Conversion Event
-        if (typeof window !== "undefined" && (window as any).gtag) {
-          (window as any).gtag("event", "generate_lead", {
-            currency: "AED",
-            value: 0, // No price known yet
-            event_callback: () => {}
-          })
-        }
-
-        setIsSubmitted(true)
-      } else {
-        throw new Error("No order IDs returned")
-      }
-    } catch (err: any) {
-      if (handleStaleServerActionError(err)) return
       toast({
         variant: "destructive",
-        title: t("Error"),
-        description: err?.message || t("Failed to create order. Please try again.")
+        title: isAr ? "غير مدعوم" : "Not Supported",
+        description: isAr ? "متصفحك لا يدعم تحديد الموقع الجغرافي." : "Your browser does not support geolocation.",
       })
-    } finally {
-      setIsSubmitting(false)
+      return
     }
-  }
 
-  const copyTrackingNumber = () => {
-    navigator.clipboard.writeText(trackingNumber)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+    setIsLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords
+        try {
+          const detectedEmirate = detectEmirateFromGPS(latitude, longitude)
+          const geoRes = await reverseGeocode(latitude, longitude)
+          const detectedArea = (geoRes && "address" in geoRes && typeof geoRes.address === "string") ? geoRes.address : ""
 
-  const goToStep = (step: number) => {
-    if (step < currentStep) {
-      setCurrentStep(step)
-    }
-  }
+          setState((prev) => ({
+            ...prev,
+            latitude,
+            longitude,
+            emirateId: detectedEmirate?.id || prev.emirateId,
+            emirateName: detectedEmirate?.nameEn || prev.emirateName,
+            area: detectedArea || prev.area,
+          }))
 
-  useEffect(() => {
-    const el = stepsRef.current
-    if (!el || currentStep === 1) return
-    el.scrollIntoView({ behavior: "smooth", block: "start" })
-  }, [currentStep])
-
-  if (isSubmitted) {
-    return (
-      <section className="pt-24 pb-12">
-        <div className="container mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="max-w-lg mx-auto text-center"
-          >
-            <GlassCard className="p-8" dir={isAr ? 'rtl' : 'ltr'}>
-              <div className="w-20 h-20 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center mx-auto mb-6">
-                <CheckCircle2 className="w-10 h-10 text-cyan-400" />
-              </div>
-
-              <h2 className="text-2xl font-bold mb-2">{t("Order Created Successfully!")}</h2>
-              <p className="text-muted-foreground mb-6">
-                {isAr ? `تم إنشاء طلبك بنجاح. رقم التتبع الخاص بك هو: ${trackingNumber}.` : `Your order has been created successfully. Tracking Number: ${trackingNumber}.`}
-              </p>
-
-              <div className="bg-muted/50 border border-border rounded-2xl p-6 mb-6">
-                <p className="text-sm text-muted-foreground mb-2">{t("Your Tracking Number")}</p>
-                <div className="flex items-center justify-center gap-3">
-                  <span className="text-2xl font-mono font-bold text-cyan-600 dark:text-cyan-300">{trackingNumber}</span>
-                  <button
-                    onClick={copyTrackingNumber}
-                    aria-label={t("Copy tracking number")}
-                    className="p-2 rounded-lg bg-background hover:bg-accent transition-colors"
-                  >
-                    {copied ? <Check className="w-5 h-5 text-cyan-500" /> : <Copy className="w-5 h-5 text-muted-foreground" />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-3 text-left mb-6">
-                <h4 className="text-sm font-semibold text-foreground">
-                  {deviceEntries.length > 1 ? `${t("Device(s)")} (${deviceEntries.length})` : t("Device")}
-                </h4>
-                {deviceEntries.map((entry, index) => (
-                  <div key={entry.id} className="bg-muted/50 border border-border rounded-xl p-3 space-y-1">
-                    {deviceEntries.length > 1 && (
-                      <p className="text-xs text-cyan-600 dark:text-cyan-300 font-semibold">{t("Device")} {index + 1}</p>
-                    )}
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{t("Type")}:</span>
-                      <span className="text-foreground">{isAr ? t(entry.deviceName) : entry.deviceName}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{t("Brand")}:</span>
-                      <span className="text-foreground">{entry.brandName}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{t("Model")}:</span>
-                      <span className="text-foreground">{entry.model}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{t("Issue")}:</span>
-                      <span className="text-foreground">{isAr ? entry.issues.map(i => t(i)).join(", ") : entry.issues.join(", ")}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex flex-col gap-3 mb-6">
-                <Button asChild variant="primary" className="w-full">
-                  <Link href={`/track?orderId=${encodeURIComponent(trackingNumber)}`}>
-                    {t("Track Your Order")}
-                  </Link>
-                </Button>
-                <Button asChild variant="secondary" className="w-full">
-                  <a
-                    href={`https://wa.me/${contact.whatsappRaw}?text=Hi! I just booked a repair for ${deviceEntries.length} device(s). My tracking number is ${trackingNumber}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {t("Chat on WhatsApp")}
-                  </a>
-                </Button>
-                <Button asChild variant="outline" className="w-full border-border bg-background/60 hover:bg-accent text-foreground">
-                  <a href={reviewUrl} target="_blank" rel="noopener noreferrer">
-                    <Star className="w-5 h-5 mr-2" />
-                    {isAr ? "قيّمنا على Google" : "Rate us on Google"}
-                  </a>
-                </Button>
-              </div>
-
-              {/* Creative Support Card */}
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-500/10 via-primary/5 to-blue-500/10 border border-cyan-500/30 p-5 text-left text-foreground backdrop-blur-md shadow-lg shadow-cyan-500/5">
-                <div className="flex items-start gap-3.5 mb-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-400 shrink-0 shadow-xs">
-                    <Headphones className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-foreground">
-                      {isAr ? "تحتاج مساعدة؟ فريق الدعم جاهز لخدمتك" : "Need help? Contact our support team"}
-                    </h4>
-                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                      {isAr
-                        ? "تواصل مع فريق الدعم المباشر عبر الواتساب أو البريد الإلكتروني لأي استفسار أو تعديل على الطلب."
-                        : "Connect with our dedicated support team via WhatsApp or email for instant assistance."}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                  {/* WhatsApp Support Button */}
-                  <a
-                    href={`https://wa.me/${contact.whatsappRaw}?text=Hi%20KBI%20Support,%20I%20need%20help%20with%20my%20order`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2.5 p-2.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-600 dark:text-emerald-300 transition-all text-xs font-semibold group cursor-pointer shadow-xs"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
-                      <MessageCircle className="w-4 h-4" />
-                    </div>
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">WhatsApp</span>
-                      <span className="text-xs font-bold font-mono truncate">050 249 1034</span>
-                    </div>
-                  </a>
-
-                  {/* Email Support Button */}
-                  <a
-                    href="mailto:support@kbi.services?subject=Support%20Request%20-%20Order%20Help"
-                    className="flex items-center gap-2.5 p-2.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-600 dark:text-cyan-300 transition-all text-xs font-semibold group cursor-pointer shadow-xs"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-cyan-500 text-black flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
-                      <Mail className="w-4 h-4" />
-                    </div>
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Email</span>
-                      <span className="text-xs font-bold truncate">support@kbi.services</span>
-                    </div>
-                  </a>
-                </div>
-              </div>
-            </GlassCard>
-          </motion.div>
-        </div>
-      </section>
+          toast({
+            title: isAr ? "تم تحديد موقعك بدقة 🎯" : "Location Pinpointed 🎯",
+            description: `${detectedEmirate?.nameEn || "UAE"} - ${detectedArea || "Current Location"}`,
+          })
+        } catch {
+          setState((prev) => ({ ...prev, latitude, longitude }))
+        } finally {
+          setIsLocating(false)
+        }
+      },
+      () => {
+        setIsLocating(false)
+        toast({
+          variant: "destructive",
+          title: isAr ? "تعذر تحديد الموقع" : "Location Unavailable",
+          description: isAr ? "يرجى كتابة اسم المنطقة يدوياً." : "Please enter your area manually.",
+        })
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
     )
+  }
+
+  // Selected device object
+  const selectedDeviceConfig = DEVICE_CONFIGS.find((d) => d.id === state.deviceId)
+
+  // Validation
+  const isStep1Valid = Boolean(state.deviceId && state.problem)
+  const isStep2Valid = Boolean(state.emirateId && (state.area.trim().length >= 2 || state.latitude !== null))
+  const isStep3Valid = Boolean(state.customerName.trim().length >= 2 && state.phone.replace(/\D/g, "").length >= 7)
+
+  // Step navigation
+  const handleNextStep = () => {
+    setSubmitError(null)
+    if (step === 1 && isStep1Valid) {
+      trackEvent("device_and_problem_selected", { device: state.deviceName, problem: state.problem })
+      setStep(2)
+      window.scrollTo({ top: 80, behavior: "smooth" })
+    } else if (step === 2 && isStep2Valid) {
+      trackEvent("location_and_appointment_selected", {
+        emirate: state.emirateName,
+        slot: state.timeSlot,
+      })
+      setStep(3)
+      window.scrollTo({ top: 80, behavior: "smooth" })
+    }
+  }
+
+  const handlePrevStep = () => {
+    setSubmitError(null)
+    if (step > 1) {
+      setStep((prev) => (prev - 1) as 1 | 2 | 3)
+      window.scrollTo({ top: 80, behavior: "smooth" })
+    }
+  }
+
+  // Final Submit
+  const handleConfirmBooking = async () => {
+    if (!isStep3Valid || isPending) return
+    setSubmitError(null)
+
+    startTransition(async () => {
+      try {
+        trackEvent("booking_submitted")
+
+        // Normalize phone
+        const cleanDigits = state.phone.replace(/\D/g, "")
+        let formattedPhone = state.phone.trim()
+        if (!formattedPhone.startsWith("+")) {
+          if (cleanDigits.startsWith("971")) {
+            formattedPhone = `+${cleanDigits}`
+          } else if (cleanDigits.startsWith("0")) {
+            formattedPhone = `+971${cleanDigits.substring(1)}`
+          } else {
+            formattedPhone = `+971${cleanDigits}`
+          }
+        }
+
+        // Computed preferred date
+        let chosenDate = getFormattedDate(0)
+        if (state.appointmentDay === "tomorrow") {
+          chosenDate = getFormattedDate(1)
+        } else if (state.appointmentDay === "custom" && state.customDate) {
+          chosenDate = state.customDate
+        }
+
+        const emirateItem = UAE_EMIRATES.find((e) => e.id === state.emirateId)
+        const emirateName = emirateItem?.nameEn || state.emirateName || "Dubai"
+        const areaName = state.area.trim() || "Doorstep Area"
+
+        const formDataPayload = {
+          name: state.customerName.trim(),
+          phone: formattedPhone,
+          whatsapp: formattedPhone,
+          email: state.email.trim() || "",
+          emirateId: state.emirateId,
+          emirateName,
+          areaId: "",
+          areaName,
+          address: `${areaName}, ${emirateName}`,
+          locationLat: state.latitude,
+          locationLng: state.longitude,
+          locationType: "home" as const,
+          companyName: "",
+          unitNumber: "",
+          notes: state.notes.trim() || "",
+          preferredDate: chosenDate,
+          preferredTime: state.timeSlot,
+          privacyConsent: true,
+        }
+
+        const deviceEntryPayload = [
+          {
+            id: `dev-${Date.now()}`,
+            deviceId: state.deviceId,
+            deviceName: state.deviceName || "Device",
+            brandId: state.brand.trim() ? state.brand.toLowerCase() : "other",
+            brandName: state.brand.trim() || "Standard",
+            model: state.model.trim() || "Standard / Unspecified",
+            issues: [state.problem || "Inspection"],
+          },
+        ]
+
+        const res = await createBookingAction(formDataPayload, deviceEntryPayload)
+
+        if (res.error) {
+          setSubmitError(
+            isAr
+              ? "تعذر إرسال طلب الحجز. يرجى المحاولة مرة أخرى أو التواصل معنا عبر واتساب."
+              : "We couldn't submit your booking. Please try again or contact us on WhatsApp.",
+          )
+          trackEvent("booking_failed", { error: res.error })
+          return
+        }
+
+        const confirmedId = res.primaryOrderId || res.orderIds?.[0] || `KBI-${Date.now().toString().slice(-6)}`
+        setConfirmedOrderId(confirmedId)
+        setStep(4)
+        trackEvent("booking_completed", { orderId: confirmedId })
+        trackEvent("Lead", { currency: "AED", value: 1 })
+        window.scrollTo({ top: 60, behavior: "smooth" })
+      } catch (err) {
+        setSubmitError(
+          isAr
+            ? "تعذر إرسال طلب الحجز. يرجى المحاولة مرة أخرى أو التواصل معنا عبر واتساب."
+            : "We couldn't submit your booking. Please try again or contact us on WhatsApp.",
+        )
+        trackEvent("booking_failed", { error: String(err) })
+      }
+    })
+  }
+
+  // Copy order ID
+  const handleCopyOrderId = () => {
+    if (confirmedOrderId) {
+      navigator.clipboard.writeText(confirmedOrderId)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
   }
 
   return (
-    <section className="pt-24 pb-12">
+    <div className="relative pt-24 sm:pt-28 pb-24 min-h-screen overflow-hidden">
+      {/* APPLE LIQUID GLASS AMBIENCE MESH */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div
+          className={cn(
+            "absolute top-[-18%] left-[-15%] w-[60vw] h-[60vw] rounded-full blur-[160px] transition-all duration-1000",
+            step === 1 ? "bg-cyan-500/20" : step === 2 ? "bg-teal-400/20" : "bg-blue-600/20"
+          )}
+        />
+        <div
+          className={cn(
+            "absolute bottom-[-15%] right-[-15%] w-[50vw] h-[50vw] rounded-full blur-[160px] transition-all duration-1000",
+            step === 1 ? "bg-blue-600/20" : step === 2 ? "bg-emerald-500/20" : "bg-cyan-500/20"
+          )}
+        />
+        <div className="absolute top-[35%] left-[20%] w-[35vw] h-[35vw] bg-indigo-500/10 rounded-full blur-[180px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.035]" />
+      </div>
 
-      <div className="container mx-auto px-6">
-        {/* Help Banner */}
-        {mounted && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-4xl mx-auto mb-8"
-          >
-            <GlassCard className="p-4 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border-cyan-500/20">
-              <div className="flex items-center gap-3 flex-wrap justify-center">
-                <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 flex items-center justify-center">
-                  <MessageCircle className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
-                </div>
-                <div className="text-center md:text-left flex-1 min-w-[200px]">
-                  <h3 className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">
-                    {t("Need Help?")}
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    {t("Chat with us on WhatsApp for quick assistance with your booking!")}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                    <span className="text-xs text-emerald-700 dark:text-green-300 font-medium">
-                      {t("We're Online")}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </GlassCard>
-          </motion.div>
-        )}
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
+        {/* LIQUID GLASS HERO */}
+        {step !== 4 ? (
+          <div className="max-w-2xl mx-auto text-center mb-6 sm:mb-8">
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-card/60 border border-white/10 dark:border-cyan-500/25 mb-3.5 backdrop-blur-2xl shadow-xl shadow-cyan-500/5 ring-1 ring-white/10"
+            >
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
+                {t("SERVING THE ENTIRE UAE")}
+              </span>
+              <span className="text-muted-foreground/30 font-light">|</span>
+              <span className="text-[11px] text-muted-foreground font-semibold flex items-center gap-1">
+                <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                <span>{isAr ? "صيانة فورية في موقعك" : "Instant On-Site Service"}</span>
+              </span>
+            </motion.div>
 
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 w-fit mx-auto mb-3">
-            <Clock className="w-3 h-3 text-cyan-500 dark:text-cyan-400" />
-            <span className="text-xs font-semibold tracking-wide text-cyan-600 dark:text-cyan-400">{t("Same-Day On-Site Service")}</span>
+            <h1 className="text-3xl sm:text-5xl font-black text-foreground tracking-tight">
+              {t("Book a Technician")}
+            </h1>
+            <p className="text-xs sm:text-base text-muted-foreground mt-1.5 max-w-md mx-auto leading-relaxed">
+              {t("Professional on-site device repair at your home or office across the UAE.")}
+            </p>
           </div>
-          <h1 className="text-3xl md:text-5xl font-extrabold mb-4 text-foreground">
-            {isAr ? (
-              <>
-                {t("Book a")} <span className="text-cyan-500 dark:text-cyan-400">{t("Technician")}</span>
-              </>
-            ) : (
-              <>Book a <span className="text-cyan-500 dark:text-cyan-400">Technician</span></>
-            )}
-          </h1>
-          <p className="text-muted-foreground max-w-xl mx-auto">
-            {t("Select your device, describe the problem, and we'll match an experienced technician to your request.")}
-          </p>
-        </div>
+        ) : null}
 
-        {deviceEntries.length > 0 && currentStep < 5 && (
-          <div className="max-w-4xl mx-auto mb-6">
-            <GlassCard className="p-4" dir={isAr ? 'rtl' : 'ltr'}>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-foreground">{t("Devices Added")} ({deviceEntries.length})</h3>
-              </div>
-              <div className="space-y-2">
-                {deviceEntries.map((entry, index) => (
-                  <div
-                    key={entry.id}
-                    className="flex items-center justify-between bg-muted/50 rounded-xl p-3 border border-border"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-cyan-500/15 flex items-center justify-center text-cyan-300 ring-1 ring-cyan-500/20">
-                        {index + 1}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">
-                          {entry.brandName} {entry.model}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{isAr ? entry.issues.map(i => t(i)).join(", ") : entry.issues.join(", ")}</p>
-                      </div>
-                    </div>
+        {/* LIQUID GLASS SEGMENTED TRACKER */}
+        {step !== 4 ? (
+          <div className="max-w-xl mx-auto mb-6 sm:mb-8">
+            <div className="relative p-1.5 rounded-2xl bg-card/70 backdrop-blur-2xl border border-white/10 dark:border-white/5 shadow-2xl shadow-cyan-500/5">
+              <div className="grid grid-cols-3 gap-1.5">
+                {[
+                  { num: 1, label: t("Device"), labelAr: "الجهاز", icon: Smartphone },
+                  { num: 2, label: t("Location"), labelAr: "الموقع", icon: MapPin },
+                  { num: 3, label: t("Details"), labelAr: "البيانات", icon: User },
+                ].map((st) => {
+                  const Icon = st.icon
+                  const isActive = step === st.num
+                  const isDone = step > st.num
+                  return (
                     <button
-                      onClick={() => removeDeviceEntry(entry.id)}
-                      aria-label={isAr ? "إزالة الجهاز" : "Remove device"}
-                      className="p-2 rounded-lg hover:bg-red-500/15 text-muted-foreground hover:text-red-500 transition-colors"
+                      key={st.num}
+                      type="button"
+                      onClick={() => {
+                        if (isDone) setStep(st.num as 1 | 2 | 3)
+                      }}
+                      className={cn(
+                        "relative flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl transition-all duration-300 text-xs font-bold select-none overflow-hidden",
+                        isActive
+                          ? "bg-gradient-to-r from-cyan-500/25 via-blue-500/20 to-teal-500/25 text-cyan-400 border border-cyan-400/40 shadow-[0_0_20px_rgba(6,182,212,0.2)]"
+                          : isDone
+                            ? "text-foreground hover:bg-muted/40 cursor-pointer"
+                            : "text-muted-foreground/50",
+                      )}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <div
+                        className={cn(
+                          "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black transition-all shrink-0",
+                          isActive
+                            ? "bg-cyan-400 text-black shadow-md shadow-cyan-400/60 ring-2 ring-cyan-400/40"
+                            : isDone
+                              ? "bg-emerald-400 text-black shadow-sm"
+                              : "bg-muted/80 text-muted-foreground",
+                        )}
+                      >
+                        {isDone ? <Check className="w-3 h-3 stroke-[3]" /> : st.num}
+                      </div>
+                      <span className="truncate">{isAr ? st.labelAr : st.label}</span>
                     </button>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
-            </GlassCard>
-          </div>
-        )}
 
-        {/* Progress Steps */}
-        <div className="sticky top-20 z-30 max-w-3xl mx-auto mb-8 rounded-2xl border border-border bg-background/85 px-2 py-3 shadow-lg backdrop-blur-2xl sm:px-5" dir={isAr ? 'rtl' : 'ltr'}>
-          <div className="flex w-full items-center">
-            {steps.map((step, index) => (
-              <div key={step.id} className={`flex min-w-0 items-center ${index < steps.length - 1 ? "flex-1" : "shrink-0"}`}>
-                <button
-                  onClick={() => goToStep(step.id)}
-                  disabled={step.id > currentStep}
-                  className={`flex flex-col items-center gap-2 ${step.id <= currentStep ? "cursor-pointer" : "cursor-not-allowed"}`}
+              {/* Liquid Progress Glow Beam */}
+              <div className="mt-1.5 h-1 bg-muted/40 rounded-full overflow-hidden relative">
+                <motion.div
+                  className="absolute inset-y-0 bg-gradient-to-r from-cyan-400 via-teal-300 to-blue-500 rounded-full shadow-[0_0_12px_rgba(6,182,212,0.8)]"
+                  initial={{ width: "33%" }}
+                  animate={{
+                    width: step === 1 ? "33%" : step === 2 ? "66%" : "100%",
+                  }}
+                  transition={{ type: "spring", stiffness: 220, damping: 25 }}
+                />
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {/* MAIN LIQUID GLASS CONTAINER */}
+        <div className="max-w-2xl mx-auto">
+          <div className="relative rounded-[36px] border border-white/15 dark:border-white/10 bg-card/80 backdrop-blur-3xl p-5 sm:p-9 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/10 before:to-transparent before:pointer-events-none">
+            {/* Top Liquid Flare */}
+            <div className="pointer-events-none absolute -top-28 left-1/2 -translate-x-1/2 w-4/5 h-28 bg-cyan-400/25 rounded-full blur-3xl" />
+
+            <AnimatePresence mode="wait">
+              {/* =========================================================================
+                  STEP 1: DEVICE & PROBLEM (Apple Liquid 3D Tiles)
+              ========================================================================= */}
+              {step === 1 && (
+                <motion.div
+                  key="step-1"
+                  initial={{ opacity: 0, scale: 0.97 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.97 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-6"
                 >
-                  <div
-                    className={`relative w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all ${step.id < currentStep
-                      ? "bg-cyan-500 text-black"
-                      : step.id === currentStep
-                        ? "bg-cyan-500/20 border-2 border-cyan-500 text-cyan-400"
-                        : "bg-muted text-muted-foreground/60"
-                      }`}
-                  >
-                    <span className={`absolute inset-0 rounded-full bg-cyan-500/10 blur-md ${step.id === currentStep ? "opacity-100" : "opacity-0"}`} />
-                    {step.id < currentStep ? <Check className="w-5 h-5" /> : step.id}
-                  </div>
-                  <span
-                    className={`text-xs hidden sm:block ${step.id <= currentStep ? "text-foreground" : "text-muted-foreground/60"}`}
-                  >
-                    {t(step.name)}
-                  </span>
-                </button>
-                {index < steps.length - 1 && (
-                  <div
-                    className={`mx-1 h-0.5 min-w-2 flex-1 sm:mx-2 ${step.id < currentStep ? "bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-500 shadow-[0_0_20px_rgba(6,182,212,0.25)]" : "bg-border"}`}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div ref={stepsRef} className="max-w-5xl mx-auto scroll-mt-44">
-          <AnimatePresence mode="wait">
-            {/* Step 1: Device Selection */}
-            {currentStep === 1 && (
-              <motion.div
-                key="step1"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-              >
-                <div className="relative overflow-hidden rounded-[32px] border border-border bg-card/80 backdrop-blur-xl shadow-lg">
-                  <div className="pointer-events-none absolute -inset-px bg-gradient-to-br from-cyan-500/10 via-transparent to-transparent opacity-80" />
-                  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_60%_at_50%_0%,rgba(6,182,212,0.12),rgba(0,0,0,0)_60%)]" />
-                  <div className="relative p-6 sm:p-8 lg:p-10">
-                    <div className="text-center">
-                      <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-                        {t(deviceEntries.length > 0 ? "Add Another Device" : "Select Your Device")}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
+                        {t("What needs repair?")}
                       </h2>
-                      <p className="mt-2 text-sm sm:text-base text-muted-foreground">
-                        {t("Select your device, describe the problem, and we'll match an experienced technician to your request.")}
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                        {isAr ? "حدد نوع الجهاز وسنرسل لك الفني المعتمد والمجهز" : "Select your device to begin on-site service"}
                       </p>
                     </div>
+                    <span className="text-[11px] font-bold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/25 hidden sm:inline-block shadow-sm">
+                      {isAr ? "الخطوة 1 من 3" : "Step 1 of 3"}
+                    </span>
+                  </div>
 
-                    <div className="relative mt-7 max-w-xl mx-auto">
-                      <Search className={`pointer-events-none absolute top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground ${isAr ? "right-4" : "left-4"}`} />
-                      <input
-                        type="search"
-                        value={deviceSearch}
-                        onChange={(event) => setDeviceSearch(event.target.value)}
-                        aria-label={t("Search devices or services")}
-                        placeholder={t("Search devices or services")}
-                        className={`w-full rounded-2xl border border-input bg-background/80 py-3.5 text-foreground shadow-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 placeholder:text-muted-foreground ${isAr ? "pr-12 pl-4 text-right" : "pl-12 pr-4"}`}
-                      />
-                    </div>
+                  {/* Liquid 3D Device Tiles */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {DEVICE_CONFIGS.map((dev) => {
+                      const Icon = dev.icon
+                      const isSelected = state.deviceId === dev.id
+                      return (
+                        <motion.button
+                          key={dev.id}
+                          type="button"
+                          whileHover={{ scale: 1.03, y: -2 }}
+                          whileTap={{ scale: 0.97 }}
+                          onClick={() => {
+                            setState((prev) => ({
+                              ...prev,
+                              deviceId: dev.id,
+                              deviceName: dev.name,
+                              problem: "", // fresh selection
+                            }))
+                          }}
+                          className={cn(
+                            "relative group flex flex-col items-start justify-between p-4 rounded-2xl border text-left transition-all duration-300 cursor-pointer min-h-[88px] sm:min-h-[98px] overflow-hidden backdrop-blur-xl",
+                            isSelected
+                              ? "border-cyan-400 bg-gradient-to-br from-cyan-500/20 via-blue-500/15 to-transparent shadow-[0_0_30px_rgba(6,182,212,0.25)] ring-1 ring-cyan-400/60 text-foreground"
+                              : "border-white/10 bg-card/60 hover:bg-muted/50 text-muted-foreground hover:text-foreground hover:border-cyan-400/40 hover:shadow-lg",
+                          )}
+                        >
+                          {dev.popular && !isSelected ? (
+                            <span className="absolute top-2.5 right-2.5 text-[9px] font-black uppercase tracking-wider text-cyan-400 bg-cyan-500/15 px-2 py-0.5 rounded-full border border-cyan-500/30">
+                              {isAr ? "شائع" : "Popular"}
+                            </span>
+                          ) : null}
 
-                    <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 auto-rows-fr" dir={isAr ? "rtl" : "ltr"}>
-                      {visibleDevices.map((device) => {
-                        const featured = device.id === "pc" || device.id === "gaming" || device.id === "networking" || device.id === "tech-support"
-                        const IconNode = device.id === "tablet"
-                          ? <Tablet className="w-6 h-6" />
-                          : device.id === "cctv"
-                            ? <Cctv className="w-6 h-6" />
-                            : device.id === "pc"
-                              ? <PcCase className="w-6 h-6" />
-                              : device.id === "networking"
-                                ? <Wifi className="w-6 h-6" />
-                                : device.id === "tech-support"
-                                  ? <Headset className="w-6 h-6" />
-                                  : (iconMap as any)[device.icon]
+                          {isSelected ? (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-cyan-400 text-black flex items-center justify-center shadow-md shadow-cyan-400/60"
+                            >
+                              <Check className="w-3 h-3 stroke-[3]" />
+                            </motion.div>
+                          ) : null}
 
-                        return (
-                          <button
-                            key={device.id}
-                            type="button"
-                            onClick={() => handleDevicePick(device.id)}
-                            className="group relative w-full h-full min-h-[124px] rounded-3xl border border-border bg-card/85 hover:bg-card backdrop-blur-xl px-3 py-4 flex flex-col items-center justify-center gap-2 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-500/50 hover:shadow-xl cursor-pointer"
+                          <div
+                            className={cn(
+                              "p-2.5 rounded-xl transition-all duration-300",
+                              isSelected
+                                ? "bg-cyan-400 text-black shadow-lg shadow-cyan-400/40"
+                                : "bg-muted/70 text-foreground group-hover:bg-cyan-500/20 group-hover:text-cyan-400",
+                            )}
                           >
-                            <span className="pointer-events-none absolute -inset-px rounded-3xl bg-gradient-to-br from-cyan-500/10 via-transparent to-transparent opacity-70" />
-                            <span className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(80%_60%_at_50%_0%,rgba(6,182,212,0.15),rgba(0,0,0,0)_65%)]" />
+                            <Icon className="w-5 h-5" />
+                          </div>
 
-                            {featured ? (
-                              <span className="absolute top-3 left-3 rounded-full bg-cyan-500/15 text-cyan-600 dark:text-cyan-300 ring-1 ring-cyan-500/30 px-2.5 py-1 text-[10px] font-bold tracking-wide">
-                                {t("Featured")}
-                              </span>
+                          <span className="text-xs sm:text-sm font-bold tracking-tight mt-2.5 line-clamp-1">
+                            {isAr ? dev.nameAr : dev.name}
+                          </span>
+                        </motion.button>
+                      )
+                    })}
+                  </div>
+
+                  {/* Immediate Problem Chips with Neon Edge */}
+                  {selectedDeviceConfig ? (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="space-y-3 pt-3 border-t border-white/10"
+                    >
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs sm:text-sm font-bold text-foreground flex items-center gap-1.5">
+                          <Sparkles className="w-4 h-4 text-cyan-400" />
+                          <span>{isAr ? "ما هي المشكلة الشائعة؟" : "What is the issue?"}</span>
+                        </label>
+                        <span className="text-[11px] text-cyan-400 font-bold">
+                          {isAr ? "اختر المشكلة للمتابعة" : "Pick an issue to continue"}
+                        </span>
+                      </div>
+
+                      {/* Issue Chips with Liquid Glow */}
+                      <div className="flex flex-wrap gap-2">
+                        {selectedDeviceConfig.issues.map((iss) => {
+                          const isSelected = state.problem === iss
+                          const isNotSure = iss === "Not Sure"
+                          return (
+                            <button
+                              key={iss}
+                              type="button"
+                              onClick={() => setState((prev) => ({ ...prev, problem: iss }))}
+                              className={cn(
+                                "px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold border transition-all duration-200 cursor-pointer active:scale-95",
+                                isSelected
+                                  ? "border-cyan-400 bg-gradient-to-r from-cyan-400 to-teal-400 text-black font-black shadow-lg shadow-cyan-400/30 scale-[1.03]"
+                                  : isNotSure
+                                    ? "border-cyan-400/50 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 font-bold"
+                                    : "border-white/10 bg-card/60 text-muted-foreground hover:text-foreground hover:bg-muted/50 hover:border-cyan-500/30",
+                              )}
+                            >
+                              {t(iss)}
+                            </button>
+                          )
+                        })}
+                      </div>
+
+                      {/* "Not Sure" Reassurance Prompt */}
+                      {state.problem === "Not Sure" && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-cyan-500/15 border border-cyan-400/30 text-xs text-cyan-300 shadow-lg shadow-cyan-500/5"
+                        >
+                          <HelpCircle className="w-4 h-4 shrink-0 text-cyan-400" />
+                          <span>
+                            {isAr
+                              ? "لا تقلق أبداً! سيقوم الفني بفحص الجهاز بالكامل عند وصوله لتشخيص العطل بدقة واقتراح أفضل حل."
+                              : "No worries! Our technician carries complete testing gear to inspect and diagnose your device on-site."}
+                          </span>
+                        </motion.div>
+                      )}
+
+                      {/* Optional Brand & Model with Fast-Tap Suggestions */}
+                      <div className="pt-2">
+                        {!showModelDetails ? (
+                          <button
+                            type="button"
+                            onClick={() => setShowModelDetails(true)}
+                            className="text-xs text-muted-foreground hover:text-cyan-400 inline-flex items-center gap-1.5 transition-colors cursor-pointer group"
+                          >
+                            <span className="w-4 h-4 rounded-full border border-white/20 flex items-center justify-center text-[10px] group-hover:border-cyan-400">+</span>
+                            <span className="underline decoration-dotted underline-offset-4">
+                              {isAr ? "إضافة الموديل أو الماركة (اختياري)" : "Add Brand / Model (Optional)"}
+                            </span>
+                          </button>
+                        ) : (
+                          <motion.div
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="p-4 rounded-2xl bg-muted/30 border border-white/10 space-y-3"
+                          >
+                            <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
+                              <span>{isAr ? "الماركة والموديل (اختياري)" : "Brand & Model (Optional)"}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setState((prev) => ({ ...prev, brand: "", model: "" }))
+                                  setShowModelDetails(false)
+                                }}
+                                className="text-cyan-400 hover:underline cursor-pointer"
+                              >
+                                {t("Skip / I don't know")}
+                              </button>
+                            </div>
+
+                            {/* Quick Brand Tap Chips */}
+                            {selectedDeviceConfig.quickBrands ? (
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <span className="text-[11px] text-muted-foreground/70">{isAr ? "شائع:" : "Common:"}</span>
+                                {selectedDeviceConfig.quickBrands.map((b) => (
+                                  <button
+                                    key={b}
+                                    type="button"
+                                    onClick={() => setState((prev) => ({ ...prev, brand: b }))}
+                                    className={cn(
+                                      "text-[11px] px-2.5 py-1 rounded-lg border transition-colors cursor-pointer",
+                                      state.brand === b
+                                        ? "bg-cyan-400 text-black font-bold border-cyan-400 shadow-sm"
+                                        : "bg-card border-white/10 text-muted-foreground hover:text-foreground",
+                                    )}
+                                  >
+                                    {b}
+                                  </button>
+                                ))}
+                              </div>
                             ) : null}
 
-                            <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl bg-muted/60 ring-1 ring-border transition-all duration-300 group-hover:ring-cyan-500/40 group-hover:bg-cyan-500/10">
-                              <span className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity bg-cyan-500/10" />
-                              <div className="relative text-foreground/70 group-hover:text-cyan-600 dark:group-hover:text-cyan-300 transition-colors group-hover:scale-110 duration-500">
-                                {IconNode}
-                              </div>
+                            <div className="grid grid-cols-2 gap-2.5">
+                              <input
+                                type="text"
+                                value={state.brand}
+                                onChange={(e) => setState((prev) => ({ ...prev, brand: e.target.value }))}
+                                placeholder={t("Brand (Optional)")}
+                                className="w-full px-3 py-2.5 text-xs sm:text-sm bg-background/80 border border-white/10 rounded-xl focus:border-cyan-400 focus:outline-none"
+                              />
+                              <input
+                                type="text"
+                                value={state.model}
+                                onChange={(e) => setState((prev) => ({ ...prev, model: e.target.value }))}
+                                placeholder={t("Model (Optional)")}
+                                className="w-full px-3 py-2.5 text-xs sm:text-sm bg-background/80 border border-white/10 rounded-xl focus:border-cyan-400 focus:outline-none"
+                              />
                             </div>
+                          </motion.div>
+                        )}
+                      </div>
+                    </motion.div>
+                  ) : null}
 
-                            <div className="mt-1 text-sm font-bold text-foreground text-center w-full px-2">{t(device.name)}</div>
-                            <div className="text-xs text-muted-foreground group-hover:opacity-0 transition-opacity duration-300 mt-0.5 text-center w-full">
-                              {t("Select Service")}
-                            </div>
+                  {/* Step 1 CTA */}
+                  <div className="pt-2">
+                    <Button
+                      type="button"
+                      disabled={!isStep1Valid}
+                      onClick={handleNextStep}
+                      className="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-300 to-cyan-400 text-black hover:opacity-95 font-black text-base shadow-xl shadow-cyan-400/25 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2 group transition-all"
+                    >
+                      <span>{t("Continue")}</span>
+                      <ChevronRight className={cn("w-4 h-4 transition-transform group-hover:translate-x-1", isAr && "rotate-180 group-hover:-translate-x-1")} />
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
 
-                            {/* CTA Indicator on Hover */}
-                            <div className="absolute bottom-4 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 w-full text-center px-2">
-                               <span className="text-[10px] font-bold text-cyan-600 dark:text-cyan-400 tracking-wider uppercase block">
-                                 {t("Book Now")}
-                               </span>
-                            </div>
+              {/* =========================================================================
+                  STEP 2: LOCATION & APPOINTMENT (All 7 Emirates + Ambient Time Slots)
+              ========================================================================= */}
+              {step === 2 && (
+                <motion.div
+                  key="step-2"
+                  initial={{ opacity: 0, scale: 0.97 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.97 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-6"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
+                        {t("Where should we come?")}
+                      </h2>
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                        {isAr ? "نصل إلى باب بيتك أو مكتبك في أي مكان بالإمارات" : "On-site doorstep service across all 7 Emirates"}
+                      </p>
+                    </div>
+                    <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/25 hidden sm:inline-block shadow-sm">
+                      {isAr ? "الخطوة 2 من 3" : "Step 2 of 3"}
+                    </span>
+                  </div>
 
+                  {/* 7 Emirates Selection with Ambient Glow */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-foreground uppercase tracking-wide flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>{isAr ? "اختر الإمارة" : "Select Emirate"}</span>
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {UAE_EMIRATES.map((em) => {
+                        const isSelected = state.emirateId === em.id
+                        return (
+                          <button
+                            key={em.id}
+                            type="button"
+                            onClick={() =>
+                              setState((prev) => ({
+                                ...prev,
+                                emirateId: em.id,
+                                emirateName: em.nameEn,
+                              }))
+                            }
+                            className={cn(
+                              "relative px-3 py-2.5 rounded-xl border text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer text-center",
+                              isSelected
+                                ? "border-cyan-400 bg-gradient-to-r from-cyan-400 to-teal-400 text-black font-black shadow-lg shadow-cyan-400/30 scale-[1.02]"
+                                : "border-white/10 bg-card/60 hover:bg-muted/40 text-muted-foreground hover:text-foreground",
+                            )}
+                          >
+                            <span>{isAr ? em.nameAr : em.nameEn}</span>
                           </button>
                         )
                       })}
                     </div>
-                    {visibleDevices.length === 0 ? (
-                      <div className="mt-6 rounded-2xl border border-dashed border-border bg-muted/30 px-5 py-8 text-center text-sm text-muted-foreground">
-                        {t("No matching device found. Try a different search.")}
-                      </div>
-                    ) : null}
                   </div>
 
-                  {deviceEntries.length > 0 && (
-                    <div className="mt-6 pt-6 border-t border-border">
-                      <Button
-                        onClick={() => setCurrentStep(5)}
-                        className="w-full bg-cyan-500 text-black hover:bg-cyan-400 font-bold py-4 rounded-2xl transition-all shadow-md"
+                  {/* Area / City + Creative Radar Location Button */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-foreground uppercase tracking-wide">
+                        {isAr ? "المنطقة أو الحي" : "Area / City"}
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleUseMyLocation}
+                        disabled={isLocating}
+                        className="inline-flex items-center gap-1.5 text-xs font-extrabold text-cyan-400 hover:text-cyan-300 cursor-pointer disabled:opacity-50 group"
                       >
-                        {isAr 
-                          ? `المتابعة مع ${deviceEntries.length} ${deviceEntries.length > 1 ? "أجهزة" : "جهاز"}`
-                          : `Continue with ${deviceEntries.length} Device(s)`}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-
-            {/* Step 2: Brand Selection */}
-            {currentStep === 2 && currentDeviceData && (
-              <motion.div
-                key="step2"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-              >
-                <NeonPanel
-                  top={
-                    <div className="flex items-center gap-2 flex-wrap" dir={isAr ? "rtl" : "ltr"}>
-                      <button onClick={() => setCurrentStep(1)} className="text-muted-foreground hover:text-foreground transition-colors">
-                        {t(currentDeviceData.name)}
-                      </button>
-                      <ChevronIcon className="w-4 h-4 text-muted-foreground/60" />
-                      <span className="text-cyan-700 dark:text-cyan-300 font-semibold">{t("Select Brand")}</span>
-                    </div>
-                  }
-                  title={t("Select Brand")}
-                  description={t("Choose the brand")}
-                >
-                  <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5 auto-rows-fr" dir={isAr ? "rtl" : "ltr"}>
-                    {currentDeviceData.brands.map((brand) => {
-                      const active = selectedBrand === brand.id
-                      return (
-                        <button
-                          key={brand.id}
-                          type="button"
-                          onClick={() => handleBrandPick(brand.id)}
-                          className={cn(
-                            "group relative w-full h-full min-h-[124px] rounded-3xl border bg-card/85 backdrop-blur-xl px-4 py-5 flex flex-col items-center justify-center gap-2 text-center transition-all duration-200 hover:-translate-y-0.5",
-                            active
-                              ? "border-cyan-500/70 bg-cyan-500/10 shadow-[0_24px_70px_-40px_rgba(6,182,212,0.75)]"
-                              : "border-border hover:border-cyan-500/50 hover:shadow-[0_24px_70px_-40px_rgba(6,182,212,0.45)]"
-                          )}
-                        >
-                          <span className="pointer-events-none absolute -inset-px rounded-3xl bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-70" />
-                          <span className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(80%_60%_at_50%_0%,rgba(6,182,212,0.22),rgba(0,0,0,0)_65%)]" />
-
-                          <div className={cn(
-                            "relative flex items-center justify-center w-12 h-12 rounded-2xl bg-muted/60 ring-1 ring-border transition-all duration-300",
-                            active ? "ring-cyan-500/50 bg-cyan-500/10" : "group-hover:ring-cyan-500/40 group-hover:bg-cyan-500/10"
-                          )}>
-                            <span className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity bg-cyan-500/10" />
-                            <span className={cn("relative text-lg font-bold", active ? "text-cyan-700 dark:text-cyan-300" : "text-foreground group-hover:text-cyan-700 dark:group-hover:text-cyan-300")}>
-                              {brand.name.slice(0, 1).toUpperCase()}
-                            </span>
+                        {isLocating ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <div className="relative flex h-2.5 w-2.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
+                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500" />
                           </div>
-
-                          <div className="text-sm font-semibold text-foreground">{t(brand.name)}</div>
-                          <div className="text-xs text-muted-foreground">{t("Select Service")}</div>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </NeonPanel>
-              </motion.div>
-            )}
-
-            {/* Step 3: Model Selection */}
-            {currentStep === 3 && currentBrandData && (
-              <motion.div
-                key="step3"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-              >
-                <NeonPanel
-                  top={
-                    <div className="flex items-center gap-2 mb-2 flex-wrap" dir={isAr ? "rtl" : "ltr"}>
-                      <button onClick={() => setCurrentStep(1)} className="text-muted-foreground hover:text-foreground transition-colors">
-                        {currentDeviceData?.name ? t(currentDeviceData.name) : ""}
+                        )}
+                        <span className="underline decoration-cyan-400/40 underline-offset-4">{t("Use My Location")}</span>
                       </button>
-                      <ChevronIcon className="w-4 h-4 text-muted-foreground/60" />
-                      <button onClick={() => setCurrentStep(2)} className="text-muted-foreground hover:text-foreground transition-colors">
-                        {currentBrandData.name}
-                      </button>
-                      <ChevronIcon className="w-4 h-4 text-muted-foreground/60" />
-                      <span className="text-cyan-700 dark:text-cyan-300 font-semibold">{t("Select Model")}</span>
                     </div>
-                  }
-                  title={t("Select Model")}
-                  description={isAr ? "اختر الموديل" : "Choose the model"}
-                >
-                  <div className="relative mt-7 max-w-xl mx-auto">
-                    <Search className={`pointer-events-none absolute top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground ${isAr ? "right-4" : "left-4"}`} />
-                    <input
-                      type="search"
-                      value={modelSearch}
-                      onChange={(event) => setModelSearch(event.target.value)}
-                      aria-label={t("Search models")}
-                      placeholder={t("Search models")}
-                      className={`w-full rounded-2xl border border-input bg-background/80 py-3.5 text-foreground shadow-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 placeholder:text-muted-foreground ${isAr ? "pr-12 pl-4 text-right" : "pl-12 pr-4"}`}
-                    />
-                  </div>
-                  <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 auto-rows-fr" dir={isAr ? "rtl" : "ltr"}>
-                    {(() => {
-                      let modelsToShow: string[] = []
-                      if (selectedDevice === "mobile" && selectedBrand === "apple") {
-                        modelsToShow = generateIphoneModelsUpTo2025()
-                      } else if (selectedDevice === "mobile" && selectedBrand === "samsung") {
-                        modelsToShow = generateSamsungSModelsUpTo2025()
-                      } else if (selectedDevice === "tablet" && selectedBrand === "apple-ipad") {
-                        modelsToShow = generateYearRangeModels("iPad", 2011, 2025)
-                      } else if (selectedDevice === "tablet" && selectedBrand === "samsung-tab") {
-                        modelsToShow = generateYearRangeModels("Galaxy Tab", 2012, 2025)
-                      } else if (selectedDevice === "pc") {
-                        modelsToShow = [
-                          ...currentBrandData.models,
-                          ...generateYearRangeModels("Model Year", 2015, 2025),
-                        ]
-                      } else {
-                        modelsToShow = currentBrandData.models
-                      }
-
-                      modelsToShow = modelsToShow
-                        .slice()
-                        .reverse()
-                        .filter((model) => model.toLowerCase().includes(modelSearch.trim().toLowerCase()))
-
-                      return (
-                        <>
-                          {modelsToShow.map((model) => {
-                            const active = selectedModel === model
-                            return (
-                              <button
-                                key={model}
-                                type="button"
-                                onClick={() => handleModelPick(model)}
-                                className={cn(
-                                  "group relative w-full h-full min-h-[112px] rounded-3xl border bg-card/85 backdrop-blur-xl px-4 py-4 flex flex-col items-center justify-center text-center transition-all duration-200 hover:-translate-y-0.5",
-                                  active
-                                    ? "border-cyan-500/70 bg-cyan-500/10 shadow-[0_24px_70px_-40px_rgba(6,182,212,0.75)]"
-                                    : "border-border hover:border-cyan-500/50 hover:shadow-[0_24px_70px_-40px_rgba(6,182,212,0.45)]"
-                                )}
-                              >
-                                <span className="pointer-events-none absolute -inset-px rounded-3xl bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-70" />
-                                <span className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(80%_60%_at_50%_0%,rgba(6,182,212,0.22),rgba(0,0,0,0)_65%)]" />
-                                <span className="relative text-sm font-semibold text-foreground leading-snug">{isAr ? t(model) : model}</span>
-                                <span className="relative text-xs text-muted-foreground mt-1">{t("Select Service")}</span>
-                              </button>
-                            )
-                          })}
-
-                          <button
-                            type="button"
-                            onClick={() => setIsOtherModel(true)}
-                            className="group relative w-full h-full min-h-[112px] rounded-3xl border border-border bg-muted/35 backdrop-blur-xl px-4 py-4 flex flex-col items-center justify-center text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-500/50"
-                          >
-                            <span className="pointer-events-none absolute -inset-px rounded-3xl bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-70" />
-                            <span className="relative text-sm font-semibold text-foreground">{t("Other Model (Enter Manually)")}</span>
-                            <span className="relative text-xs text-muted-foreground mt-1">{t("Enter your model manually")}</span>
-                          </button>
-                        </>
-                      )
-                    })()}
-                  </div>
-
-                  {isOtherModel ? (
-                    <div className="mt-6 flex flex-col items-stretch gap-3" dir={isAr ? "rtl" : "ltr"}>
+                    <div className="relative">
+                      <MapPin className={cn("absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground", isAr ? "right-3.5" : "left-3.5")} />
                       <input
                         type="text"
-                        value={customModel}
-                        onChange={(e) => setCustomModel(e.target.value)}
-                        placeholder={t("Enter Model Name")}
-                        className="flex-1 px-4 py-3.5 bg-background border border-input rounded-2xl focus:outline-none focus:border-cyan-500/60 transition-colors text-base text-foreground"
+                        value={state.area}
+                        onChange={(e) => setState((prev) => ({ ...prev, area: e.target.value }))}
+                        placeholder={t("Area, community or building")}
+                        className={cn(
+                          "w-full py-3.5 bg-background/80 border border-white/10 rounded-2xl text-xs sm:text-sm text-foreground focus:border-cyan-400 focus:outline-none transition-colors shadow-inner",
+                          isAr ? "pr-10 pl-4 text-right" : "pl-10 pr-4 text-left",
+                        )}
                       />
-                      <button
-                        type="button"
-                        onClick={() => customModel && handleModelSelect(`Other: ${customModel}`)}
-                        className="w-full px-6 py-3 bg-cyan-500 text-black rounded-2xl font-semibold hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                        disabled={!customModel}
-                      >
-                        {t("Use This Model")}
-                        <ChevronIcon className="w-4 h-4 text-black/70" />
-                      </button>
-                    </div>
-                  ) : null}
-                </NeonPanel>
-              </motion.div>
-            )}
-
-            {/* Step 4: Issue Selection - Updated with Add Another Device option */}
-            {currentStep === 4 && currentDeviceData && (
-              <motion.div
-                key="step4"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-              >
-                <NeonPanel
-                  top={
-                    <div className="flex items-center gap-2 mb-2 flex-wrap" dir={isAr ? "rtl" : "ltr"}>
-                      <button onClick={() => setCurrentStep(1)} className="text-muted-foreground hover:text-foreground transition-colors">
-                        {t(currentDeviceData.name)}
-                      </button>
-                      <ChevronIcon className="w-4 h-4 text-muted-foreground/60" />
-                      <button onClick={() => setCurrentStep(2)} className="text-muted-foreground hover:text-foreground transition-colors">
-                        {currentBrandData?.name ? t(currentBrandData.name) : ""}
-                      </button>
-                      <ChevronIcon className="w-4 h-4 text-muted-foreground/60" />
-                      <button onClick={() => setCurrentStep(3)} className="text-muted-foreground hover:text-foreground transition-colors">
-                        {selectedModel ? t(selectedModel) : ""}
-                      </button>
-                      <ChevronIcon className="w-4 h-4 text-muted-foreground/60" />
-                      <span className="text-cyan-700 dark:text-cyan-300 font-semibold">{t("Select Issue")}</span>
-                    </div>
-                  }
-                  title={t("Select Issue")}
-                  description={t("Choose the Problem")}
-                >
-                  <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 auto-rows-fr" dir={isAr ? "rtl" : "ltr"}>
-                    {currentDeviceData.issues.map((issue) => {
-                      const active = selectedIssues.includes(issue)
-                      const isLoading = issuePickingId === issue
-                      return (
-                        <button
-                          key={issue}
-                          type="button"
-                          onClick={() => handleIssuePick(issue)}
-                          className={cn(
-                            "group relative w-full min-h-[86px] rounded-3xl border bg-card/85 backdrop-blur-xl px-4 py-4 flex items-center gap-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-500/50 hover:shadow-[0_24px_70px_-40px_rgba(6,182,212,0.45)]",
-                            active ? "border-cyan-500/70 bg-cyan-500/10" : "border-border"
-                          )}
-                        >
-                          <span className="pointer-events-none absolute -inset-px rounded-3xl bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-70" />
-                          <span className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(80%_60%_at_50%_0%,rgba(6,182,212,0.22),rgba(0,0,0,0)_65%)]" />
-
-                          <div className={cn(
-                            "relative w-10 h-10 rounded-2xl ring-1 flex items-center justify-center shrink-0 transition-all",
-                            active ? "bg-cyan-500/20 ring-cyan-500/40" : "bg-muted/60 ring-border group-hover:ring-cyan-500/30"
-                          )}>
-                            {active ? <Check className="w-5 h-5 text-cyan-600 dark:text-cyan-300" /> : <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />}
-                          </div>
-
-                          <div className={cn("relative flex-1 min-w-0", isAr ? "text-right" : "text-left")}>
-                            <div className="text-sm font-semibold text-foreground leading-tight">{t(issue)}</div>
-                            <div className="mt-1 text-xs text-muted-foreground">{t("Select Service")}</div>
-                          </div>
-
-                          <div className={cn(
-                            "relative text-xs font-semibold px-2.5 py-1 rounded-full ring-1 shrink-0",
-                            active ? "text-cyan-700 dark:text-cyan-300 bg-cyan-500/10 ring-cyan-500/25" : "text-muted-foreground bg-muted/60 ring-border"
-                          )}>
-                            {repairEstimateLabel(selectedDevice as string, issue)}
-                          </div>
-
-                          {isLoading ? (
-                            <span className="absolute inset-0 rounded-3xl bg-background/60 backdrop-blur-sm flex items-center justify-center">
-                              <Loader2 className="w-5 h-5 text-cyan-600 dark:text-cyan-300 animate-spin" />
-                            </span>
-                          ) : null}
-                        </button>
-                      )
-                    })}
-                  </div>
-
-                  {selectedIssues.length > 0 ? (
-                    <div className="mt-6 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 p-4" dir={isAr ? "rtl" : "ltr"}>
-                      <p className="text-sm text-cyan-700 dark:text-cyan-300 font-semibold">
-                        {t("Selected Issues")} ({selectedIssues.length}): {isAr ? selectedIssues.map(i => t(i)).join(", ") : selectedIssues.join(", ")}
-                      </p>
-                    </div>
-                  ) : null}
-
-                  <div className="mt-8 flex flex-col gap-3" dir={isAr ? "rtl" : "ltr"}>
-                    <button
-                      type="button"
-                      onClick={proceedToDetails}
-                      disabled={selectedIssues.length === 0}
-                      className="w-full py-4 bg-cyan-500 text-black rounded-2xl font-semibold text-base hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    >
-                      {t("Continue to Details")}
-                      <ChevronIcon className="w-4 h-4 text-black/70" />
-                    </button>
-
-                    <div className="rounded-3xl border border-border bg-muted/35 backdrop-blur-xl p-6 text-center shadow-[0_24px_70px_-50px_rgba(6,182,212,0.35)]">
-                      <div className="flex items-center justify-center gap-2 text-foreground text-sm">
-                        <div className="w-8 h-8 rounded-2xl bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 ring-1 ring-cyan-500/25 flex items-center justify-center">
-                          <Plus className="w-4 h-4" />
-                        </div>
-                        <span className="font-semibold">{t("Add Another Device")}</span>
-                      </div>
-                      <p className="mt-3 text-muted-foreground text-sm">{t("One visit, all devices • Single tracking number • Priority scheduling")}</p>
-                      <button
-                        type="button"
-                        onClick={addDeviceToList}
-                        disabled={selectedIssues.length === 0}
-                        className="mt-5 px-6 py-3 bg-background text-foreground ring-1 ring-border rounded-2xl font-semibold hover:bg-accent hover:ring-cyan-500/30 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <Plus className="w-5 h-5" />
-                        {t("Add Another Device")}
-                      </button>
                     </div>
                   </div>
-                </NeonPanel>
-              </motion.div>
-            )}
 
-            {/* Step 5: Contact Details - Updated to show all devices */}
-            {currentStep === 5 && (
-              <motion.div
-                key="step5"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-              >
-                <NeonPanel title={t("Your Details")} description={isAr ? "أدخل بياناتك لإتمام الطلب" : "Enter your details to complete the order"}>
-                  <form method="post" onSubmit={handleSubmit} className="mt-8 space-y-5" suppressHydrationWarning dir={isAr ? "rtl" : "ltr"}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="booking-name" className="block text-sm font-semibold text-foreground/80 mb-2">{t("Full Name *")}</label>
-                        <div className="relative">
-                          <User className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground ${isAr ? "right-4" : "left-4"}`} />
-                          <input
-                            type="text"
-                            id="booking-name"
-                            name="name"
-                            autoComplete="name"
-                            required
-                            value={formData.name}
-                            onChange={handleInputChange}
-                            placeholder={t("Your full name")}
-                            className={`w-full py-3.5 bg-background border border-input rounded-2xl focus:outline-none focus:border-cyan-500 transition-colors text-foreground text-base shadow-xs placeholder:text-muted-foreground/60 ${isAr ? "pr-12 pl-4 text-right" : "pl-12 pr-4 text-left"}`}
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label htmlFor="booking-phone" className="block text-sm font-semibold text-foreground/80 mb-2">{t("Phone Number *")}</label>
-                        <div className="relative">
-                          <Phone className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground ${isAr ? "right-4" : "left-4"}`} />
-                          <input
-                            type="tel"
-                            id="booking-phone"
-                            name="phone"
-                            inputMode="tel"
-                            autoComplete="tel"
-                            required
-                            value={formData.phone}
-                            onChange={handleInputChange}
-                            placeholder="050 XXX XXXX"
-                            className={`w-full py-3.5 bg-background border border-input rounded-2xl focus:outline-none focus:border-cyan-500 transition-colors text-foreground text-base shadow-xs placeholder:text-muted-foreground/60 ${isAr ? "pr-12 pl-4 text-right" : "pl-12 pr-4 text-left"}`}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="booking-whatsapp" className="block text-sm font-semibold text-foreground/80 mb-2">{t("WhatsApp")}</label>
-                        <div className="relative">
-                          <MessageSquare className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground ${isAr ? "right-4" : "left-4"}`} />
-                          <input
-                            type="tel"
-                            id="booking-whatsapp"
-                            name="whatsapp"
-                            inputMode="tel"
-                            value={formData.whatsapp}
-                            onChange={handleInputChange}
-                            placeholder={t("WhatsApp number (optional)")}
-                            className={`w-full py-3.5 bg-background border border-input rounded-2xl focus:outline-none focus:border-cyan-500 transition-colors text-foreground text-base shadow-xs placeholder:text-muted-foreground/60 ${isAr ? "pr-12 pl-4 text-right" : "pl-12 pr-4 text-left"}`}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Multi-Emirate Selection */}
-                    <div>
-                      <label className="block text-sm font-semibold text-foreground/80 mb-2">
-                        {isAr ? "اختر الإمارة *" : "Select Emirate *"}
+                  {/* Appointment Timing (Day + Ambient Slots) */}
+                  <div className="space-y-3 pt-3 border-t border-white/10">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs sm:text-sm font-bold text-foreground flex items-center gap-1.5">
+                        <Clock className="w-4 h-4 text-cyan-400" />
+                        <span>{t("When would you like us to come?")}</span>
                       </label>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5" dir={isAr ? "rtl" : "ltr"}>
-                        {getActiveEmirates().map((em) => {
-                          const isSelected = formData.emirateId === em.id
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/25">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>{t("Same-Day Service Available")}</span>
+                      </span>
+                    </div>
+
+                    {/* Day Selection */}
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { id: "today", label: t("Today") },
+                        { id: "tomorrow", label: t("Tomorrow") },
+                        { id: "custom", label: t("Choose Date") },
+                      ].map((day) => {
+                        const isSelected = state.appointmentDay === day.id
+                        return (
+                          <button
+                            key={day.id}
+                            type="button"
+                            onClick={() => setState((prev) => ({ ...prev, appointmentDay: day.id as any }))}
+                            className={cn(
+                              "py-2.5 px-3 rounded-xl border text-xs sm:text-sm font-bold transition-all cursor-pointer text-center",
+                              isSelected
+                                ? "border-cyan-400 bg-cyan-500/20 text-foreground ring-1 ring-cyan-400 shadow-md shadow-cyan-500/10"
+                                : "border-white/10 bg-card/60 hover:bg-muted/40 text-muted-foreground hover:text-foreground",
+                            )}
+                          >
+                            {day.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+
+                    {state.appointmentDay === "custom" ? (
+                      <div className="pt-1">
+                        <input
+                          type="date"
+                          min={getFormattedDate(0)}
+                          value={state.customDate}
+                          onChange={(e) => setState((prev) => ({ ...prev, customDate: e.target.value }))}
+                          className="w-full px-4 py-3 bg-background/80 border border-white/10 rounded-xl text-sm focus:border-cyan-400 focus:outline-none"
+                        />
+                      </div>
+                    ) : null}
+
+                    {/* Ambient Time Slots */}
+                    <div className="space-y-1.5 pt-1">
+                      <span className="text-[11px] font-medium text-muted-foreground">
+                        {isAr ? "اختر نافذة الوقت المناسبة:" : "Pick a preferred arrival window:"}
+                      </span>
+                      <div className="grid grid-cols-2 gap-2">
+                        {TIME_SLOTS.map((slot) => {
+                          const Icon = slot.icon
+                          const isSelected = state.timeSlot === slot.label
                           return (
                             <button
-                              key={em.id}
+                              key={slot.id}
                               type="button"
-                              onClick={() => {
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  emirateId: em.id,
-                                  emirateName: em.nameEn,
-                                  areaId: "",
-                                  areaName: "",
-                                }))
-                                setAreaSearch("")
-                              }}
+                              onClick={() => setState((prev) => ({ ...prev, timeSlot: slot.label }))}
                               className={cn(
-                                "flex flex-col items-center justify-center p-3 rounded-2xl border text-sm font-bold transition-all cursor-pointer relative overflow-hidden",
+                                "flex items-center justify-between p-3 rounded-xl border text-xs sm:text-sm font-bold transition-all cursor-pointer",
                                 isSelected
-                                  ? "bg-cyan-500/20 border-cyan-500 text-cyan-700 dark:text-cyan-300 shadow-xs"
-                                  : "bg-muted/40 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                                  ? "border-cyan-400 bg-gradient-to-r from-cyan-400 to-teal-400 text-black font-black shadow-lg shadow-cyan-400/30"
+                                  : "border-white/10 bg-card/60 hover:bg-muted/40 text-muted-foreground hover:text-foreground",
                               )}
                             >
-                              <span className="text-sm font-bold">{isAr ? em.nameAr : em.nameEn}</span>
-                              <span className="text-[10px] font-normal text-muted-foreground mt-0.5">
-                                {isAr ? `${em.areas.length} منطقة` : `${em.areas.length} Areas`}
+                              <div className="flex items-center gap-2">
+                                <Icon className="w-4 h-4 opacity-80" />
+                                <span>{slot.label}</span>
+                              </div>
+                              <span className="text-[10px] opacity-75 font-medium hidden sm:inline">
+                                {isAr ? slot.periodAr : slot.tag}
                               </span>
-                              {isSelected && (
-                                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-cyan-500" />
-                              )}
                             </button>
                           )
                         })}
                       </div>
                     </div>
+                  </div>
 
-                    {/* Area Selection for the selected Emirate */}
+                  {/* Step 2 CTA */}
+                  <div className="flex items-center gap-3 pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handlePrevStep}
+                      className="py-4 px-6 rounded-2xl border-white/10 font-bold text-sm cursor-pointer"
+                    >
+                      <ChevronLeft className={cn("w-4 h-4", isAr && "rotate-180")} />
+                      <span>{t("Back")}</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      disabled={!isStep2Valid}
+                      onClick={handleNextStep}
+                      className="flex-1 py-4 rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-300 to-cyan-400 text-black hover:opacity-95 font-black text-base shadow-xl shadow-cyan-400/25 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2 group"
+                    >
+                      <span>{t("Continue")}</span>
+                      <ChevronRight className={cn("w-4 h-4 transition-transform group-hover:translate-x-1", isAr && "rotate-180 group-hover:-translate-x-1")} />
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* =========================================================================
+                  STEP 3: CONTACT & DIGITAL REPAIR PASS (VIP Pass Receipt)
+              ========================================================================= */}
+              {step === 3 && (
+                <motion.div
+                  key="step-3"
+                  initial={{ opacity: 0, scale: 0.97 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.97 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-6"
+                >
+                  <div className="flex items-center justify-between">
                     <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="block text-sm font-semibold text-foreground/80">
-                          {isAr ? "المنطقة / الحي *" : "Area / Neighborhood *"}
-                        </label>
-                        <span className="text-xs text-muted-foreground font-medium">
-                          {isAr ? (formData.emirateId === "abu-dhabi" ? "أبوظبي" : formData.emirateId === "dubai" ? "دبي" : formData.emirateId === "sharjah" ? "الشارقة" : "عجمان") : formData.emirateName}
+                      <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
+                        {t("Almost done")}
+                      </h2>
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                        {t("Where should we send your booking confirmation?")}
+                      </p>
+                    </div>
+                    <span className="text-[11px] font-bold text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/25 hidden sm:inline-block shadow-sm">
+                      {isAr ? "الخطوة 3 من 3" : "Step 3 of 3"}
+                    </span>
+                  </div>
+
+                  {/* VIP Digital Boarding Pass Ticket */}
+                  <div className="relative rounded-3xl bg-gradient-to-br from-cyan-500/15 via-background/90 to-blue-500/10 border border-cyan-400/40 p-4 sm:p-5 shadow-2xl overflow-hidden backdrop-blur-2xl">
+                    <div className="flex items-center justify-between pb-3 border-b border-cyan-400/20">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse shadow-sm shadow-cyan-400" />
+                        <span className="font-black text-foreground text-xs uppercase tracking-wider">
+                          {isAr ? "تذكرة صيانة ميدانية معتمدة" : "Verified Doorstep Repair Pass"}
                         </span>
                       </div>
-
-                      {/* Search / Select Area */}
-                      <div className="relative mb-3">
-                        <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground ${isAr ? "right-3.5" : "left-3.5"}`} />
-                        <input
-                          type="text"
-                          value={areaSearch}
-                          onChange={(e) => setAreaSearch(e.target.value)}
-                          placeholder={isAr ? "ابحث عن منطقتك (مثال: مارينا، خليفة، النهدة...)" : "Search area (e.g. Marina, Khalifa, Nahda...)"}
-                          className={`w-full py-2.5 bg-background border border-input rounded-xl focus:outline-none focus:border-cyan-500 text-xs text-foreground ${isAr ? "pr-10 pl-4 text-right" : "pl-10 pr-4 text-left"}`}
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1" dir={isAr ? "rtl" : "ltr"}>
-                        {getAreasByEmirate(formData.emirateId)
-                          .filter((area) => {
-                            if (!areaSearch.trim()) return true
-                            const q = areaSearch.trim().toLowerCase()
-                            return area.nameEn.toLowerCase().includes(q) || area.nameAr.includes(q)
-                          })
-                          .map((area) => {
-                            const isSelected = formData.areaId === area.id || formData.areaName === area.nameEn
-                            return (
-                              <button
-                                key={area.id}
-                                type="button"
-                                onClick={() => {
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    areaId: area.id,
-                                    areaName: area.nameEn,
-                                  }))
-                                }}
-                                className={cn(
-                                  "p-2.5 rounded-xl border text-xs font-semibold text-center transition-all truncate cursor-pointer",
-                                  isSelected
-                                    ? "bg-cyan-500/20 border-cyan-500 text-cyan-700 dark:text-cyan-300 font-bold shadow-xs"
-                                    : "bg-muted/30 border-border text-foreground/80 hover:bg-muted hover:text-foreground"
-                                )}
-                              >
-                                {isAr ? area.nameAr : area.nameEn}
-                              </button>
-                            )
-                          })}
-                      </div>
+                      <span className="text-[10px] sm:text-[11px] font-black text-emerald-400 bg-emerald-500/15 px-2.5 py-0.5 rounded-md border border-emerald-500/30">
+                        {isAr ? "الدفع بعد الإصلاح" : "Pay After Repair"}
+                      </span>
                     </div>
 
-                    <div>
-                      <label htmlFor="booking-address" className="block text-sm font-semibold text-foreground/80 mb-2">
-                        {isAr ? "العنوان بالتفصيل (الشارع، المبنى، المعلم) *" : "Detailed Address (Street, Building, Landmark) *"}
+                    <div className="grid grid-cols-2 gap-3 pt-3 text-xs sm:text-sm">
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                          {t("Device")}
+                        </span>
+                        <div className="flex items-center justify-between pr-2 mt-0.5">
+                          <span className="font-black text-foreground truncate">
+                            {isAr ? selectedDeviceConfig?.nameAr : state.deviceName}
+                            {state.brand ? ` (${state.brand})` : ""}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setStep(1)}
+                            className="text-[10px] font-bold text-cyan-400 hover:underline cursor-pointer"
+                          >
+                            {t("Edit")}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                          {isAr ? "المشكلة" : "Issue"}
+                        </span>
+                        <div className="flex items-center justify-between mt-0.5">
+                          <span className="font-black text-foreground truncate">{t(state.problem)}</span>
+                          <button
+                            type="button"
+                            onClick={() => setStep(1)}
+                            className="text-[10px] font-bold text-cyan-400 hover:underline cursor-pointer"
+                          >
+                            {t("Edit")}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                          {t("Location")}
+                        </span>
+                        <div className="flex items-center justify-between pr-2 mt-0.5">
+                          <span className="font-black text-foreground truncate">
+                            {state.emirateName} – {state.area}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setStep(2)}
+                            className="text-[10px] font-bold text-cyan-400 hover:underline cursor-pointer"
+                          >
+                            {t("Edit")}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                          {isAr ? "الموعد" : "Appointment"}
+                        </span>
+                        <div className="flex items-center justify-between mt-0.5">
+                          <span className="font-black text-foreground truncate">
+                            {state.appointmentDay === "today" ? t("Today") : state.appointmentDay === "tomorrow" ? t("Tomorrow") : state.customDate} ({state.timeSlot})
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setStep(2)}
+                            className="text-[10px] font-bold text-cyan-400 hover:underline cursor-pointer"
+                          >
+                            {t("Edit")}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Form Inputs */}
+                  <div className="space-y-3.5">
+                    {/* Full Name */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-foreground uppercase tracking-wide">
+                        {t("Full Name")} <span className="text-rose-500">*</span>
                       </label>
                       <div className="relative">
-                        <MapPin className={`absolute top-4 w-5 h-5 text-muted-foreground ${isAr ? "right-4" : "left-4"}`} />
+                        <User className={cn("absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground", isAr ? "right-3.5" : "left-3.5")} />
                         <input
                           type="text"
-                          id="booking-address"
-                          name="address"
-                          autoComplete="street-address"
                           required
-                          value={formData.address}
-                          onChange={handleInputChange}
-                          placeholder={isAr ? "اسم الشارع، رقم الفيلا/البناية أو معلم مميز" : "Street name, building/villa number, landmark"}
-                          className={`w-full py-3.5 bg-background border border-input rounded-2xl focus:outline-none focus:border-cyan-500 transition-colors text-foreground text-base shadow-xs placeholder:text-muted-foreground/60 ${isAr ? "pr-12 pl-32 text-right" : "pl-12 pr-32 text-left"}`}
+                          value={state.customerName}
+                          onChange={(e) => setState((prev) => ({ ...prev, customerName: e.target.value }))}
+                          placeholder={isAr ? "اسم العميل الكريم" : "e.g. Sultan Al Nuaimi"}
+                          className={cn(
+                            "w-full py-3.5 bg-background/80 border border-white/10 rounded-2xl text-xs sm:text-sm text-foreground focus:border-cyan-400 focus:outline-none transition-colors shadow-inner",
+                            isAr ? "pr-10 pl-4 text-right" : "pl-10 pr-4 text-left",
+                          )}
                         />
-                        <button
-                          type="button"
-                          onClick={detectLocation}
-                          disabled={isDetectingLocation}
-                          className={`absolute top-1/2 -translate-y-1/2 px-3 py-1.5 bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 rounded-xl text-cyan-600 dark:text-cyan-300 text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-1.5 cursor-pointer shadow-xs ${isAr ? "left-2" : "right-2"}`}
-                        >
-                          {isDetectingLocation ? (
-                            <>
-                              <Loader2 className="w-3 h-3 animate-spin" />
-                              {t("Detecting...")}
-                            </>
-                          ) : (
-                            <>
-                              <MapPin className="w-3 h-3" />
-                              {t("Detect")}
-                            </>
-                          )}
-                        </button>
                       </div>
-                      {locationError && (
-                        <p className="text-xs text-destructive mt-1 font-medium">{locationError}</p>
-                      )}
                     </div>
 
-                    <div role="group" aria-labelledby="booking-location-type">
-                      <div id="booking-location-type" className="block text-sm font-semibold text-foreground/80 mb-2">{t("Location Type")}</div>
-                      <div className="grid grid-cols-2 gap-2" dir={isAr ? "rtl" : "ltr"}>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              locationType: "home",
-                              companyName: "",
-                            }))
-                          }
-                          className={cn(
-                            "w-full py-2.5 rounded-2xl border text-sm font-bold transition-colors cursor-pointer",
-                            formData.locationType === "home"
-                              ? "bg-cyan-500/20 border-cyan-500 text-cyan-700 dark:text-cyan-300 shadow-xs"
-                              : "bg-muted/40 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
-                          )}
-                        >
-                          {t("Home Location")}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              locationType: "office",
-                              unitNumber: "",
-                            }))
-                          }
-                          className={cn(
-                            "w-full py-2.5 rounded-2xl border text-sm font-bold transition-colors cursor-pointer",
-                            formData.locationType === "office"
-                              ? "bg-cyan-500/20 border-cyan-500 text-cyan-700 dark:text-cyan-300 shadow-xs"
-                              : "bg-muted/40 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
-                          )}
-                        >
-                          {t("Office Location")}
-                        </button>
-                      </div>
-
-                      {formData.locationType === "office" ? (
-                        <div className="mt-3">
-                          <input
-                            type="text"
-                            name="companyName"
-                            aria-label={t("Company Name")}
-                            autoComplete="organization"
-                            value={formData.companyName}
-                            onChange={handleInputChange}
-                            placeholder={t("Company Name")}
-                            className={`w-full py-3.5 bg-background border border-input rounded-2xl focus:outline-none focus:border-cyan-500 transition-colors text-foreground text-base shadow-xs placeholder:text-muted-foreground/60 ${isAr ? "pr-4 pl-4 text-right" : "pl-4 pr-4 text-left"}`}
-                          />
-                        </div>
-                      ) : (
-                        <div className="mt-3">
-                          <input
-                            type="text"
-                            name="unitNumber"
-                            aria-label={t("Apartment / Villa Number")}
-                            value={formData.unitNumber}
-                            onChange={handleInputChange}
-                            placeholder={t("Apartment / Villa Number")}
-                            className={`w-full py-3.5 bg-background border border-input rounded-2xl focus:outline-none focus:border-cyan-500 transition-colors text-foreground text-base shadow-xs placeholder:text-muted-foreground/60 ${isAr ? "pr-4 pl-4 text-right" : "pl-4 pr-4 text-left"}`}
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-semibold text-foreground/80 mb-2">
-                          {t("Service Day") || t("Preferred Date")}
+                    {/* Phone Input with UAE Flag Badge */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-foreground uppercase tracking-wide">
+                          {t("Phone Number")} <span className="text-rose-500">*</span>
                         </label>
-                        <div className="grid grid-cols-2 gap-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const todayStr = new Date().toISOString().split("T")[0]
-                              setFormData((p) => ({ ...p, preferredDate: todayStr }))
-                            }}
-                            className={cn(
-                              "h-[54px] px-4 rounded-2xl font-bold text-sm border flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs",
-                              formData.preferredDate === new Date().toISOString().split("T")[0]
-                                ? "bg-cyan-500 text-black border-cyan-400 ring-2 ring-cyan-500/20 shadow-md shadow-cyan-500/10"
-                                : "bg-background text-muted-foreground border-input hover:text-foreground hover:border-cyan-500/40"
-                            )}
-                          >
-                            <Calendar className="w-4 h-4" />
-                            <span>{isAr ? "اليوم (Today)" : "Today"}</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const tomorrow = new Date()
-                              tomorrow.setDate(tomorrow.getDate() + 1)
-                              const tomorrowStr = tomorrow.toISOString().split("T")[0]
-                              setFormData((p) => ({ ...p, preferredDate: tomorrowStr }))
-                            }}
-                            className={cn(
-                              "h-[54px] px-4 rounded-2xl font-bold text-sm border flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs",
-                              (() => {
-                                const tom = new Date()
-                                tom.setDate(tom.getDate() + 1)
-                                return formData.preferredDate === tom.toISOString().split("T")[0]
-                              })()
-                                ? "bg-cyan-500 text-black border-cyan-400 ring-2 ring-cyan-500/20 shadow-md shadow-cyan-500/10"
-                                : "bg-background text-muted-foreground border-input hover:text-foreground hover:border-cyan-500/40"
-                            )}
-                          >
-                            <Calendar className="w-4 h-4" />
-                            <span>{isAr ? "غداً (Tomorrow)" : "Tomorrow"}</span>
-                          </button>
-                        </div>
+                        <span className="text-[11px] font-bold text-cyan-400 inline-flex items-center gap-1">
+                          <span>🇦🇪</span>
+                          <span>+971 UAE</span>
+                        </span>
                       </div>
-                      <div>
-                        <label htmlFor="booking-time" className="block text-sm font-semibold text-foreground/80 mb-2">{t("Preferred Time")}</label>
-                        <div className="relative">
-                          <Clock className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground ${isAr ? "right-4" : "left-4"}`} />
-                          <select
-                            id="booking-time"
-                            name="preferredTime"
-                            required
-                            value={formData.preferredTime}
-                            onChange={handleInputChange}
-                            className={`w-full py-3.5 bg-background border border-input rounded-2xl focus:outline-none focus:border-cyan-500 transition-colors text-foreground appearance-none cursor-pointer text-base shadow-xs ${isAr ? "pr-12 pl-12 text-right" : "pl-12 pr-12 text-left"}`}
-                          >
-                            <option value="" className="bg-popover text-popover-foreground">
-                              {t("Select time")}
-                            </option>
-                            <option value="morning" className="bg-popover text-popover-foreground">
-                              {t("Morning (9AM - 12PM)")}
-                            </option>
-                            <option value="afternoon" className="bg-popover text-popover-foreground">
-                              {t("Afternoon (12PM - 5PM)")}
-                            </option>
-                            <option value="evening" className="bg-popover text-popover-foreground">
-                              {t("Evening (5PM - 9PM)")}
-                            </option>
-                            <option value="asap" className="bg-popover text-popover-foreground">
-                              {t("As Soon As Possible")}
-                            </option>
-                          </select>
-                          <ChevronIcon className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none ${isAr ? "left-4" : "right-4"}`} />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label htmlFor="booking-notes" className="block text-sm font-semibold text-foreground/80 mb-2">{t("Additional Notes")}</label>
                       <div className="relative">
-                        <MessageSquare className={`absolute top-4 w-5 h-5 text-muted-foreground ${isAr ? "right-4" : "left-4"}`} />
-                        <textarea
-                          id="booking-notes"
-                          name="notes"
-                          value={formData.notes}
-                          onChange={handleInputChange}
-                          placeholder={t("Describe the issue in more detail (optional)")}
-                          rows={3}
-                          className={`w-full py-3.5 bg-background border border-input rounded-2xl focus:outline-none focus:border-cyan-500 transition-colors text-foreground resize-none text-base shadow-xs placeholder:text-muted-foreground/60 ${isAr ? "pr-12 pl-4 text-right" : "pl-12 pr-4 text-left"}`}
+                        <Phone className={cn("absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground", isAr ? "right-3.5" : "left-3.5")} />
+                        <input
+                          type="tel"
+                          inputMode="tel"
+                          autoComplete="tel"
+                          required
+                          value={state.phone}
+                          onChange={(e) => setState((prev) => ({ ...prev, phone: e.target.value }))}
+                          placeholder="050 123 4567"
+                          className={cn(
+                            "w-full py-3.5 bg-background/80 border border-white/10 rounded-2xl text-xs sm:text-sm text-foreground focus:border-cyan-400 focus:outline-none transition-colors font-semibold shadow-inner",
+                            isAr ? "pr-10 pl-4 text-right" : "pl-10 pr-4 text-left",
+                          )}
+                          dir="ltr"
                         />
                       </div>
                     </div>
 
-                    <div className="relative group bg-card rounded-3xl p-6 border border-border shadow-md" suppressHydrationWarning dir={isAr ? 'rtl' : 'ltr'}>
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-bold text-foreground">
-                          {t("Order Summary")} ({deviceEntries.length} {t("Device(s)")})
-                        </h4>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCurrentStep(1)
-                          }}
-                          className="text-xs text-cyan-600 dark:text-cyan-300 hover:underline flex items-center gap-1 font-bold cursor-pointer"
+                    {/* Email (Optional) */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+                        {t("Email (Optional)")}
+                      </label>
+                      <div className="relative">
+                        <Mail className={cn("absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground", isAr ? "right-3.5" : "left-3.5")} />
+                        <input
+                          type="email"
+                          value={state.email}
+                          onChange={(e) => setState((prev) => ({ ...prev, email: e.target.value }))}
+                          placeholder="name@example.com"
+                          className={cn(
+                            "w-full py-3 bg-background/80 border border-white/10 rounded-2xl text-xs sm:text-sm text-foreground focus:border-cyan-400 focus:outline-none transition-colors",
+                            isAr ? "pr-10 pl-4 text-right" : "pl-10 pr-4 text-left",
+                          )}
+                          dir="ltr"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Notes (Optional) */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+                        {t("Anything else we should know?")}
+                      </label>
+                      <div className="relative">
+                        <MessageSquare className={cn("absolute top-3.5 w-4 h-4 text-muted-foreground", isAr ? "right-3.5" : "left-3.5")} />
+                        <textarea
+                          rows={2}
+                          value={state.notes}
+                          onChange={(e) => setState((prev) => ({ ...prev, notes: e.target.value }))}
+                          placeholder={t("Describe the problem briefly if needed...")}
+                          className={cn(
+                            "w-full py-3 bg-background/80 border border-white/10 rounded-2xl text-xs sm:text-sm text-foreground focus:border-cyan-400 focus:outline-none transition-colors resize-none",
+                            isAr ? "pr-10 pl-4 text-right" : "pl-10 pr-4 text-left",
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Trust Micro-Grid */}
+                  <div className="grid grid-cols-2 gap-2 text-[11px] sm:text-xs text-muted-foreground pt-1">
+                    <div className="flex items-center gap-1.5 p-2 rounded-xl bg-card/60 border border-white/5">
+                      <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0" />
+                      <span className="font-semibold">{t("We Come to You")}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 p-2 rounded-xl bg-card/60 border border-white/5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span className="font-semibold">{t("Clear Quote Before Repair")}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 p-2 rounded-xl bg-card/60 border border-white/5">
+                      <Zap className="w-4 h-4 text-amber-400 shrink-0" />
+                      <span className="font-semibold">{t("Same-Day Service Available")}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 p-2 rounded-xl bg-card/60 border border-white/5">
+                      <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
+                      <span className="font-semibold">{t("Warranty on Eligible Repairs")}</span>
+                    </div>
+                  </div>
+
+                  {/* Error Notification */}
+                  {submitError ? (
+                    <div className="p-3.5 rounded-2xl bg-destructive/15 border border-destructive/30 text-destructive text-xs text-center font-bold">
+                      {submitError}
+                    </div>
+                  ) : null}
+
+                  {/* Primary Shimmer Button */}
+                  <div className="space-y-3 pt-2">
+                    <div className="flex items-center gap-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handlePrevStep}
+                        disabled={isPending}
+                        className="py-4 px-6 rounded-2xl border-white/10 font-bold text-sm cursor-pointer"
+                      >
+                        <ChevronLeft className={cn("w-4 h-4", isAr && "rotate-180")} />
+                        <span>{t("Back")}</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        disabled={!isStep3Valid || isPending}
+                        onClick={handleConfirmBooking}
+                        className="relative flex-1 py-4 rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-300 to-cyan-400 text-black hover:opacity-95 font-black text-base shadow-xl shadow-cyan-400/30 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2 overflow-hidden active:scale-[0.99] transition-all"
+                      >
+                        {isPending ? (
+                          <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <span>{t("Booking your technician...")}</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>{t("Confirm Booking")}</span>
+                            <ArrowRight className={cn("w-5 h-5", isAr && "rotate-180")} />
+                          </>
+                        )}
+                      </Button>
+                    </div>
+
+                    {/* WhatsApp Secondary Helper */}
+                    <div className="text-center pt-1">
+                      <p className="text-xs text-muted-foreground">
+                        {t("Need help?")}{" "}
+                        <a
+                          href={`https://wa.me/${contact.whatsappRaw}?text=${encodeURIComponent("Hello KBI, I need quick assistance with booking.")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-bold text-emerald-500 dark:text-emerald-400 hover:underline inline-flex items-center gap-1"
                         >
-                          <Plus className="w-3 h-3" />
-                          {t("Add More")}
-                        </button>
-                      </div>
-                      <div className="space-y-3">
-                        {deviceEntries.map((entry, index) => (
-                          <div key={entry.id} className="relative flex items-start justify-between bg-muted/40 rounded-2xl border border-border p-3.5 hover:bg-muted/70 transition-all overflow-hidden">
-                            <div className="space-y-1 text-sm flex-1">
-                              {deviceEntries.length > 1 && (
-                                <p className="text-xs text-cyan-600 dark:text-cyan-400 font-bold mb-1">{t("Device")} {index + 1}</p>
-                              )}
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">{t("Type")}:</span>
-                                <span className="font-semibold text-foreground">{isAr ? t(entry.deviceName) : entry.deviceName}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">{t("Brand")}:</span>
-                                <span className="font-semibold text-foreground">{entry.brandName}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">{t("Model")}:</span>
-                                <span className="font-semibold text-foreground">{entry.model}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">{t("Issue")}:</span>
-                                <span className="font-semibold text-foreground">{isAr ? entry.issues.map(i => t(i)).join(", ") : entry.issues.join(", ")}</span>
-                              </div>
-                            </div>
-                            {deviceEntries.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => removeDeviceEntry(entry.id)}
-                                aria-label={isAr ? "إزالة الجهاز" : "Remove device"}
-                                className={`p-1.5 rounded-lg hover:bg-red-500/20 text-muted-foreground hover:text-red-500 transition-colors cursor-pointer ${isAr ? "mr-3" : "ml-3"}`}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                      <div />
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          <span>{t("Chat with us on WhatsApp")}</span>
+                        </a>
+                      </p>
                     </div>
+                  </div>
+                </motion.div>
+              )}
 
-                    <div className="grid gap-2 rounded-2xl border border-cyan-500/20 bg-cyan-500/8 px-4 py-4 text-sm text-foreground sm:grid-cols-3">
-                      {["No payment today", "Quote confirmed before repair", "On-site service across UAE"].map((item) => (
-                        <div key={item} className="flex items-center gap-2">
-                          <CheckCircle2 className="h-4 w-4 shrink-0 text-cyan-600 dark:text-cyan-400" />
-                          <span>{t(item)}</span>
-                        </div>
-                      ))}
+              {/* =========================================================================
+                  STEP 4: SUCCESS CONFIRMATION (VIP Cyber Pass)
+              ========================================================================= */}
+              {step === 4 && (
+                <motion.div
+                  key="step-4"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ type: "spring", stiffness: 220, damping: 20 }}
+                  className="text-center py-6 sm:py-8 space-y-6"
+                >
+                  <div className="relative inline-flex items-center justify-center">
+                    <div className="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping" />
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-emerald-400 to-teal-300 text-black flex items-center justify-center shadow-xl shadow-emerald-400/50 relative z-10">
+                      <Check className="w-10 h-10 stroke-[3]" />
                     </div>
+                  </div>
 
-                    <button
-                      type="submit"
-                      disabled={deviceEntries.length === 0 || isSubmitting}
-                      className="w-full py-4 bg-cyan-500 text-black rounded-2xl font-semibold text-lg hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md hover:shadow-cyan-500/20"
-                    >
-                      {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
-                      {t("Create Order")}
-                    </button>
-
-                    <p className="text-center text-sm text-muted-foreground">
-                      {isAr ? "لا يوجد دفع عند الحجز. نؤكد عرض السعر قبل بدء أي إصلاح مدفوع." : "No payment is taken at booking. We confirm the quote before any paid repair begins."}
+                  <div>
+                    <h2 className="text-2xl sm:text-4xl font-black text-foreground tracking-tight">
+                      {t("Booking Confirmed")}
+                    </h2>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
+                      {t("Your service request has been received.")}
                     </p>
-                  </form>
-                </NeonPanel>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                  </div>
+
+                  {/* High-Tech Booking Pass Badge */}
+                  <div className="max-w-md mx-auto p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-card to-muted/40 border border-cyan-400/40 shadow-2xl relative overflow-hidden backdrop-blur-2xl">
+                    <div className="flex items-center justify-between">
+                      <div className="text-left">
+                        <span className="text-[10px] uppercase font-bold text-muted-foreground block tracking-wider">
+                          {t("Booking ID")}
+                        </span>
+                        <span className="text-xl sm:text-2xl font-mono font-black text-cyan-400 tracking-wider">
+                          {confirmedOrderId}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleCopyOrderId}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-cyan-400/10 hover:bg-cyan-400/20 text-cyan-400 border border-cyan-400/30 transition-colors cursor-pointer text-xs font-bold"
+                        title={t("Copy order ID")}
+                      >
+                        {copied ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            <span className="text-emerald-400">{isAr ? "تم النسخ" : "Copied"}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>{isAr ? "نسخ" : "Copy"}</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-white/10 text-left text-xs space-y-1.5">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">{t("Device")}:</span>
+                        <span className="font-bold text-foreground">{isAr ? selectedDeviceConfig?.nameAr : state.deviceName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">{isAr ? "المشكلة" : "Issue"}:</span>
+                        <span className="font-bold text-foreground">{t(state.problem)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">{t("Location")}:</span>
+                        <span className="font-bold text-foreground">{state.emirateName} – {state.area}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">{isAr ? "الموعد" : "Appointment"}:</span>
+                        <span className="font-bold text-foreground">
+                          {state.appointmentDay === "today" ? t("Today") : state.appointmentDay === "tomorrow" ? t("Tomorrow") : state.customDate} ({state.timeSlot})
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">{t("Phone Number")}:</span>
+                        <span className="font-bold text-foreground" dir="ltr">{state.phone}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex flex-col sm:flex-row gap-2.5 max-w-md mx-auto pt-2">
+                    <Button asChild className="flex-1 py-4 rounded-xl bg-gradient-to-r from-cyan-400 to-teal-400 text-black hover:opacity-90 font-black shadow-lg shadow-cyan-400/25">
+                      <Link href={`/track?orderId=${encodeURIComponent(confirmedOrderId || "")}`}>
+                        <Clock className="w-4 h-4 mr-1.5" />
+                        <span>{t("Track Booking")}</span>
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" className="flex-1 py-4 rounded-xl border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 font-bold">
+                      <a
+                        href={`https://wa.me/${contact.whatsappRaw}?text=${encodeURIComponent(`Hello KBI, I just booked order ${confirmedOrderId}.`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <MessageCircle className="w-4 h-4 mr-1.5" />
+                        <span>{t("WhatsApp Support")}</span>
+                      </a>
+                    </Button>
+                  </div>
+
+                  <div className="pt-2">
+                    <Link href="/" className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4">
+                      {t("Back to Home")}
+                    </Link>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
-      
-      {/* Booking-specific WhatsApp chatbot with context */}
-        {chatReady && (
-          <BookingWhatsAppChatbot
-            bookingStep={currentStep}
-            currentDevice={
-              selectedDevice
-                ? isAr
-                  ? t(currentDeviceData?.name || selectedDevice)
-                  : currentDeviceData?.name || selectedDevice
-                : undefined
-            }
-            currentIssue={
-              selectedIssues.length > 0
-                ? isAr
-                  ? selectedIssues.map(i => t(i)).join(", ")
-                  : selectedIssues.join(", ")
-                : undefined
-            }
-          />
-        )}
-    </section>
+    </div>
   )
 }

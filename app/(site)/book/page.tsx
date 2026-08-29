@@ -3,12 +3,12 @@ import { Suspense } from "react"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Book a Technician",
-  description: "Request an on-site device repair or IT support appointment in Abu Dhabi, Dubai, Sharjah, or Ajman. Timing is confirmed after booking.",
+  title: "Book a Technician in UAE | KBI Services",
+  description: "Book a professional KBI technician for on-site device repair at your home or office anywhere in the UAE.",
   alternates: {
     canonical: "/book",
   },
-  robots: { index: false, follow: true },
+  robots: { index: true, follow: true },
 }
 
 // export const dynamic = "force-static"
