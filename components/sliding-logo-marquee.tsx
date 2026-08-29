@@ -196,8 +196,8 @@ export function SlidingLogoMarquee({
          }
          .sliding-marquee-item:hover { transform: scale(1.05); }
          .sliding-marquee-item svg {
-           max-height: 40px;
-           max-width: 100px;
+           max-height: 48px;
+           max-width: 120px;
            width: auto;
            height: auto;
            object-fit: contain;
@@ -214,11 +214,11 @@ export function SlidingLogoMarquee({
          .sliding-marquee-item > button { cursor: pointer; }
 
          @media (max-width: 767px) {
-           .sliding-marquee-list { gap: 0.75rem !important; }
-           .sliding-marquee-item { height: 70% !important; font-size: 0.875rem !important; }
+           .sliding-marquee-list { gap: 1.5rem !important; }
+           .sliding-marquee-item { height: 85% !important; min-width: 75px; }
            .sliding-marquee-item svg {
-             max-height: 30px;
-             max-width: 80px;
+             max-height: 38px;
+             max-width: 90px;
            }
          }
 
