@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { GlassCard } from "@/components/ui/glass-card"
 import { Button } from "@/components/ui/button"
 import { orderStatuses } from "@/lib/data"
@@ -80,6 +80,43 @@ export function OrderTracker({ initialOrderId = "" }: { initialOrderId?: string 
   const cleanOrderId = orderId.trim()
   const cleanPhone = phone.replace(/\D/g, "")
   const canSearch = cleanOrderId.length >= 3 || cleanPhone.length >= 4
+
+  // Auto-search if initialOrderId is provided in URL
+  useEffect(() => {
+    if (initialOrderId && initialOrderId.trim().length >= 3) {
+      const executeInitialSearch = async () => {
+        setIsSearching(true)
+        setNotFound(false)
+        setErrorMessage("")
+        setOrderData(null)
+        setOrdersList([])
+        try {
+          const params = new URLSearchParams()
+          params.set("orderId", initialOrderId.trim())
+          const res = await fetch(`/api/track?${params.toString()}`)
+          const data = await res.json()
+          if (data.error) {
+            setErrorMessage(data.error)
+            setNotFound(true)
+          } else if (data.results && data.results.length > 0) {
+            if (data.results.length === 1) {
+              setOrderData(data.results[0])
+            } else {
+              setOrdersList(data.results)
+            }
+          } else {
+            setNotFound(true)
+          }
+        } catch {
+          setErrorMessage(isAr ? "تعذّر الاتصال بخدمة التتبّع. حاول مرة أخرى." : "Unable to reach tracking right now. Please try again.")
+          setNotFound(true)
+        } finally {
+          setIsSearching(false)
+        }
+      }
+      executeInitialSearch()
+    }
+  }, [initialOrderId, isAr])
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
