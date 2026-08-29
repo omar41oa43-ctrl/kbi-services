@@ -39,7 +39,7 @@ export function JsonLd({ contact }: { contact: SiteContact }) {
         closes: "22:00",
       },
     ],
-    areaServed: ["Abu Dhabi", "Dubai", "Sharjah", "Ajman"].map((name) => ({
+    areaServed: ["Abu Dhabi", "Dubai", "Sharjah", "Ajman", "Ras Al Khaimah", "Fujairah", "Umm Al Quwain"].map((name) => ({
       "@type": "AdministrativeArea",
       name,
     })),
@@ -53,7 +53,7 @@ export function JsonLd({ contact }: { contact: SiteContact }) {
     name: "On-site device repair and IT support",
     serviceType: "Electronic repair and technical support",
     provider: { "@id": "https://kbi.services/#business" },
-    areaServed: ["Abu Dhabi", "Dubai", "Sharjah", "Ajman"],
+    areaServed: ["Abu Dhabi", "Dubai", "Sharjah", "Ajman", "Ras Al Khaimah", "Fujairah", "Umm Al Quwain"],
     hasOfferCatalog: {
       "@type": "OfferCatalog",
       name: "Repair services",
