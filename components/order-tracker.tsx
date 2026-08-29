@@ -146,26 +146,26 @@ export function OrderTracker({ initialOrderId = "" }: { initialOrderId?: string 
 
         <div className="max-w-2xl mx-auto">
           {/* Search Form */}
-          <GlassCard className="mb-8 p-4 sm:p-6">
-            <form onSubmit={handleSearch} className="flex flex-col sm:flex-row items-stretch gap-3">
+          <GlassCard className="mb-8 p-4 sm:p-6 shadow-xl border border-border">
+            <form onSubmit={handleSearch} className="flex flex-col md:flex-row items-stretch gap-3.5 sm:gap-4">
               <div className="relative flex-1">
                 <span className="sr-only">{isAr ? "رقم الطلب" : "KBI Order Number"}</span>
-                <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground ${isAr ? "right-4" : "left-4"}`} />
+                <Search className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground ${isAr ? "right-4" : "left-4"}`} />
                 <input
                   type="text"
                   name="orderId"
                   autoComplete="off"
                   value={orderId}
                   onChange={(e) => setOrderId(e.target.value)}
-                  placeholder={isAr ? "رقم الطلب (KBI-XXXXXX)" : "Order ID (e.g. KBI-123456)"}
-                  className={`w-full py-3.5 sm:py-4 bg-background border border-input rounded-xl focus:outline-none focus:border-cyan-500 transition-colors text-foreground text-sm sm:text-base shadow-xs placeholder:text-muted-foreground/60 ${isAr ? "pr-11 pl-4 text-right" : "pl-11 pr-4 text-left"}`}
+                  placeholder={isAr ? "رقم طلب KBI (مثال: KBI-123456)" : "KBI Order # (e.g. KBI-123456)"}
+                  className={`w-full py-4 bg-background border border-input rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500 transition-all text-foreground text-sm sm:text-base shadow-xs placeholder:text-muted-foreground/60 ${isAr ? "pr-12 pl-4 text-right" : "pl-12 pr-4 text-left"}`}
                   dir="ltr"
                   required
                 />
               </div>
               <div className="relative flex-1">
                 <span className="sr-only">{isAr ? "رقم الهاتف" : "Phone Number"}</span>
-                <Phone className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground ${isAr ? "right-4" : "left-4"}`} />
+                <Phone className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground ${isAr ? "right-4" : "left-4"}`} />
                 <input
                   type="tel"
                   name="phone"
@@ -173,8 +173,8 @@ export function OrderTracker({ initialOrderId = "" }: { initialOrderId?: string 
                   autoComplete="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder={isAr ? "رقم الهاتف (05X XXX XXXX)" : "Phone # (e.g. 050 123 4567)"}
-                  className={`w-full py-3.5 sm:py-4 bg-background border border-input rounded-xl focus:outline-none focus:border-cyan-500 transition-colors text-foreground text-sm sm:text-base shadow-xs placeholder:text-muted-foreground/60 ${isAr ? "pr-11 pl-4 text-right" : "pl-11 pr-4 text-left"}`}
+                  placeholder={isAr ? "رقم الهاتف (مثال: 0501234567)" : "Phone # (e.g. 050 123 4567)"}
+                  className={`w-full py-4 bg-background border border-input rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500 transition-all text-foreground text-sm sm:text-base shadow-xs placeholder:text-muted-foreground/60 ${isAr ? "pr-12 pl-4 text-right" : "pl-12 pr-4 text-left"}`}
                   dir="ltr"
                   required
                 />
@@ -182,7 +182,7 @@ export function OrderTracker({ initialOrderId = "" }: { initialOrderId?: string 
               <Button
                 type="submit"
                 disabled={!orderId.trim() || phone.replace(/\D/g, "").length < 4 || isSearching}
-                className="rounded-xl px-6 sm:px-8 py-3.5 sm:py-4 bg-cyan-500 text-black hover:bg-cyan-400 font-bold shadow-md cursor-pointer flex items-center justify-center gap-2 text-sm sm:text-base shrink-0 w-full sm:w-auto"
+                className="rounded-2xl px-8 py-4 bg-cyan-500 text-black hover:bg-cyan-400 font-bold shadow-md cursor-pointer flex items-center justify-center gap-2 text-base shrink-0 w-full md:w-auto h-[54px] md:h-auto"
               >
                 {isSearching ? (
                   <div className="flex items-center gap-2">
