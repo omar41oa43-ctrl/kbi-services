@@ -1,6 +1,5 @@
 
 import { Hero } from "@/components/hero"
-import { HomeDeviceSelector } from "@/components/home-device-selector"
 import { Services } from "@/components/services"
 import { WhyChooseUs } from "@/components/why-choose-us"
 import { HowItWorks } from "@/components/how-it-works"
@@ -16,6 +15,7 @@ export const metadata: Metadata = {
   },
 }
 
+
 export const dynamic = "force-static"
 
 export default async function Home() {
@@ -24,7 +24,6 @@ export default async function Home() {
       <MobileAppShell />
       <div className="hidden md:block">
         <Hero />
-        <HomeDeviceSelector />
         <Services />
         <WhyChooseUs />
         <HowItWorks />
