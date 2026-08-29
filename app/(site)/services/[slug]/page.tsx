@@ -18,23 +18,93 @@ export async function generateStaticParams() {
     }))
 }
 
+const serviceMetaMap: Record<string, { title: string; description: string }> = {
+    mobile: {
+        title: "Mobile Phone Repair Across the UAE",
+        description: "Professional on-site mobile phone repair across the UAE for iPhone, Samsung, Google, Xiaomi and other devices. Book a KBI technician to your home or office.",
+    },
+    laptop: {
+        title: "Laptop Repair Across the UAE",
+        description: "Professional on-site laptop repair across the UAE for MacBook, Dell, HP, Lenovo, ASUS and more. Screen, battery, keyboard and motherboard repairs at your location.",
+    },
+    pc: {
+        title: "Computer & PC Repair Across the UAE",
+        description: "Expert on-site desktop PC and computer repair across the UAE. Hardware diagnostics, OS troubleshooting, power supply and performance upgrades at your home or office.",
+    },
+    printer: {
+        title: "Printer Repair & Maintenance Across the UAE",
+        description: "On-site printer repair and maintenance across the UAE for HP, Canon, Epson, and Brother printers. Paper jams, connectivity, toner and hardware servicing.",
+    },
+    tv: {
+        title: "TV Repair Across the UAE",
+        description: "Professional on-site TV repair across the UAE for Samsung, LG, Sony, TCL and OLED/QLED screens. Screen, backlight, board and audio repairs at your doorstep.",
+    },
+    monitor: {
+        title: "Monitor Repair Across the UAE",
+        description: "On-site monitor repair and diagnostics across the UAE for gaming, curved, 4K and office monitors. Fast technician dispatch to your home or office.",
+    },
+    tablet: {
+        title: "Tablet & iPad Repair Across the UAE",
+        description: "Expert on-site tablet and iPad repair across the UAE. Screen replacement, battery fixes, charging ports and diagnostics at your location.",
+    },
+    "apple-watch": {
+        title: "Apple Watch & Smartwatch Repair Across the UAE",
+        description: "On-site smartwatch and Apple Watch repair across the UAE. Screen replacements, battery fixes, sensor diagnostics and repairs at your home or office.",
+    },
+    gaming: {
+        title: "PlayStation & Xbox Console Repair Across the UAE",
+        description: "Professional gaming console repair across the UAE for PlayStation 5, Xbox Series X, Nintendo Switch and controllers. HDMI port, overheating and power fixes.",
+    },
+    cctv: {
+        title: "CCTV Installation & Maintenance Across the UAE",
+        description: "Professional CCTV security camera installation, maintenance, wiring and mobile viewing setup for homes and businesses across all seven Emirates.",
+    },
+    networking: {
+        title: "Network Installation & Support Across the UAE",
+        description: "On-site Wi-Fi, mesh network, router configuration, office cabling and network troubleshooting across the UAE. Fast on-site technician dispatch.",
+    },
+    "tech-support": {
+        title: "IT Support & Tech Assistance Across the UAE",
+        description: "On-demand IT support and technical assistance for homes and offices across the UAE. Virus removal, software configuration, cloud backup and diagnostics.",
+    },
+    "tv-install": {
+        title: "TV Wall Mounting & Installation Across the UAE",
+        description: "Professional TV wall mounting and concealed cabling installation across the UAE for all screen sizes and bracket types. Safe, secure on-site installation.",
+    },
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params
     const device = devices.find((d) => d.id === slug)
     if (!device) return {}
 
+    const custom = serviceMetaMap[slug]
     const serviceName =
         device.id === "networking" ? "Network Installation & Support" :
         device.id === "tech-support" ? "IT Support" :
         device.id === "tv-install" ? "TV Installation" :
         device.id === "cctv" ? "CCTV Installation & Maintenance" :
         device.name.includes("Repair") || device.name.includes("Support") || device.name.includes("Installation") ? device.name : `${device.name} Repair`
-    const issueSummary = device.issues.slice(0, 3).join(", ")
+
+    const title = custom?.title || `${serviceName} Across the UAE`
+    const description = custom?.description || `On-site ${serviceName.toLowerCase()} across all 7 Emirates in the UAE with clear quotes confirmed before paid work.`
+
     return {
-        title: `${serviceName} Across the UAE | KBI Services`,
-        description: `On-site ${serviceName.toLowerCase()} for ${issueSummary}. Available across all 7 Emirates in the UAE, with a quote confirmed before paid work.`,
+        title,
+        description,
         alternates: {
             canonical: `/services/${device.id}`,
+        },
+        openGraph: {
+            title: `${title} | KBI Services`,
+            description,
+            url: `https://kbi.services/services/${device.id}`,
+            type: "website",
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: `${title} | KBI Services`,
+            description,
         },
     }
 }
@@ -47,17 +117,59 @@ export default async function ServicePage({ params }: Props) {
         notFound()
     }
 
-    // Extract top issues for display
+    const serviceName =
+        device.id === "networking" ? "Network Installation & Support" :
+        device.id === "tech-support" ? "IT Support" :
+        device.id === "tv-install" ? "TV Installation" :
+        device.id === "cctv" ? "CCTV Installation & Maintenance" :
+        device.name.includes("Repair") || device.name.includes("Support") || device.name.includes("Installation") ? device.name : `${device.name} Repair`
+
     const topIssues = device.issues.slice(0, 6)
-    const serviceName = device.name.includes("Repair") || device.name.includes("Support") || device.name.includes("Installation") ? device.name : `${device.name} Repair`
-    const schema = JSON.stringify({
+    const custom = serviceMetaMap[slug]
+    const description = custom?.description || `Professional on-site ${serviceName.toLowerCase()} across all 7 Emirates of the UAE.`
+
+    const serviceSchema = {
         "@context": "https://schema.org",
         "@type": "Service",
-        "name": `${serviceName} Service`,
-        "provider": { "@type": "LocalBusiness", "name": "KBI Services", "url": "https://kbi.services" },
-        "description": `On-site ${serviceName.toLowerCase()} for ${device.issues.slice(0, 3).join(", ")}. Available across all 7 Emirates in the UAE.`,
-        "areaServed": ["Abu Dhabi", "Dubai", "Sharjah", "Ajman", "Ras Al Khaimah", "Fujairah", "Umm Al Quwain"].map((name) => ({ "@type": "AdministrativeArea", name })),
-    }).replace(/</g, "\\u003c")
+        "@id": `https://kbi.services/services/${device.id}#service`,
+        "name": serviceName,
+        "serviceType": serviceName,
+        "provider": {
+            "@id": "https://kbi.services/#organization",
+        },
+        "description": description,
+        "areaServed": {
+            "@type": "Country",
+            "name": "United Arab Emirates",
+        },
+    }
+
+    const breadcrumbSchema = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://kbi.services",
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Services",
+                "item": "https://kbi.services/services",
+            },
+            {
+                "@type": "ListItem",
+                "position": 3,
+                "name": serviceName,
+                "item": `https://kbi.services/services/${device.id}`,
+            },
+        ],
+    }
+
+    const schemaJson = JSON.stringify([serviceSchema, breadcrumbSchema]).replace(/</g, "\\u003c")
 
     return (
         <main className="adaptive-theme-page min-h-screen bg-black text-white pt-24 pb-12">
@@ -161,7 +273,7 @@ export default async function ServicePage({ params }: Props) {
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{
-                    __html: schema
+                    __html: schemaJson
                 }}
             />
         </main>

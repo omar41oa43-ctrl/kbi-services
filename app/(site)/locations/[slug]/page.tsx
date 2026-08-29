@@ -16,13 +16,34 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params
     const loc = locations.find((l) => l.slug === slug)
     if (!loc) return {}
-    const emirate = UAE_EMIRATES.find((item) => item.id === loc.id || item.areas.some((area) => area.id === loc.id))?.nameEn || loc.name
+    const parentEmirate = UAE_EMIRATES.find((item) => item.areas.some((area) => area.id === loc.id))
+    const isEmirate = UAE_EMIRATES.some((item) => item.id === loc.id)
+    const emirateName = parentEmirate?.nameEn || loc.name
+
+    const title = isEmirate
+        ? `On-Site Device Repair in ${loc.name}`
+        : `On-Site Device Repair in ${loc.name}, ${emirateName}`
+
+    const description = isEmirate
+        ? `Professional on-site phone, laptop, computer, printer, TV and IT support in ${loc.name}. KBI technicians come directly to your home or office.`
+        : `Professional on-site phone, laptop, computer and electronics repair in ${loc.name}, ${emirateName}, UAE. KBI technicians come directly to your door.`
 
     return {
-        title: `Mobile & Phone Repair in ${loc.name}`,
-        description: `On-site mobile, laptop, and electronics service in ${loc.name}, ${emirate}. Request a home or office appointment and approve the quote before paid repair.`,
+        title,
+        description,
         alternates: {
             canonical: `/locations/${loc.slug}`,
+        },
+        openGraph: {
+            title: `${title} | KBI Services`,
+            description,
+            url: `https://kbi.services/locations/${loc.slug}`,
+            type: "website",
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: `${title} | KBI Services`,
+            description,
         },
     }
 }
@@ -34,15 +55,64 @@ export default async function LocationPage({ params }: Props) {
     if (!loc) {
         notFound()
     }
-    const emirate = UAE_EMIRATES.find((item) => item.id === loc.id || item.areas.some((area) => area.id === loc.id))?.nameEn || loc.name
-    const schema = JSON.stringify({
+
+    const parentEmirate = UAE_EMIRATES.find((item) => item.areas.some((area) => area.id === loc.id))
+    const isEmirate = UAE_EMIRATES.some((item) => item.id === loc.id)
+    const emirateName = parentEmirate?.nameEn || loc.name
+
+    const serviceSchema = {
         "@context": "https://schema.org",
         "@type": "Service",
-        "name": `On-site device service in ${loc.name}`,
-        "provider": { "@type": "LocalBusiness", "name": "KBI Services", "url": "https://kbi.services" },
-        "areaServed": { "@type": "Place", "name": `${loc.name}, ${emirate}, UAE` },
-        "description": `On-site device diagnosis and repair appointments in ${loc.name}.`,
-    }).replace(/</g, "\\u003c")
+        "@id": `https://kbi.services/locations/${loc.slug}#service`,
+        "name": `On-Site Device Repair in ${loc.name}`,
+        "provider": {
+            "@id": "https://kbi.services/#organization",
+        },
+        "areaServed": {
+            "@type": "AdministrativeArea",
+            "name": isEmirate ? `${loc.name}, United Arab Emirates` : `${loc.name}, ${emirateName}, United Arab Emirates`,
+        },
+        "description": `Professional on-site device diagnosis, repair and IT support appointments in ${loc.name}.`,
+    }
+
+    const breadcrumbItems = [
+        {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://kbi.services",
+        },
+    ]
+
+    if (!isEmirate && parentEmirate) {
+        breadcrumbItems.push({
+            "@type": "ListItem",
+            "position": 2,
+            "name": parentEmirate.nameEn,
+            "item": `https://kbi.services/locations/${parentEmirate.slug}`,
+        })
+        breadcrumbItems.push({
+            "@type": "ListItem",
+            "position": 3,
+            "name": loc.name,
+            "item": `https://kbi.services/locations/${loc.slug}`,
+        })
+    } else {
+        breadcrumbItems.push({
+            "@type": "ListItem",
+            "position": 2,
+            "name": loc.name,
+            "item": `https://kbi.services/locations/${loc.slug}`,
+        })
+    }
+
+    const breadcrumbSchema = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": breadcrumbItems,
+    }
+
+    const schema = JSON.stringify([serviceSchema, breadcrumbSchema]).replace(/</g, "\\u003c")
 
     return (
         <main className="adaptive-theme-page min-h-screen bg-black text-white pt-24 pb-12">

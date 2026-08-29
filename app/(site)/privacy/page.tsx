@@ -7,8 +7,14 @@ export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "How KBI collects, uses, shares, retains, and protects personal information for bookings and on-site repair services in the UAE.",
+  description: "Read the KBI Services Privacy Policy and learn how personal, booking and service information is collected, used and protected.",
   alternates: { canonical: "/privacy" },
+  openGraph: {
+    title: "Privacy Policy | KBI Services",
+    description: "Read the KBI Services Privacy Policy and learn how personal, booking and service information is collected, used and protected.",
+    url: "https://kbi.services/privacy",
+    type: "website",
+  },
 }
 
 const policySections = [

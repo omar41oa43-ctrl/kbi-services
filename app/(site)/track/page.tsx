@@ -2,12 +2,20 @@ import { OrderTracker } from "@/components/order-tracker"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Track Your Order",
-  description: "Check the real-time status of your repair order. Enter your tracking number for live updates on your mobile, laptop, or IT service request.",
+  title: {
+    absolute: "Track Your Repair Order | KBI Services",
+  },
+  description: "Track the latest status of your KBI Services repair or technician appointment securely using your order details.",
   alternates: {
     canonical: "/track",
   },
-  robots: { index: false, follow: true },
+  robots: { index: true, follow: true },
+  openGraph: {
+    title: "Track Your Repair Order | KBI Services",
+    description: "Track the latest status of your KBI Services repair or technician appointment securely using your order details.",
+    url: "https://kbi.services/track",
+    type: "website",
+  },
 }
 
 export default async function TrackPage({ searchParams }: { searchParams: Promise<{ orderId?: string }> }) {

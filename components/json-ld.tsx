@@ -10,15 +10,35 @@ export function JsonLd({ contact }: { contact: SiteContact }) {
     contact.socialLinks.tiktok,
   ].filter(Boolean)
 
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": "https://kbi.services/#organization",
+    name: "KBI Services",
+    legalName: "KBI GLOBAL TECHNOLOGIES",
+    url: "https://kbi.services",
+    logo: "https://kbi.services/apple-touch-icon.png",
+    contactPoint: {
+      "@type": "ContactPoint",
+      telephone: "+971502491034",
+      contactType: "customer support",
+      areaServed: "AE",
+      availableLanguage: ["en", "ar"],
+    },
+    sameAs: socialProfiles,
+  }
+
   const businessSchema = {
     "@context": "https://schema.org",
-    "@type": "LocalBusiness",
+    "@type": "ProfessionalService",
     "@id": "https://kbi.services/#business",
     name: "KBI Services",
     legalName: "KBI GLOBAL TECHNOLOGIES",
-    alternateName: "KBI Services",
     image: "https://kbi.services/og-image.png",
     url: "https://kbi.services/",
+    parentOrganization: {
+      "@id": "https://kbi.services/#organization",
+    },
     telephone: "+971502491034",
     email: "support@kbi.services",
     address: {
@@ -51,21 +71,30 @@ export function JsonLd({ contact }: { contact: SiteContact }) {
   const servicesSchema = {
     "@context": "https://schema.org",
     "@type": "Service",
-    name: "On-site device repair and IT support",
+    name: "On-Site Device Repair & IT Services Across the UAE",
     serviceType: "Electronic repair and technical support",
-    provider: { "@id": "https://kbi.services/#business" },
-    areaServed: ["Abu Dhabi", "Dubai", "Sharjah", "Ajman", "Ras Al Khaimah", "Fujairah", "Umm Al Quwain"],
+    provider: { "@id": "https://kbi.services/#organization" },
+    areaServed: {
+      "@type": "Country",
+      name: "United Arab Emirates",
+    },
     hasOfferCatalog: {
       "@type": "OfferCatalog",
-      name: "Repair services",
+      name: "On-Site Device Repair & IT Services",
       itemListElement: [
-        "Mobile phone repair",
-        "Laptop and computer repair",
-        "Printer maintenance",
-        "TV and monitor repair",
-        "Gaming console repair",
-        "CCTV installation and maintenance",
-        "Network installation and technical support",
+        "Mobile Phone Repair",
+        "Laptop Repair",
+        "Desktop Computer & PC Repair",
+        "Printer Maintenance & Repair",
+        "TV Repair",
+        "Monitor Repair",
+        "Tablet & iPad Repair",
+        "Apple Watch & Smartwatch Repair",
+        "Gaming Console Repair",
+        "CCTV Installation & Maintenance",
+        "Network Installation & Support",
+        "IT Support & Technical Assistance",
+        "TV Wall Mounting & Installation",
       ].map((name) => ({
         "@type": "Offer",
         itemOffered: { "@type": "Service", name },
@@ -75,6 +104,10 @@ export function JsonLd({ contact }: { contact: SiteContact }) {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(organizationSchema) }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(businessSchema) }}

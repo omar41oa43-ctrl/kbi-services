@@ -38,10 +38,16 @@ import { T } from "@/components/i18n-text"
 import { getSiteContact } from "@/lib/site-contact"
 
 export const metadata: Metadata = {
-  title: "Corporate IT Support & Maintenance Across the UAE | KBI",
+  title: "Corporate IT Support & Maintenance Across the UAE",
   description: "Professional corporate IT support, device maintenance, networking, CCTV and on-site technical services for businesses across the UAE.",
   alternates: {
     canonical: "/corporate",
+  },
+  openGraph: {
+    title: "Corporate IT Support & Maintenance Across the UAE | KBI Services",
+    description: "Professional corporate IT support, device maintenance, networking, CCTV and on-site technical services for businesses across the UAE.",
+    url: "https://kbi.services/corporate",
+    type: "website",
   },
 }
 

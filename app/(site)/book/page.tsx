@@ -3,12 +3,18 @@ import { Suspense } from "react"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Book a Technician Across the UAE | KBI Services",
-  description: "Book a certified KBI technician for professional on-site device repair at your home or office anywhere across all 7 Emirates of the UAE.",
+  title: "Book a Technician Across the UAE",
+  description: "Book a professional KBI technician for on-site device repair or IT support at your home or office anywhere across the UAE.",
   alternates: {
     canonical: "/book",
   },
   robots: { index: true, follow: true },
+  openGraph: {
+    title: "Book a Technician Across the UAE | KBI Services",
+    description: "Book a professional KBI technician for on-site device repair or IT support at your home or office anywhere across the UAE.",
+    url: "https://kbi.services/book",
+    type: "website",
+  },
 }
 
 // export const dynamic = "force-static"

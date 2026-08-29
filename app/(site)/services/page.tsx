@@ -8,10 +8,16 @@ import { Smartphone, Laptop, Printer, Monitor, Tv, Watch, Gamepad2, Camera, Moni
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Device Repair & IT Services Across the UAE | KBI Services",
-  description: "Explore on-site mobile, laptop, computer, printer, TV, CCTV, networking, and installation services across all 7 Emirates in the UAE.",
+  title: "Device Repair & IT Services Across the UAE",
+  description: "Explore KBI Services for professional phone, laptop, PC, printer, TV, gaming console, CCTV, networking and IT support across all seven Emirates of the UAE.",
   alternates: {
     canonical: "/services",
+  },
+  openGraph: {
+    title: "Device Repair & IT Services Across the UAE | KBI Services",
+    description: "Explore KBI Services for professional phone, laptop, PC, printer, TV, gaming console, CCTV, networking and IT support across all seven Emirates of the UAE.",
+    url: "https://kbi.services/services",
+    type: "website",
   },
 }
 

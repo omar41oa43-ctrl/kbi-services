@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
         rules: {
             userAgent: '*',
             allow: '/',
-            disallow: ['/admin/', '/api/', '/book', '/track', '/rate/', '/jobs/', '/corporate/portal'],
+            disallow: ['/admin/', '/tech/', '/corporate/portal', '/api/', '/rate/'],
         },
         sitemap: 'https://kbi.services/sitemap.xml',
     }

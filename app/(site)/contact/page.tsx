@@ -2,10 +2,18 @@ import { ContactContent } from "@/components/contact-content"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Contact KBI Services | Device Repair Across the UAE",
+  title: {
+    absolute: "Contact KBI Services | Device Repair & IT Support UAE",
+  },
   description: "Contact KBI Services for professional on-site device repair and IT support across Abu Dhabi, Dubai, Sharjah, Ajman, Ras Al Khaimah, Fujairah and Umm Al Quwain.",
   alternates: {
     canonical: "/contact",
+  },
+  openGraph: {
+    title: "Contact KBI Services | Device Repair & IT Support UAE",
+    description: "Contact KBI Services for professional on-site device repair and IT support across Abu Dhabi, Dubai, Sharjah, Ajman, Ras Al Khaimah, Fujairah and Umm Al Quwain.",
+    url: "https://kbi.services/contact",
+    type: "website",
   },
 }
 

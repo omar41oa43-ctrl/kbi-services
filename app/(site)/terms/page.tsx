@@ -7,11 +7,11 @@ export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: "Terms & Conditions",
-  description: "Terms governing KBI on-site repair, diagnostics, quotations, parts, warranties, cancellations, and customer responsibilities in the UAE.",
+  description: "Read the terms and conditions governing repair, technician, payment, warranty and on-site services provided by KBI Services.",
   alternates: { canonical: "/terms" },
   openGraph: {
     title: "Terms & Conditions | KBI Services",
-    description: "The service terms for KBI on-site device repair and technical support in the UAE.",
+    description: "Read the terms and conditions governing repair, technician, payment, warranty and on-site services provided by KBI Services.",
     url: "/terms",
     type: "website",
   },

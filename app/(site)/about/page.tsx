@@ -3,10 +3,18 @@ import type { Metadata } from "next"
 import { getSiteContact } from "@/lib/site-contact"
 
 export const metadata: Metadata = {
-  title: "About KBI Services | On-Site Repair Across the UAE",
-  description: "Learn about KBI Services, providing professional on-site device repair and IT solutions across all seven Emirates of the UAE.",
+  title: {
+    absolute: "About KBI Services | On-Site Repair Across the UAE",
+  },
+  description: "Learn about KBI Services, providing professional on-site device repair and IT solutions for homes, offices and businesses across all seven Emirates of the UAE.",
   alternates: {
     canonical: "/about",
+  },
+  openGraph: {
+    title: "About KBI Services | On-Site Repair Across the UAE",
+    description: "Learn about KBI Services, providing professional on-site device repair and IT solutions for homes, offices and businesses across all seven Emirates of the UAE.",
+    url: "https://kbi.services/about",
+    type: "website",
   },
 }
 

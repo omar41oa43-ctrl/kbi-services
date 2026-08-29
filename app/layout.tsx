@@ -17,7 +17,7 @@ export const revalidate = 600
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: {
-      default: "On-Site Device Repair Across the UAE | KBI Services",
+      default: "On-Site Device Repair & IT Services Across the UAE | KBI Services",
       template: "%s | KBI Services"
     },
     description:
@@ -32,20 +32,20 @@ export async function generateMetadata(): Promise<Metadata> {
       locale: "en_AE",
       url: "https://kbi.services",
       siteName: "KBI Services",
-      title: "On-Site Device Repair Across the UAE | KBI Services",
+      title: "On-Site Device Repair & IT Services Across the UAE | KBI Services",
       description: "Professional on-site device repair and IT services across the UAE. KBI technicians come to your home or office for phones, laptops, PCs, printers, TVs, CCTV, gaming consoles and more.",
       images: [
         {
           url: "/og-image.png",
           width: 1200,
           height: 630,
-          alt: "KBI on-site device repair services across the UAE",
+          alt: "KBI Services on-site device repair and IT support across the UAE",
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: "On-Site Device Repair Across the UAE | KBI Services",
+      title: "On-Site Device Repair & IT Services Across the UAE | KBI Services",
       description: "Professional on-site device repair and IT services across the UAE. KBI technicians come to your home or office for phones, laptops, PCs, printers, TVs, CCTV, gaming consoles and more.",
       images: ["/og-image.png"],
     },
