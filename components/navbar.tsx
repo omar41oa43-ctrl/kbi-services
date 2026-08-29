@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import dynamic from "next/dynamic"
-import { Phone, MessageCircle, CalendarDays, Search, Home, Building2 } from "lucide-react"
+import { Phone, MessageCircle, CalendarDays, Search, Home, Building2, Menu, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -25,8 +25,13 @@ export function Navbar({ contact }: NavbarProps) {
   const { lang, setLang } = useLanguage()
   const t = useT()
   const [isScrolled, setIsScrolled] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
+
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [pathname])
 
   const [supportReady, setSupportReady] = useState(false)
   const isExcluded = pathname?.startsWith("/admin") || pathname?.startsWith("/tech")
@@ -158,10 +163,20 @@ export function Navbar({ contact }: NavbarProps) {
             </Link>
           </div>
 
-          {/* Mobile Right-side: language button & theme toggle */}
+          {/* Mobile Right-side: language button, theme toggle, hamburger */}
           <div className="md:hidden flex items-center gap-1.5 z-50" dir="ltr">
             {languageSwitcher}
             <ThemeToggle />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileMenuOpen((prev) => !prev)}
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+              className="h-9 w-9 rounded-xl border border-border/60 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-foreground dark:text-white"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </Button>
           </div>
 
           {/* Desktop Menu */}
@@ -220,44 +235,56 @@ export function Navbar({ contact }: NavbarProps) {
             {languageSwitcher}
           </div>
 
-
         </header>
-      </nav>
-      <nav className="lg:hidden fixed inset-x-0 bottom-0 z-40 pb-[env(safe-area-inset-bottom)]">
-        <div className="apple-nav">
-          <div className="apple-nav-items">
-            {[
-              { href: "/", label: "Home", icon: Home },
-              { href: "/book", label: "Book Now", icon: CalendarDays },
-              { href: "/corporate", label: "Corporate", icon: Building2 },
-              { href: "/track", label: "Track Order", icon: Search },
-            ].map((item) => {
-              const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href)
-              const Icon = item.icon as any
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  prefetch={false}
-                  className={cn("group relative flex flex-col items-center justify-center gap-1.5 flex-1")}
-                  aria-current={active ? "page" : undefined}
-                  aria-label={t(item.label)}
+
+        {/* Mobile Drawer Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden max-w-7xl mx-auto mt-2 p-4 rounded-2xl bg-card/95 dark:bg-slate-900/95 backdrop-blur-xl border border-border/80 shadow-2xl space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
+            <ul className="space-y-1">
+              {sortedNavLinks.map((link) => {
+                const active = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href)
+                return (
+                  <li key={link.raw}>
+                    <Link
+                      href={link.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        "block py-2.5 px-4 rounded-xl text-sm font-semibold transition-colors",
+                        active
+                          ? "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 font-bold"
+                          : "text-foreground/80 dark:text-white/80 hover:bg-black/5 dark:hover:bg-white/5"
+                      )}
+                    >
+                      {link.name}
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+            <div className="pt-3 mt-2 border-t border-border/60 grid grid-cols-2 gap-2">
+              <Button asChild variant="secondary" size="sm" className="w-full">
+                <a
+                  href={`https://wa.me/${contact.whatsappRaw}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2"
                 >
-                  <div
-                    className="flex flex-col items-center justify-center"
-                  >
-                    <div className={cn("apple-nav-item", active ? "apple-nav-item-active" : "apple-nav-item-inactive")}>
-                      <Icon className={cn("icon w-5 h-5")} />
-                    </div>
-                    <span className="block mt-1 text-[10px] sm:text-[11px] font-semibold tracking-tight text-foreground/80 dark:text-white/80 truncate w-full text-center" suppressHydrationWarning>
-                      {t(item.label)}
-                    </span>
-                  </div>
-                </Link>
-              )
-            })}
+                  <MessageCircle className="w-4 h-4" />
+                  <span>{t("WhatsApp")}</span>
+                </a>
+              </Button>
+              <Button asChild variant="primary" size="sm" className="w-full">
+                <a
+                  href={`tel:${contact.phone}`}
+                  className="inline-flex items-center justify-center gap-2"
+                >
+                  <Phone className="w-4 h-4" />
+                  <span>{t("Call Now")}</span>
+                </a>
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </nav>
       {supportReady && !isBookingPage && <WhatsAppChatbot />}
     </>
