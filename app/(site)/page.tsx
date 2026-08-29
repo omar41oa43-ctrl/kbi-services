@@ -18,7 +18,7 @@ export const dynamic = "force-static"
 
 export default async function Home() {
   return (
-    <main className="min-h-screen bg-background text-foreground selection:bg-cyan-500/30">
+    <main className="min-h-screen bg-background text-foreground selection:bg-cyan-500/30 pb-20 lg:pb-0">
       <Hero />
       <Services />
       <WhyChooseUs />
@@ -28,12 +28,12 @@ export default async function Home() {
         <p className="text-sm text-muted-foreground mb-6">Brand names identify devices we repair and do not imply manufacturer authorization.</p>
         <SlidingLogoMarquee
           items={[
-            { id: "apple", label: "Apple", content: <SiApple aria-hidden="true" className="w-12 h-12 text-slate-800 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors" />, href: "https://www.apple.com" },
-            { id: "samsung", label: "Samsung", content: <SiSamsung aria-hidden="true" className="w-16 h-16 text-slate-800 dark:text-white/70 hover:text-[#1428A0] transition-colors" />, href: "https://www.samsung.com" },
-            { id: "dell", label: "Dell", content: <SiDell aria-hidden="true" className="w-12 h-12 text-slate-800 dark:text-white/70 hover:text-[#0076CE] transition-colors" />, href: "https://www.dell.com" },
-            { id: "hp", label: "HP", content: <SiHp aria-hidden="true" className="w-12 h-12 text-slate-800 dark:text-white/70 hover:text-[#0096D6] transition-colors" />, href: "https://www.hp.com" },
-            { id: "lenovo", label: "Lenovo", content: <SiLenovo aria-hidden="true" className="w-16 h-16 text-slate-800 dark:text-white/70 hover:text-[#E2231A] transition-colors" />, href: "https://www.lenovo.com" },
-            { id: "sony", label: "Sony", content: <SiSony aria-hidden="true" className="w-16 h-16 text-slate-800 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors" />, href: "https://www.sony.com" },
+            { id: "apple", label: "Apple", content: <SiApple aria-hidden="true" className="w-10 h-10 text-slate-800 dark:text-white/80 hover:text-black dark:hover:text-white transition-colors" />, href: "https://www.apple.com" },
+            { id: "samsung", label: "Samsung", content: <SiSamsung aria-hidden="true" className="w-24 h-7 text-slate-800 dark:text-white/80 hover:text-[#1428A0] transition-colors" />, href: "https://www.samsung.com" },
+            { id: "dell", label: "Dell", content: <SiDell aria-hidden="true" className="w-10 h-10 text-slate-800 dark:text-white/80 hover:text-[#0076CE] transition-colors" />, href: "https://www.dell.com" },
+            { id: "hp", label: "HP", content: <SiHp aria-hidden="true" className="w-10 h-10 text-slate-800 dark:text-white/80 hover:text-[#0096D6] transition-colors" />, href: "https://www.hp.com" },
+            { id: "lenovo", label: "Lenovo", content: <SiLenovo aria-hidden="true" className="w-24 h-6 text-slate-800 dark:text-white/80 hover:text-[#E2231A] transition-colors" />, href: "https://www.lenovo.com" },
+            { id: "sony", label: "Sony", content: <SiSony aria-hidden="true" className="w-20 h-5 text-slate-800 dark:text-white/80 hover:text-black dark:hover:text-white transition-colors" />, href: "https://www.sony.com" },
           ]}
           speed={40}
           pauseOnHover

@@ -56,7 +56,7 @@ export function SlidingLogoMarquee({
   const [canAnimate, setCanAnimate] = useState(false)
 
   useEffect(() => {
-    const media = window.matchMedia("(pointer: coarse), (prefers-reduced-motion: reduce)")
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)")
     const update = () => setCanAnimate(!media.matches)
 
     update()
@@ -195,7 +195,13 @@ export function SlidingLogoMarquee({
            color: currentColor;
          }
          .sliding-marquee-item:hover { transform: scale(1.05); }
-         .sliding-marquee-item svg { height: 65%; }
+         .sliding-marquee-item svg {
+           max-height: 40px;
+           max-width: 100px;
+           width: auto;
+           height: auto;
+           object-fit: contain;
+         }
          .sliding-marquee-item > a,
          .sliding-marquee-item > button,
          .sliding-marquee-item > span {
@@ -208,8 +214,12 @@ export function SlidingLogoMarquee({
          .sliding-marquee-item > button { cursor: pointer; }
 
          @media (max-width: 767px) {
-           .sliding-marquee-list { gap: 0.25rem !important; }
-           .sliding-marquee-item { height: 60% !important; font-size: 0.875rem !important; }
+           .sliding-marquee-list { gap: 0.75rem !important; }
+           .sliding-marquee-item { height: 70% !important; font-size: 0.875rem !important; }
+           .sliding-marquee-item svg {
+             max-height: 30px;
+             max-width: 80px;
+           }
          }
 
          @keyframes marqueeX { from { transform: translateX(0); } to { transform: translateX(-50%); } }
