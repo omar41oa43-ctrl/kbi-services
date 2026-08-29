@@ -27,7 +27,7 @@ export function Hero() {
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                 </div>
                 <span className="text-xs sm:text-sm font-semibold text-emerald-700 dark:text-green-300 tracking-wide transition-colors">
-                  {t("Nationwide On-Site Service • All 7 Emirates Across the UAE")}
+                  {t("services all uae")}
                 </span>
               </div>
             </div>
@@ -38,7 +38,7 @@ export function Hero() {
             </h1>
 
             <p className="text-sm sm:text-lg md:text-xl text-slate-600 dark:text-gray-300 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed font-normal dark:font-light tracking-wide px-2 sm:px-0" suppressHydrationWarning>
-              {t("Premier on-site technology repair and IT solutions delivered directly to your home or workplace across all 7 Emirates. Certified specialists, precision-grade components, and prompt same-day service throughout the UAE.")}
+              {t("Device repair and IT solutions wherever you are in the UAE. We reach you at home or office with fast, professional same-day service.")}
             </p>
 
             {/* Buttons */}

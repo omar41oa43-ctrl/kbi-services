@@ -95,15 +95,12 @@ export function Navbar({ contact }: NavbarProps) {
       title={lang === "en" ? "التغيير إلى العربية" : "Switch to English"}
       aria-label={lang === "en" ? "Switch to Arabic" : "Switch to English"}
       className={cn(
-        "relative h-9 px-2.5 md:h-10 md:px-3 rounded-xl md:rounded-2xl flex items-center gap-1.5 transition-all duration-300 cursor-pointer group shadow-sm",
+        "relative h-9 w-9 md:h-10 md:w-10 rounded-xl md:rounded-2xl flex items-center justify-center transition-all duration-300 cursor-pointer group shadow-sm",
         "bg-white/10 hover:bg-white/20 border border-white/15 text-white/80 hover:text-white",
         "dark:bg-white/5 dark:hover:bg-white/10 dark:border-white/10 dark:text-white/80"
       )}
     >
-      <Globe className="w-3.5 h-3.5 md:w-4 md:h-4 text-cyan-500 dark:text-cyan-400 group-hover:rotate-45 transition-transform duration-300" />
-      <span className="text-[11px] md:text-xs font-bold text-foreground dark:text-white">
-        {lang === "en" ? "عربي" : "EN"}
-      </span>
+      <Globe className="w-4 h-4 md:w-4.5 md:h-4.5 text-cyan-500 dark:text-cyan-400 group-hover:rotate-45 transition-transform duration-300" />
     </button>
   )
 
@@ -135,21 +132,21 @@ export function Navbar({ contact }: NavbarProps) {
         suppressHydrationWarning
       >
         <header
-          className={cn("max-w-7xl mx-auto relative flex items-center justify-between px-3 md:px-6 py-1.5 md:py-2 transition-[background-color,box-shadow] duration-200 glass-nav")}
+          className={cn("max-w-7xl mx-auto relative flex items-center justify-between px-3 md:px-6 py-2 md:py-2.5 transition-[background-color,box-shadow] duration-200 glass-nav min-h-[48px] md:min-h-[56px]")}
           suppressHydrationWarning
           dir="ltr"
         >
 
-          {/* Left-side: Desktop Logo & Mobile left spacer */}
+          {/* Left-side: Desktop Logo & Mobile left spacer to balance right buttons */}
           <div className="flex items-center gap-2 relative z-50">
             {desktopLogo}
-            <div className="md:hidden w-6" aria-hidden="true" />
+            <div className="md:hidden w-[76px]" aria-hidden="true" />
           </div>
 
           {/* Mobile Centered Logo */}
           <div className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-auto" dir="ltr">
-            <Link href="/" className="flex items-center justify-center py-1" dir="ltr" style={{ direction: "ltr", unicodeBidi: "isolate" }} aria-label="KBI home">
-              <span className="text-lg font-bold tracking-tighter text-foreground dark:text-white inline-flex items-center" dir="ltr" style={{ direction: "ltr", unicodeBidi: "isolate" }}>
+            <Link href="/" className="flex items-center justify-center py-1 group" dir="ltr" style={{ direction: "ltr", unicodeBidi: "isolate" }} aria-label="KBI home">
+              <span className="text-[1.35rem] sm:text-2xl font-black tracking-tight text-foreground dark:text-white inline-flex items-center leading-none" dir="ltr" style={{ direction: "ltr", unicodeBidi: "isolate" }}>
                 <span>KBI</span><span className="text-cyan-500 dark:text-cyan-400">.</span>
               </span>
             </Link>
