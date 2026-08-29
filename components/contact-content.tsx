@@ -37,16 +37,16 @@ export function ContactContent({ contact }: ContactContentProps) {
     {
       icon: <Phone className="w-8 h-8" />,
       title: "Call Us",
-      description: "Speak directly with our support team",
-      value: contact.phoneDisplay,
+      description: "+971 50 249 1034 (International)",
+      value: contact.phoneDisplay || "050 249 1034",
       href: `tel:${contact.phone}`,
       color: "cyan",
     },
     {
       icon: <MessageCircle className="w-8 h-8" />,
       title: "WhatsApp",
-      description: "Chat with us instantly",
-      value: "Send a message",
+      description: "050 249 1034",
+      value: "Chat on WhatsApp",
       href: `https://wa.me/${contact.whatsappRaw}`,
       color: "green",
     },
@@ -54,8 +54,8 @@ export function ContactContent({ contact }: ContactContentProps) {
       icon: <Mail className="w-8 h-8" />,
       title: "Email",
       description: "Send us an email anytime",
-      value: contact.email,
-      href: `mailto:${contact.email}`,
+      value: contact.email || "support@kbi.services",
+      href: `mailto:${contact.email || "support@kbi.services"}`,
       color: "blue",
     },
   ]
@@ -200,7 +200,7 @@ export function ContactContent({ contact }: ContactContentProps) {
                   className="inline-flex items-center gap-2"
                 >
                   <MessageCircle className="w-5 h-5" />
-                  {t("WhatsApp Us")}
+                  {t("Chat on WhatsApp")}
                 </a>
               </Button>
             </div>

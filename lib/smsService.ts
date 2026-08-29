@@ -83,9 +83,9 @@ export const WhatsAppTemplates = {
 
 سيتم تعيين فني لك قريباً.
 
-للمتابعة: kbi.ae/track
+للمتابعة: kbi.services/track
 
-KBI Repair Services`,
+KBI Services`,
 
     technicianAssigned: (orderId: string, techName: string, techPhone: string) =>
         `أخبار سارة! 🎉
@@ -116,7 +116,7 @@ ${eta ? `الوصول المتوقع: ${eta}` : ""}
 
 ⭐ قيّم تجربتك: ${rateLink}
 
-شكراً لاختيارك KBI Repair!`,
+شكراً لاختيارك KBI Services!`,
 
     waitingParts: (orderId: string) =>
         `⏳ تحديث لطلبك #${orderId}
@@ -128,4 +128,4 @@ ${eta ? `الوصول المتوقع: ${eta}` : ""}
 /**
  * Get WhatsApp business number for company
  */
-export const COMPANY_WHATSAPP = "+971501234567" // Update with real number
+export const COMPANY_WHATSAPP = "+971502491034"

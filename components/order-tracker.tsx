@@ -259,7 +259,7 @@ export function OrderTracker({ initialOrderId = "" }: { initialOrderId?: string 
                       rel="noopener noreferrer"
                     >
                       <MessageCircle className="w-5 h-5 mr-2" />
-                      {t("Contact Support")}
+                      {t("Chat on WhatsApp")}
                     </a>
                   </Button>
                 </GlassCard>

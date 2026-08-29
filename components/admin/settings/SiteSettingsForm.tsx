@@ -42,7 +42,7 @@ export function SiteSettingsForm({ settings, setSettings }: Props) {
               <Input
                 value={settings.companyName}
                 onChange={(e) => setSettings({ ...settings, companyName: e.target.value })}
-                placeholder="KBI Repairs"
+                placeholder="KBI Services"
                 className="bg-background border-input text-foreground text-xs h-10 rounded-xl focus:border-cyan-500"
               />
             </div>
@@ -76,7 +76,7 @@ export function SiteSettingsForm({ settings, setSettings }: Props) {
                 type="email"
                 value={settings.email}
                 onChange={(e) => setSettings({ ...settings, email: e.target.value })}
-                placeholder="info@kbi.services"
+                placeholder="support@kbi.services"
                 dir="ltr"
                 className="bg-background border-input text-foreground text-xs h-10 rounded-xl focus:border-cyan-500"
               />

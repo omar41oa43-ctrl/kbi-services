@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 const policySections = [
   {
     title: "1. Who controls your information",
-    body: "KBI GLOBAL TECHNOLOGIES, trading as KBI Repairs, is responsible for the personal information described in this policy. The current contact details are listed below and on our Contact page.",
+    body: "KBI Services, operated by KBI GLOBAL TECHNOLOGIES, is responsible for the personal information described in this policy. The current contact details are listed below and on our Contact page.",
   },
   {
     title: "2. Information we collect",

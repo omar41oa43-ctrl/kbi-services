@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: "Terms governing KBI on-site repair, diagnostics, quotations, parts, warranties, cancellations, and customer responsibilities in the UAE.",
   alternates: { canonical: "/terms" },
   openGraph: {
-    title: "Terms & Conditions | KBI Repairs",
+    title: "Terms & Conditions | KBI Services",
     description: "The service terms for KBI on-site device repair and technical support in the UAE.",
     url: "/terms",
     type: "website",
@@ -21,8 +21,8 @@ const sections = [
   {
     title: "1. Scope and acceptance",
     titleAr: "1. نطاق الشروط والموافقة",
-    body: "These terms apply to bookings, diagnostics, on-site repairs, installations, maintenance, and corporate service requests provided by KBI GLOBAL TECHNOLOGIES (KBI Repairs). By confirming a booking or approving a quotation, you accept the version of these terms available at that time.",
-    bodyAr: "تسري هذه الشروط على الحجوزات والفحص والإصلاح في الموقع والتركيب والصيانة وطلبات الشركات المقدمة من KBI GLOBAL TECHNOLOGIES (KBI Repairs). بتأكيد الحجز أو الموافقة على عرض السعر، فإنك توافق على نسخة الشروط السارية في ذلك الوقت.",
+    body: "These terms apply to bookings, diagnostics, on-site repairs, installations, maintenance, and corporate service requests provided by KBI Services, operated by KBI GLOBAL TECHNOLOGIES. By confirming a booking or approving a quotation, you accept the version of these terms available at that time.",
+    bodyAr: "تسري هذه الشروط على الحجوزات والفحص والإصلاح الميداني والتركيب والصيانة وطلبات الشركات المقدمة من KBI Services، وتديرها KBI GLOBAL TECHNOLOGIES. بتأكيد الحجز أو الموافقة على عرض السعر، فإنك توافق على نسخة الشروط السارية في ذلك الوقت.",
   },
   {
     title: "2. Booking and service availability",

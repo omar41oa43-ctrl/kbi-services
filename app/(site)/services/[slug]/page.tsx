@@ -23,7 +23,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const device = devices.find((d) => d.id === slug)
     if (!device) return {}
 
-    const serviceName = device.name.includes("Repair") || device.name.includes("Support") || device.name.includes("Installation") ? device.name : `${device.name} Repair`
+    const serviceName =
+        device.id === "networking" ? "Network Installation & Support" :
+        device.id === "tech-support" ? "IT Support" :
+        device.id === "tv-install" ? "TV Installation" :
+        device.id === "cctv" ? "CCTV Installation & Maintenance" :
+        device.name.includes("Repair") || device.name.includes("Support") || device.name.includes("Installation") ? device.name : `${device.name} Repair`
     const issueSummary = device.issues.slice(0, 3).join(", ")
     return {
         title: `${serviceName} Across the UAE | KBI Services`,
@@ -77,7 +82,7 @@ export default async function ServicePage({ params }: Props) {
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <Button asChild size="lg" className="h-14 px-8 text-lg rounded-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold w-full sm:w-auto">
                             <Link href={`/book?device=${device.id}`}>
-                                Book {serviceName}
+                                {serviceName === "Network Installation & Support" ? "Book Network Service" : `Book ${serviceName}`}
                             </Link>
                         </Button>
                     </div>
@@ -145,7 +150,7 @@ export default async function ServicePage({ params }: Props) {
                     <div className="mt-8">
                         <Button asChild variant="link" className="text-cyan-400">
                             <Link href={`/book?device=${device.id}`} className="flex items-center gap-2">
-                                Start Your Repair <ArrowRight className="w-4 h-4" />
+                                Book a Technician <ArrowRight className="w-4 h-4" />
                             </Link>
                         </Button>
                     </div>

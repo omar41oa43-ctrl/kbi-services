@@ -42,13 +42,13 @@ export function Footer({ contact }: FooterProps) {
       icon: Instagram,
       href: "https://www.instagram.com/kbi.services?igsh=d2M1bjc5Y2swc2du&utm_source=qr",
       show: true,
-      ariaLabel: "Follow KBI Repairs on Instagram",
+      ariaLabel: "Follow KBI Services on Instagram",
     },
     {
       icon: FaTiktok,
       href: "https://www.tiktok.com/@kbi.services?_r=1&_t=ZS-95S9A3Ge4pt",
       show: true,
-      ariaLabel: "Follow KBI Repairs on TikTok",
+      ariaLabel: "Follow KBI Services on TikTok",
     },
   ]
 
@@ -202,9 +202,9 @@ export function Footer({ contact }: FooterProps) {
         <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-6 relative" dir="ltr">
           <div className="text-center md:text-start">
             <p className="text-muted-foreground text-sm">
-              © {new Date().getFullYear()} {t("KBI Repair Services")}. {t("All rights reserved.")}
+              © {new Date().getFullYear()} {t("KBI Services")}. {t("All rights reserved.")}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">{contact.companyName || "KBI GLOBAL TECHNOLOGIES"} · {contact.email}</p>
+            <p className="mt-1 text-xs text-muted-foreground">KBI Services, operated by KBI GLOBAL TECHNOLOGIES · {contact.email || "support@kbi.services"}</p>
           </div>
 
           {/* Center Circular Text - Absolute centered on Desktop */}

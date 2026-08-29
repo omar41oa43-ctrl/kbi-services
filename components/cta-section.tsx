@@ -36,7 +36,7 @@ export function CTASection() {
                   className="inline-flex items-center gap-2"
                 >
                   <MessageCircle className="w-5 h-5" />
-                  {t("WhatsApp")}
+                  {t("Chat on WhatsApp")}
                 </a>
               </Button>
               <Button asChild variant="outline">

@@ -57,7 +57,7 @@ export function Hero() {
                 className="w-full sm:w-auto px-8 py-3.5 sm:py-4 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-base sm:text-lg border border-emerald-500/30 hover:border-emerald-500/50 transition-all duration-300 flex items-center justify-center gap-2.5 shadow-sm backdrop-blur-md hover:-translate-y-0.5 active:translate-y-0"
               >
                 <MessageCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 fill-emerald-500/20" />
-                <span>{t("WhatsApp")}</span>
+                <span>{t("Chat on WhatsApp")}</span>
               </a>
             </div>
 

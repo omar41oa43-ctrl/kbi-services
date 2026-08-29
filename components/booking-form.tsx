@@ -1458,7 +1458,7 @@ export function BookingForm() {
                         rel="noopener noreferrer"
                       >
                         <MessageCircle className="w-4 h-4 mr-1.5" />
-                        <span>{t("WhatsApp Support")}</span>
+                        <span>{t("Chat on WhatsApp")}</span>
                       </a>
                     </Button>
                   </div>

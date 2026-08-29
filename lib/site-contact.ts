@@ -30,14 +30,14 @@ export type SiteContact = {
 }
 
 const DEFAULT_SITE_CONTACT: SiteContact = {
-        companyName: "KBI GLOBAL TECHNOLOGIES",
+        companyName: "KBI Services",
         whatsapp: "971502491034",
         phone: "+971502491034",
-        email: "info@kbi.services",
+        email: "support@kbi.services",
         address: "All 7 Emirates, UAE",
         addressAr: "جميع إمارات الدولة السبع",
         whatsappRaw: "971502491034",
-        phoneDisplay: "+971 50 249 1034",
+        phoneDisplay: "050 249 1034",
         serviceAreas: [
             "Abu Dhabi", "Dubai", "Sharjah", "Ajman", "Ras Al Khaimah", "Fujairah", "Umm Al Quwain"
         ],

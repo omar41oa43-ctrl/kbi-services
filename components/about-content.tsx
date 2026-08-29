@@ -54,11 +54,11 @@ export function AboutContent({ pdfUrl }: { pdfUrl?: string }) {
         <div className="text-center mb-16">
           <div>
             <h1 className="text-4xl md:text-6xl font-extrabold mb-6 text-foreground">
-              {t("About")} <span className="text-cyan-500 dark:text-cyan-400">KBI</span>
+              {t("About")} <span className="text-cyan-500 dark:text-cyan-400">KBI Services</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               {t(
-                "KBI provides on-site device repair and technical support at homes and offices across all 7 Emirates in the UAE.",
+                "KBI Services provides on-site device repair and technical support at homes and offices across all 7 Emirates in the UAE.",
               )}
             </p>
           </div>
@@ -92,7 +92,7 @@ export function AboutContent({ pdfUrl }: { pdfUrl?: string }) {
                 </p>
                 <p>
                   {t(
-                    "That's why we created KBI—a mobile service that comes directly to you. Our technicians bring the tools and practical experience needed to diagnose many common device problems on site.",
+                    "That's why we created KBI Services—a mobile service that comes directly to you. Our technicians bring the tools and practical experience needed to diagnose many common device problems on site.",
                   )}
                 </p>
                 <p>

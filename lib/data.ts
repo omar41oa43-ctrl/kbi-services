@@ -90,7 +90,7 @@ export const devices = [
   },
   {
     id: "pc",
-    name: "PC / Desktop Computer",
+    name: "Computer / PC",
     icon: "Monitor",
     brands: [
       { id: "dell-pc", name: "Dell", models: ["OptiPlex", "Precision", "Vostro", "Alienware"] },
@@ -169,7 +169,7 @@ export const devices = [
   },
   {
     id: "monitor",
-    name: "Monitor Repair",
+    name: "Monitor",
     icon: "Monitor",
     brands: [
       { id: "samsung-monitor", name: "Samsung", models: ["Odyssey", "Smart Monitor", "Essential"] },
@@ -282,7 +282,7 @@ export const devices = [
   },
   {
     id: "tablet",
-    name: "iPad / Tablet",
+    name: "Tablet",
     icon: "Laptop",
     brands: [
       { id: "apple-ipad", name: "Apple iPad", models: ["iPad (2018)", "iPad (2019)", "iPad (2020)", "iPad Air (2022)"] },
@@ -300,7 +300,7 @@ export const devices = [
   },
   {
     id: "networking",
-    name: "Network Installation & Maintenance",
+    name: "Network Installation & Support",
     icon: "Wifi",
     description: "Professional wired and wireless network setup and configuration with performance optimization.",
     brands: [
@@ -326,7 +326,7 @@ export const devices = [
   },
   {
     id: "tech-support",
-    name: "Technical Support",
+    name: "IT Support",
     icon: "Headset",
     description: "Fast technical support to solve all hardware and system issues remotely or on-site.",
     brands: [

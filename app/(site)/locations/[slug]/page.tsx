@@ -39,7 +39,7 @@ export default async function LocationPage({ params }: Props) {
         "@context": "https://schema.org",
         "@type": "Service",
         "name": `On-site device service in ${loc.name}`,
-        "provider": { "@type": "LocalBusiness", "name": "KBI Repairs", "url": "https://kbi.services" },
+        "provider": { "@type": "LocalBusiness", "name": "KBI Services", "url": "https://kbi.services" },
         "areaServed": { "@type": "Place", "name": `${loc.name}, ${emirate}, UAE` },
         "description": `On-site device diagnosis and repair appointments in ${loc.name}.`,
     }).replace(/</g, "\\u003c")

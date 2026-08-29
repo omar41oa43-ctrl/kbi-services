@@ -65,7 +65,7 @@ export function FinalInvoice(props: Props) {
   const [poBox, setPoBox] = useState("88888")
   const [country, setCountry] = useState("UNITED ARAB EMIRATES")
   const [emirate, setEmirate] = useState("ABU DHABI")
-  const [email, setEmail] = useState("INFO@KBI.SERVICES")
+  const [email, setEmail] = useState("SUPPORT@KBI.SERVICES")
 
   const [issuedTo, setIssuedTo] = useState<string>(order?.customerName || "")
   const [location, setLocation] = useState<string>(order?.location || order?.address || "")

@@ -4,13 +4,13 @@ import { createContext, useContext } from "react"
 import type { SiteContact } from "@/lib/site-contact"
 
 const defaultContact: SiteContact = {
-  companyName: "KBI GLOBAL TECHNOLOGIES",
+  companyName: "KBI Services",
   whatsapp: "971502491034",
   phone: "+971502491034",
-  email: "info@kbi.services",
-  address: "Abu Dhabi, UAE",
+  email: "support@kbi.services",
+  address: "All 7 Emirates, UAE",
   whatsappRaw: "971502491034",
-  phoneDisplay: "+971 50 249 1034",
+  phoneDisplay: "050 249 1034",
   socialLinks: { facebook: "", instagram: "", tiktok: "" },
   socialLinksEnabled: { facebook: true, instagram: true, tiktok: true },
 }
