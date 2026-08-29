@@ -27,7 +27,7 @@ export function Hero() {
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </div>
                 <span className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-300">
-                  {t("AVAILABLE ACROSS THE UAE")}
+                  {t("SERVING ALL OF THE UAE")}
                 </span>
               </div>
             </div>

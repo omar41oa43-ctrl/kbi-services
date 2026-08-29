@@ -77,11 +77,13 @@ export function OrderTracker({ initialOrderId = "" }: { initialOrderId?: string 
   const [notFound, setNotFound] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
 
+  const cleanOrderId = orderId.trim()
+  const cleanPhone = phone.replace(/\D/g, "")
+  const canSearch = cleanOrderId.length >= 3 || cleanPhone.length >= 4
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
-    const cleanOrderId = orderId.trim()
-    const cleanPhone = phone.replace(/\D/g, "")
-    if (!cleanOrderId || cleanPhone.length < 4) return
+    if (!canSearch) return
 
     setIsSearching(true)
     setNotFound(false)
@@ -91,7 +93,11 @@ export function OrderTracker({ initialOrderId = "" }: { initialOrderId?: string 
 
     try {
       try {
-        const res = await fetch(`/api/track?orderId=${encodeURIComponent(cleanOrderId)}&phone=${encodeURIComponent(cleanPhone)}`)
+        const params = new URLSearchParams()
+        if (cleanOrderId) params.set("orderId", cleanOrderId)
+        if (cleanPhone) params.set("phone", cleanPhone)
+
+        const res = await fetch(`/api/track?${params.toString()}`)
         const data = await res.json()
 
         if (data.error) {
@@ -140,7 +146,7 @@ export function OrderTracker({ initialOrderId = "" }: { initialOrderId?: string 
             {t("Track Order")}
           </h1>
           <p className="text-muted-foreground max-w-xl mx-auto text-sm sm:text-base">
-            {t("Enter your KBI order number and phone number to see the live status of your repair.")}
+            {t("Enter your KBI order number or phone number to see the live status of your repair.")}
           </p>
         </div>
 
@@ -160,7 +166,6 @@ export function OrderTracker({ initialOrderId = "" }: { initialOrderId?: string 
                   placeholder={isAr ? "رقم طلب KBI (مثال: KBI-123456)" : "KBI Order # (e.g. KBI-123456)"}
                   className={`w-full py-4 bg-background border border-input rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500 transition-all text-foreground text-sm sm:text-base shadow-xs placeholder:text-muted-foreground/60 ${isAr ? "pr-12 pl-4 text-right" : "pl-12 pr-4 text-left"}`}
                   dir="ltr"
-                  required
                 />
               </div>
               <div className="relative flex-1">
@@ -173,16 +178,15 @@ export function OrderTracker({ initialOrderId = "" }: { initialOrderId?: string 
                   autoComplete="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder={isAr ? "رقم الهاتف (مثال: 0501234567)" : "Phone # (e.g. 050 123 4567)"}
+                  placeholder={isAr ? "أو رقم الهاتف (05X XXX XXXX)" : "Or Phone # (e.g. 050 123 4567)"}
                   className={`w-full py-4 bg-background border border-input rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500 transition-all text-foreground text-sm sm:text-base shadow-xs placeholder:text-muted-foreground/60 ${isAr ? "pr-12 pl-4 text-right" : "pl-12 pr-4 text-left"}`}
                   dir="ltr"
-                  required
                 />
               </div>
               <Button
                 type="submit"
-                disabled={!orderId.trim() || phone.replace(/\D/g, "").length < 4 || isSearching}
-                className="rounded-2xl px-8 py-4 bg-cyan-500 text-black hover:bg-cyan-400 font-bold shadow-md cursor-pointer flex items-center justify-center gap-2 text-base shrink-0 w-full md:w-auto h-[54px] md:h-auto"
+                disabled={!canSearch || isSearching}
+                className="rounded-2xl px-8 py-4 bg-cyan-500 text-black hover:bg-cyan-400 font-bold shadow-md cursor-pointer flex items-center justify-center gap-2 text-base shrink-0 w-full md:w-auto h-[54px] md:h-auto disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSearching ? (
                   <div className="flex items-center gap-2">
