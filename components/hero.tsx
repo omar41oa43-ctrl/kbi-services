@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, MessageCircle } from "lucide-react"
 import Link from "next/link"
 import { useT } from "@/components/language-provider"
 import { useSiteContact } from "@/components/contact-provider"
@@ -20,43 +20,44 @@ export function Hero() {
             {/* Badge */}
             <div className="flex justify-center mb-6 sm:mb-10">
               <div
-                className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full bg-slate-900/5 dark:bg-white/5 border border-slate-900/10 dark:border-white/10 cursor-default hover:bg-slate-900/10 dark:hover:bg-white/10 transition-all duration-300 shadow-xs"
+                className="inline-flex items-center gap-2 sm:gap-2.5 px-4 sm:px-5 py-1.5 sm:py-2 rounded-full bg-emerald-500/10 border border-emerald-500/25 cursor-default hover:bg-emerald-500/15 transition-all duration-300 shadow-sm backdrop-blur-md"
               >
-                <div className="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3 items-center justify-center">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                <div className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5 items-center justify-center">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </div>
-                <span className="text-xs sm:text-sm font-semibold text-emerald-700 dark:text-green-300 tracking-wide transition-colors">
-                  {t("services all uae")}
+                <span className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-300">
+                  {t("AVAILABLE ACROSS THE UAE")}
                 </span>
               </div>
             </div>
 
             {/* Headings */}
             <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-slate-900 via-slate-800 to-slate-600 dark:from-white dark:via-blue-50 dark:to-white/60 mb-5 sm:mb-6 tracking-tighter text-balance leading-[1.1]" suppressHydrationWarning>
-              <span>{t("Tech Repair at Your Doorstep")}<br /><span className="text-cyan-600 dark:text-cyan-400 inline-block mt-1.5 sm:mt-2">{t("Across UAE")}</span></span>
+              <span>{t("Tech Repair at Your Doorstep")}<br /><span className="text-cyan-600 dark:text-cyan-400 inline-block mt-1.5 sm:mt-2">{t("Across the UAE")}</span></span>
             </h1>
 
             <p className="text-sm sm:text-lg md:text-xl text-slate-600 dark:text-gray-300 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed font-normal dark:font-light tracking-wide px-2 sm:px-0" suppressHydrationWarning>
-              {t("Device repair and IT solutions wherever you are in the UAE. We reach you at home or office with fast, professional same-day service.")}
+              {t("Device repair and IT solutions wherever you are in the UAE. We come to your home or office with fast, professional, same-day service.")}
             </p>
 
             {/* Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-6 w-full max-w-xs sm:max-w-none mx-auto">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 w-full max-w-xs sm:max-w-none mx-auto">
               <Link
                 href="/book"
-                className="w-full sm:w-auto px-8 py-3.5 sm:py-4 rounded-full bg-slate-900 text-white dark:bg-white dark:text-black font-semibold text-base sm:text-lg hover:bg-slate-800 dark:hover:bg-gray-100 transition-all duration-300 flex items-center justify-center gap-2 group shadow-lg"
+                className="w-full sm:w-auto px-8 py-3.5 sm:py-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-base sm:text-lg hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 flex items-center justify-center gap-2.5 group shadow-[0_0_25px_rgba(6,182,212,0.35)] hover:shadow-[0_0_35px_rgba(6,182,212,0.6)] hover:-translate-y-0.5 active:translate-y-0"
               >
-                {t("Book a Technician")}
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <span>{t("Book a Technician")}</span>
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform rtl:rotate-180 rtl:group-hover:-translate-x-1" />
               </Link>
               <a
                 href={`https://wa.me/${contact.whatsappRaw}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full sm:w-auto px-8 py-3.5 sm:py-4 rounded-full bg-slate-900/5 dark:bg-white/5 text-slate-800 dark:text-white font-medium text-base sm:text-lg hover:bg-slate-900/10 dark:hover:bg-white/10 border border-slate-900/10 dark:border-white/10 transition-all duration-300 flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-8 py-3.5 sm:py-4 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-base sm:text-lg border border-emerald-500/30 hover:border-emerald-500/50 transition-all duration-300 flex items-center justify-center gap-2.5 shadow-sm backdrop-blur-md hover:-translate-y-0.5 active:translate-y-0"
               >
-                {t("WhatsApp")}
+                <MessageCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 fill-emerald-500/20" />
+                <span>{t("WhatsApp")}</span>
               </a>
             </div>
           </div>
