@@ -89,14 +89,14 @@ export function Navbar({ contact }: NavbarProps) {
   )
 
   const languageSwitcher = (
-    <div className="flex items-center h-11 gap-1 rounded-2xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 p-1" dir="ltr">
+    <div className="flex items-center h-9 md:h-10 gap-1 rounded-xl md:rounded-2xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 p-0.5 md:p-1" dir="ltr">
       <button
         type="button"
         onClick={() => setLang("en")}
         aria-label="Switch to English"
         aria-pressed={lang === "en"}
         className={cn(
-          "h-full px-3 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer flex items-center justify-center",
+          "h-full px-2.5 md:px-3 rounded-lg md:rounded-xl text-[11px] md:text-xs font-bold transition-all duration-200 cursor-pointer flex items-center justify-center",
           lang === "en" ? "bg-cyan-500 text-black shadow-xs font-extrabold" : "text-foreground/60 dark:text-white/50 hover:text-foreground dark:hover:text-white"
         )}
       >
@@ -108,7 +108,7 @@ export function Navbar({ contact }: NavbarProps) {
         aria-label="Switch to Arabic"
         aria-pressed={lang === "ar"}
         className={cn(
-          "h-full px-3 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer flex items-center justify-center",
+          "h-full px-2.5 md:px-3 rounded-lg md:rounded-xl text-[11px] md:text-xs font-bold transition-all duration-200 cursor-pointer flex items-center justify-center",
           lang === "ar" ? "bg-cyan-500 text-black shadow-xs font-extrabold" : "text-foreground/60 dark:text-white/50 hover:text-foreground dark:hover:text-white"
         )}
       >
@@ -139,29 +139,34 @@ export function Navbar({ contact }: NavbarProps) {
     <>
       <nav
         className={cn(
-          "fixed top-0 inset-x-0 z-50 transition-[padding] duration-200 px-4 md:px-6 py-3",
-          isScrolled ? "py-3" : "py-4",
+          "fixed top-0 inset-x-0 z-50 transition-[padding] duration-200 px-3 md:px-6 py-2.5 md:py-3",
+          isScrolled ? "py-2 md:py-3" : "py-3 md:py-4",
         )}
         suppressHydrationWarning
       >
         <header
-          className={cn("max-w-7xl mx-auto relative flex items-center justify-between px-4 md:px-6 py-2 transition-[background-color,box-shadow] duration-200 glass-nav")}
+          className={cn("max-w-7xl mx-auto relative flex items-center justify-between px-3 md:px-6 py-1.5 md:py-2 transition-[background-color,box-shadow] duration-200 glass-nav")}
           suppressHydrationWarning
           dir="ltr"
         >
 
-          {/* Left-side: Desktop Logo & Mobile Left Logo */}
+          {/* Left-side: Desktop Logo & Mobile left spacer */}
           <div className="flex items-center gap-2 relative z-50">
             {desktopLogo}
-            <Link href="/" className="relative flex min-h-11 min-w-11 items-center md:hidden" dir="ltr" aria-label="KBI home">
-              <span className="text-xl font-bold tracking-tighter text-foreground dark:text-white">
+            <div className="md:hidden w-6" aria-hidden="true" />
+          </div>
+
+          {/* Mobile Centered Logo */}
+          <div className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-auto">
+            <Link href="/" className="flex items-center justify-center py-1" dir="ltr" aria-label="KBI home">
+              <span className="text-lg font-bold tracking-tighter text-foreground dark:text-white">
                 KBI<span className="text-cyan-500 dark:text-cyan-400">.</span>
               </span>
             </Link>
           </div>
 
           {/* Mobile Right-side: language button & theme toggle */}
-          <div className="md:hidden flex items-center gap-2 z-50" dir="ltr">
+          <div className="md:hidden flex items-center gap-1.5 z-50" dir="ltr">
             {languageSwitcher}
             <ThemeToggle />
           </div>

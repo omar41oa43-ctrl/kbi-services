@@ -15,8 +15,8 @@ export function ThemeToggle({ className }: { className?: string }) {
 
   if (!mounted) {
     return (
-      <div className={cn("w-11 h-11 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40", className)}>
-        <Sun className="w-4 h-4" />
+      <div className={cn("h-9 w-9 md:h-10 md:w-10 rounded-xl md:rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40", className)}>
+        <Sun className="w-3.5 h-3.5 md:w-4 md:h-4" />
       </div>
     );
   }
@@ -28,7 +28,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       type="button"
       onClick={() => setTheme(isDark ? "light" : "dark")}
       className={cn(
-        "relative w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-300 cursor-pointer group shadow-sm",
+        "relative h-9 w-9 md:h-10 md:w-10 rounded-xl md:rounded-2xl flex items-center justify-center transition-all duration-300 cursor-pointer group shadow-sm",
         "bg-white/10 hover:bg-white/20 border border-white/15 text-white/80 hover:text-white",
         "dark:bg-white/5 dark:hover:bg-white/10 dark:border-white/10 dark:text-white/80",
         className
@@ -37,9 +37,9 @@ export function ThemeToggle({ className }: { className?: string }) {
       aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
     >
       {isDark ? (
-        <Sun className="w-4 h-4 text-amber-400 group-hover:rotate-45 group-hover:scale-110 transition-transform duration-300" />
+        <Sun className="w-3.5 h-3.5 md:w-4 md:h-4 text-amber-400 group-hover:rotate-45 group-hover:scale-110 transition-transform duration-300" />
       ) : (
-        <Moon className="w-4 h-4 text-cyan-300 group-hover:-rotate-12 group-hover:scale-110 transition-transform duration-300" />
+        <Moon className="w-3.5 h-3.5 md:w-4 md:h-4 text-cyan-300 group-hover:-rotate-12 group-hover:scale-110 transition-transform duration-300" />
       )}
     </button>
   );
