@@ -2,8 +2,8 @@ import { ContactContent } from "@/components/contact-content"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Contact Us",
-  description: "Contact KBI to request on-site mobile, laptop, electronics, and IT support in Abu Dhabi, Dubai, Sharjah, or Ajman.",
+  title: "Contact KBI Services | Device Repair Across the UAE",
+  description: "Contact KBI Services for professional on-site device repair and IT support across Abu Dhabi, Dubai, Sharjah, Ajman, Ras Al Khaimah, Fujairah and Umm Al Quwain.",
   alternates: {
     canonical: "/contact",
   },

@@ -38,8 +38,8 @@ import { T } from "@/components/i18n-text"
 import { getSiteContact } from "@/lib/site-contact"
 
 export const metadata: Metadata = {
-  title: "Corporate IT Support & Maintenance",
-  description: "Enterprise-grade on-site repair and IT maintenance contracts for businesses across all 7 Emirates in the UAE. Priority SLA, secure data handling, and dedicated support for corporate fleets.",
+  title: "Corporate IT Support & Maintenance Across the UAE | KBI",
+  description: "Professional corporate IT support, device maintenance, networking, CCTV and on-site technical services for businesses across the UAE.",
   alternates: {
     canonical: "/corporate",
   },

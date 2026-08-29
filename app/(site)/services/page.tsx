@@ -8,8 +8,8 @@ import { Smartphone, Laptop, Printer, Monitor, Tv, Watch, Gamepad2, Camera, Moni
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Repair Services",
-  description: "Explore on-site mobile, laptop, computer, printer, TV, CCTV, networking, and installation services in Abu Dhabi, Dubai, Sharjah, and Ajman.",
+  title: "Device Repair & IT Services Across the UAE | KBI Services",
+  description: "Explore on-site mobile, laptop, computer, printer, TV, CCTV, networking, and installation services across all 7 Emirates in the UAE.",
   alternates: {
     canonical: "/services",
   },

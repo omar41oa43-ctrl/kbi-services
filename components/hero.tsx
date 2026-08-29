@@ -27,7 +27,7 @@ export function Hero() {
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </div>
                 <span className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-300">
-                  {t("SERVING ALL OF THE UAE")}
+                  {t("AVAILABLE ACROSS THE UAE")}
                 </span>
               </div>
             </div>
@@ -38,7 +38,7 @@ export function Hero() {
             </h1>
 
             <p className="text-sm sm:text-lg md:text-xl text-slate-600 dark:text-gray-300 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed font-normal dark:font-light tracking-wide px-2 sm:px-0" suppressHydrationWarning>
-              {t("Device repair and IT solutions wherever you are in the UAE. We come to your home or office with fast, professional, same-day service.")}
+              {t("Device repair and IT solutions wherever you are in the UAE. We come to your home or office with fast, professional service, with same-day appointments available depending on technician and parts availability.")}
             </p>
 
             {/* Buttons */}
@@ -59,6 +59,13 @@ export function Hero() {
                 <MessageCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 fill-emerald-500/20" />
                 <span>{t("WhatsApp")}</span>
               </a>
+            </div>
+
+            {/* Emirates List */}
+            <div className="mt-8 pt-4 border-t border-slate-200/40 dark:border-white/5 max-w-xl mx-auto">
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-gray-400 font-medium tracking-wide">
+                {t("Abu Dhabi · Dubai · Sharjah · Ajman · Ras Al Khaimah · Fujairah · Umm Al Quwain")}
+              </p>
             </div>
           </div>
         </div>

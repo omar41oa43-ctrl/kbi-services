@@ -8,6 +8,8 @@ import { BrandsSection } from "@/components/brands-section"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
+  title: "On-Site Device Repair Across the UAE | KBI Services",
+  description: "Professional on-site device repair and IT services across the UAE. KBI technicians come to your home or office for phones, laptops, PCs, printers, TVs, CCTV, gaming consoles and more.",
   alternates: {
     canonical: "/",
   },

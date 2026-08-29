@@ -17,11 +17,11 @@ export const revalidate = 600
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: {
-      default: "On-Site Device Repair Across the UAE | KBI Repairs",
-      template: "%s | KBI Repairs"
+      default: "On-Site Device Repair Across the UAE | KBI Services",
+      template: "%s | KBI Services"
     },
     description:
-      "On-site repair for phones, laptops, computers, printers, TVs, gaming consoles, networks, and CCTV across all 7 Emirates in the UAE.",
+      "Professional on-site device repair and IT services across the UAE. KBI technicians come to your home or office for phones, laptops, PCs, printers, TVs, CCTV, gaming consoles and more.",
     metadataBase: new URL("https://kbi.services"),
     icons: {
       icon: '/favicon-32.png',
@@ -31,22 +31,22 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       locale: "en_AE",
       url: "https://kbi.services",
-      siteName: "KBI Repairs",
-      title: "KBI | On-Site Device Repair Across the UAE",
-      description: "Book professional device repair at your home or office in Abu Dhabi, Dubai, Sharjah, and Ajman.",
+      siteName: "KBI Services",
+      title: "On-Site Device Repair Across the UAE | KBI Services",
+      description: "Professional on-site device repair and IT services across the UAE. KBI technicians come to your home or office for phones, laptops, PCs, printers, TVs, CCTV, gaming consoles and more.",
       images: [
         {
           url: "/og-image.png",
           width: 1200,
           height: 630,
-          alt: "KBI on-site device repair services",
+          alt: "KBI on-site device repair services across the UAE",
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: "KBI | On-Site Device Repair Across the UAE",
-      description: "Professional repair at your home or office in Abu Dhabi, Dubai, Sharjah, and Ajman.",
+      title: "On-Site Device Repair Across the UAE | KBI Services",
+      description: "Professional on-site device repair and IT services across the UAE. KBI technicians come to your home or office for phones, laptops, PCs, printers, TVs, CCTV, gaming consoles and more.",
       images: ["/og-image.png"],
     },
   }

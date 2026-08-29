@@ -26,8 +26,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const serviceName = device.name.includes("Repair") || device.name.includes("Support") || device.name.includes("Installation") ? device.name : `${device.name} Repair`
     const issueSummary = device.issues.slice(0, 3).join(", ")
     return {
-        title: `${serviceName} Across the UAE`,
-        description: `On-site ${serviceName.toLowerCase()} for ${issueSummary}. Appointments in Abu Dhabi, Dubai, Sharjah, and Ajman, with a quote confirmed before paid work.`,
+        title: `${serviceName} Across the UAE | KBI Services`,
+        description: `On-site ${serviceName.toLowerCase()} for ${issueSummary}. Available across all 7 Emirates in the UAE, with a quote confirmed before paid work.`,
         alternates: {
             canonical: `/services/${device.id}`,
         },
@@ -49,9 +49,9 @@ export default async function ServicePage({ params }: Props) {
         "@context": "https://schema.org",
         "@type": "Service",
         "name": `${serviceName} Service`,
-        "provider": { "@type": "LocalBusiness", "name": "KBI Repairs", "url": "https://kbi.services" },
-        "description": `On-site ${serviceName.toLowerCase()} for ${device.issues.slice(0, 3).join(", ")}.`,
-        "areaServed": ["Abu Dhabi", "Dubai", "Sharjah", "Ajman"].map((name) => ({ "@type": "AdministrativeArea", name })),
+        "provider": { "@type": "LocalBusiness", "name": "KBI Services", "url": "https://kbi.services" },
+        "description": `On-site ${serviceName.toLowerCase()} for ${device.issues.slice(0, 3).join(", ")}. Available across all 7 Emirates in the UAE.`,
+        "areaServed": ["Abu Dhabi", "Dubai", "Sharjah", "Ajman", "Ras Al Khaimah", "Fujairah", "Umm Al Quwain"].map((name) => ({ "@type": "AdministrativeArea", name })),
     }).replace(/</g, "\\u003c")
 
     return (

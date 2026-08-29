@@ -122,16 +122,24 @@ export function ContactContent({ contact }: ContactContentProps) {
                 <div className="p-3 rounded-2xl bg-purple-500/10">
                   <MapPin className="w-7 h-7 text-purple-500 dark:text-purple-400" />
                 </div>
-                <h2 className="text-2xl font-bold text-foreground">{t("Service Area")}</h2>
+                <h2 className="text-2xl font-bold text-foreground">{t("Service Areas")}</h2>
               </div>
               <p className="text-muted-foreground mb-4">
-                {t("We provide on-site repair services across all 7 Emirates in the UAE, including:")}
+                {t("We provide professional on-site repair and IT services across all seven Emirates of the UAE.")}
               </p>
               <div className="grid grid-cols-2 gap-3">
-                {(contact.serviceAreas || []).map((area, index) => (
+                {[
+                  "Abu Dhabi",
+                  "Dubai",
+                  "Sharjah",
+                  "Ajman",
+                  "Ras Al Khaimah",
+                  "Fujairah",
+                  "Umm Al Quwain",
+                ].map((area, index) => (
                   <div key={index} className="flex items-center gap-2 text-sm text-foreground/80 p-2.5 rounded-lg bg-black/5 dark:bg-white/5 border border-border">
                     <div className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
-                    {t(area)}
+                    <span>{t(area)}</span>
                   </div>
                 ))}
               </div>

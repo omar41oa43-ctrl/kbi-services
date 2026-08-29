@@ -8,7 +8,7 @@ import { useT } from "@/components/language-provider"
 
 const stats = [
   { number: "On-site", label: "Home & Office Visits" },
-  { number: "4", label: "Emirates Served" },
+  { number: "7", label: "Emirates Served" },
   { number: "Upfront", label: "Quote Before Repair" },
   { number: "Written", label: "Eligible Repair Warranty" },
 ]

@@ -190,8 +190,8 @@ export function Footer({ contact }: FooterProps) {
                   <MapPin className="w-4 h-4 text-purple-500 dark:text-purple-400" />
                 </div>
                 <div className="text-center" style={{ textAlign: "center" }}>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1 text-center" style={{ textAlign: "center" }}>{t("Location")}</p>
-                  <p className="text-foreground font-semibold text-center" style={{ textAlign: "center" }}>{t((isAr && contact.addressAr) ? contact.addressAr : contact.address)}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1 text-center" style={{ textAlign: "center" }}>{t("Service Area")}</p>
+                  <p className="text-foreground font-semibold text-center" style={{ textAlign: "center" }}>{t("All 7 Emirates, UAE")}</p>
                 </div>
               </li>
             </ul>
