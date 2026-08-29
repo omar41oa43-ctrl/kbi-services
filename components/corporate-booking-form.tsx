@@ -190,7 +190,7 @@ export function CorporateBookingForm() {
 
             <label className="flex items-start gap-3 rounded-2xl border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
               <input type="checkbox" checked={form.privacyConsent} onChange={handleConsent} required className="mt-1 h-4 w-4 accent-cyan-500" />
-              <span>I agree to KBI using these details to respond to this corporate request under the <Link href="/privacy" target="_blank" className="font-semibold text-cyan-700 underline dark:text-cyan-300">Privacy Policy</Link> and <Link href="/terms" target="_blank" className="font-semibold text-cyan-700 underline dark:text-cyan-300">Terms</Link>.</span>
+              <span>{t("I agree to KBI using these details to respond to this corporate request under the")} <Link href="/privacy" target="_blank" className="font-semibold text-cyan-700 underline dark:text-cyan-300">{t("Privacy Policy")}</Link> {t("and")} <Link href="/terms" target="_blank" className="font-semibold text-cyan-700 underline dark:text-cyan-300">{t("Terms")}</Link>.</span>
             </label>
 
             <div className="grid md:grid-cols-2 gap-6">

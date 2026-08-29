@@ -39,7 +39,7 @@ import { getSiteContact } from "@/lib/site-contact"
 
 export const metadata: Metadata = {
   title: "Corporate IT Support & Maintenance",
-  description: "Enterprise-grade on-site repair and IT maintenance contracts for businesses in Abu Dhabi and UAE. Priority SLA, secure data handling, and dedicated support for corporate fleets.",
+  description: "Enterprise-grade on-site repair and IT maintenance contracts for businesses across all 7 Emirates in the UAE. Priority SLA, secure data handling, and dedicated support for corporate fleets.",
   alternates: {
     canonical: "/corporate",
   },
@@ -113,18 +113,12 @@ export default async function CorporatePage() {
               </StaggerContainer>
 
 
-              <FadeIn delay={0.5} className="flex flex-wrap gap-4">
+              <FadeIn delay={0.5} className="flex flex-wrap items-center gap-4">
                 <HoverScale>
-                  <a href="#corporate-form" className="px-8 py-4 rounded-full bg-cyan-500 text-black font-bold hover:bg-cyan-400 transition-colors shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_35px_rgba(6,182,212,0.6)] block"><T k="Request Partnership" /></a>
+                  <a href="#corporate-form" className="px-8 py-4 rounded-full bg-cyan-500 text-black font-bold hover:bg-cyan-400 transition-colors shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_35px_rgba(6,182,212,0.6)] flex items-center justify-center gap-2"><T k="Request Partnership" /> <ArrowRight className="w-4 h-4 rtl:rotate-180" /></a>
                 </HoverScale>
                 <HoverScale>
-                  <Link href="#corporate-form" className="px-8 py-4 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold hover:bg-cyan-500/20 transition-colors shadow-sm block">Corporate Enquiry</Link>
-                </HoverScale>
-                <HoverScale>
-                  <Link href="/book" className="px-8 py-4 rounded-full border border-border bg-card/60 text-foreground font-semibold hover:bg-accent transition-colors shadow-sm block"><T k="Book Technician" /></Link>
-                </HoverScale>
-                <HoverScale>
-                  <a href={`https://wa.me/${contact.whatsappRaw}`} target="_blank" rel="noopener noreferrer" className="px-8 py-4 rounded-full bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_35px_rgba(34,197,94,0.6)] flex items-center gap-2"><MessageCircle className="w-5 h-5" /> <T k="WhatsApp" /></a>
+                  <a href={`https://wa.me/${contact.whatsappRaw}`} target="_blank" rel="noopener noreferrer" className="px-8 py-4 rounded-full bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_35px_rgba(34,197,94,0.6)] flex items-center justify-center gap-2"><MessageCircle className="w-5 h-5" /> <T k="WhatsApp" /></a>
                 </HoverScale>
               </FadeIn>
             </div>
@@ -482,7 +476,7 @@ export default async function CorporatePage() {
       <section className="container mx-auto px-6 py-12">
         <FadeIn>
           <h2 className="text-2xl md:text-3xl font-bold mb-6 text-foreground">
-            <span>Brands and platforms we support</span>
+            <span><T k="Brands and platforms we support" /></span>
           </h2>
         </FadeIn>
         <SlidingLogoMarquee
@@ -506,7 +500,7 @@ export default async function CorporatePage() {
           animationSteps={8}
           showControls
         />
-        <p className="mt-4 text-sm text-muted-foreground">Brand names identify devices we service and do not imply manufacturer authorization or endorsement.</p>
+        <p className="mt-4 text-sm text-muted-foreground"><T k="Brand names identify devices we service and do not imply manufacturer authorization or endorsement." /></p>
       </section>
 
       {/* CTA & Contact Information Section */}
