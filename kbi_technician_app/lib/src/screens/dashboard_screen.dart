@@ -12,6 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/service_request.dart';
 import '../services/location_tracking_service.dart';
 import '../services/technician_service.dart';
+import '../theme.dart';
 import '../utils/job_utils.dart';
 import 'job_details_screen.dart';
 import 'notifications_screen.dart';
@@ -93,7 +94,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Account awaiting approval or suspended. Cannot go online.'),
+            content: Text(
+                'Account awaiting approval or suspended. Cannot go online.'),
             backgroundColor: Color(0xFFEF4444),
           ),
         );
@@ -113,7 +115,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (user != null) {
         if (isOnline) {
           try {
-            await LocationTrackingService.instance.start(requestPermission: true);
+            await LocationTrackingService.instance
+                .start(requestPermission: true);
           } catch (_) {}
         } else {
           try {
@@ -121,7 +124,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           } catch (_) {}
         }
 
-        final techRef = FirebaseFirestore.instance.collection('technicians').doc(user.uid);
+        final techRef =
+            FirebaseFirestore.instance.collection('technicians').doc(user.uid);
         await techRef.set({
           'isOnline': isOnline,
           'online': isOnline,
@@ -141,7 +145,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   String _extractGeneralArea(String? fullAddress) {
-    if (fullAddress == null || fullAddress.trim().isEmpty) return 'UAE Service Area';
+    if (fullAddress == null || fullAddress.trim().isEmpty)
+      return 'UAE Service Area';
     final parts = fullAddress.split(',');
     if (parts.length >= 2) {
       return '${parts[0].trim()}, ${parts[1].trim()}';
@@ -155,7 +160,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (hasCoords) {
       uri = Uri.parse('https://maps.apple.com/?daddr=$lat,$lng&dirflg=d');
       if (!await canLaunchUrl(uri)) {
-        uri = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
+        uri = Uri.parse(
+            'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
       }
     } else {
       final enc = Uri.encodeComponent(address);
@@ -176,176 +182,207 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-            stream: _techStream,
-            builder: (context, techSnap) {
-              final techData = techSnap.data?.data();
-              final String techName = techData?['full_name'] ??
-                  techData?['name'] ??
-                  user?.displayName ??
-                  'Ahmed';
-              final rawStatus = (techData?['status'] ?? techData?['availability'] ?? '')
-                  .toString()
-                  .toLowerCase()
-                  .trim();
-              final isExplicitlyOffline = rawStatus == 'offline' ||
-                  rawStatus == 'standby' ||
-                  techData?['online'] == false;
+          stream: _techStream,
+          builder: (context, techSnap) {
+            final techData = techSnap.data?.data();
+            final String techName = techData?['full_name'] ??
+                techData?['name'] ??
+                user?.displayName ??
+                'Ahmed';
+            final rawStatus =
+                (techData?['status'] ?? techData?['availability'] ?? '')
+                    .toString()
+                    .toLowerCase()
+                    .trim();
+            final isExplicitlyOffline = rawStatus == 'offline' ||
+                rawStatus == 'standby' ||
+                techData?['online'] == false;
 
-              _canGoOnline = techData?['isSuspended'] != true &&
-                  techData?['isLocked'] != true &&
-                  techData?['appAccessEnabled'] != false;
+            _canGoOnline = techData?['isSuspended'] != true &&
+                techData?['isLocked'] != true &&
+                techData?['appAccessEnabled'] != false;
 
-              _isOnline = _canGoOnline && !isExplicitlyOffline;
+            _isOnline = _canGoOnline && !isExplicitlyOffline;
 
-              if (_canGoOnline &&
-                  (rawStatus.isEmpty || rawStatus == 'approved' || rawStatus == 'active') &&
-                  !_initialAutoOnlineTriggered) {
-                _initialAutoOnlineTriggered = true;
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  _setAvailabilityMode('available');
-                });
-              }
+            if (_canGoOnline &&
+                (rawStatus.isEmpty ||
+                    rawStatus == 'approved' ||
+                    rawStatus == 'active') &&
+                !_initialAutoOnlineTriggered) {
+              _initialAutoOnlineTriggered = true;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _setAvailabilityMode('available');
+              });
+            }
 
-              if (_isOnline && user != null && !_restoredLocationTracking) {
-                _restoredLocationTracking = true;
-                WidgetsBinding.instance.addPostFrameCallback(
-                  (_) => _restoreLocationTracking(user.uid),
-                );
-              }
+            if (_isOnline && user != null && !_restoredLocationTracking) {
+              _restoredLocationTracking = true;
+              WidgetsBinding.instance.addPostFrameCallback(
+                (_) => _restoreLocationTracking(user.uid),
+              );
+            }
 
-              final String techId = (techData?['employeeId'] ?? techData?['techId'] ?? 'KBI-007396').toString();
-              final String photoUrl = (techData?['profile_photo'] ?? techData?['photoUrl'] ?? techData?['avatarUrl'] ?? techData?['photoURL'] ?? techData?['profilePhoto'] ?? user?.photoURL ?? '').toString();
-              final int batteryLevel = (techData?['batteryLevel'] is num) ? (techData!['batteryLevel'] as num).toInt() : 88;
+            final String techId =
+                (techData?['employeeId'] ?? techData?['techId'] ?? 'KBI-007396')
+                    .toString();
+            final String photoUrl = (techData?['profile_photo'] ??
+                    techData?['photoUrl'] ??
+                    techData?['avatarUrl'] ??
+                    techData?['photoURL'] ??
+                    techData?['profilePhoto'] ??
+                    user?.photoURL ??
+                    '')
+                .toString();
+            final int batteryLevel = (techData?['batteryLevel'] is num)
+                ? (techData!['batteryLevel'] as num).toInt()
+                : 88;
 
-              return StreamBuilder<List<DocumentSnapshot<Map<String, dynamic>>>>(
-                stream: _jobsStream,
-                builder: (context, jobsSnap) {
-                  final myJobs = jobsSnap.data ?? [];
+            return StreamBuilder<List<DocumentSnapshot<Map<String, dynamic>>>>(
+              stream: _jobsStream,
+              builder: (context, jobsSnap) {
+                final myJobs = jobsSnap.data ?? [];
 
-                  // Find Next / Active Job
-                  final activeJobDoc = myJobs.cast<DocumentSnapshot<Map<String, dynamic>>?>().firstWhere(
-                    (d) {
-                      if (d == null) return false;
-                      final data = d.data();
-                      if (data == null) return false;
-                      final status = normalizeJobStatus(data['status']);
-                      return !{'completed', 'cancelled', 'rejected'}.contains(status);
-                    },
-                    orElse: () => null,
-                  );
+                // Feature a new, unaccepted dispatch before work already in
+                // progress. Within the same stage, the newest update wins.
+                final featuredJobs = myJobs.where((doc) {
+                  final data = doc.data();
+                  if (data == null) return false;
+                  return jobHomePriority(data['status']) < 3;
+                }).toList()
+                  ..sort((left, right) {
+                    final leftData = left.data() ?? <String, dynamic>{};
+                    final rightData = right.data() ?? <String, dynamic>{};
+                    final priorityComparison = jobHomePriority(
+                      leftData['status'],
+                    ).compareTo(jobHomePriority(rightData['status']));
+                    if (priorityComparison != 0) return priorityComparison;
 
-                  final todayJobs = myJobs.where((d) {
-                    final data = d.data();
-                    return data != null && isSameLocalDay(jobDate(data), DateTime.now());
-                  }).toList();
+                    final leftDate = TechnicianService.extractDocDate(leftData);
+                    final rightDate =
+                        TechnicianService.extractDocDate(rightData);
+                    if (leftDate == null && rightDate == null) return 0;
+                    if (leftDate == null) return 1;
+                    if (rightDate == null) return -1;
+                    return rightDate.compareTo(leftDate);
+                  });
+                final activeJobDoc =
+                    featuredJobs.isEmpty ? null : featuredJobs.first;
 
-                  final completedTodayJobs = todayJobs.where((d) {
-                    final data = d.data();
-                    if (data == null) return false;
-                    return normalizeJobStatus(data['status']) == 'completed';
-                  }).toList();
+                final todayJobs = myJobs.where((d) {
+                  final data = d.data();
+                  return data != null &&
+                      isSameLocalDay(jobDate(data), DateTime.now());
+                }).toList();
 
-                  final activeTodayJobs = todayJobs.where((d) {
-                    final data = d.data();
-                    if (data == null) return false;
-                    final s = normalizeJobStatus(data['status']);
-                    return !{'completed', 'cancelled', 'rejected', 'delivered'}.contains(s);
-                  }).toList();
+                final completedTodayJobs = todayJobs.where((d) {
+                  final data = d.data();
+                  if (data == null) return false;
+                  return normalizeJobStatus(data['status']) == 'completed';
+                }).toList();
 
-                  double earningsToday = 0;
-                  for (final doc in completedTodayJobs) {
-                    final data = doc.data() ?? {};
-                    final amt = data['finalAmount'] ?? data['totalAmount'] ?? data['finalPrice'] ?? data['price'] ?? 0;
-                    if (amt is num) {
-                      earningsToday += amt.toDouble();
-                    } else if (amt is String) {
-                      earningsToday += double.tryParse(amt) ?? 0;
-                    }
+                final activeTodayJobs = todayJobs.where((d) {
+                  final data = d.data();
+                  if (data == null) return false;
+                  final s = normalizeJobStatus(data['status']);
+                  return !{'completed', 'cancelled', 'rejected', 'delivered'}
+                      .contains(s);
+                }).toList();
+
+                double earningsToday = 0;
+                for (final doc in completedTodayJobs) {
+                  final data = doc.data() ?? {};
+                  final amt = data['finalAmount'] ??
+                      data['totalAmount'] ??
+                      data['finalPrice'] ??
+                      data['price'] ??
+                      0;
+                  if (amt is num) {
+                    earningsToday += amt.toDouble();
+                  } else if (amt is String) {
+                    earningsToday += double.tryParse(amt) ?? 0;
                   }
-                  if (earningsToday == 0 && completedTodayJobs.isNotEmpty) {
-                    earningsToday = completedTodayJobs.length * 250.0;
-                  }
+                }
+                // Recent Completed Activity
+                final recentCompletedDocs = myJobs.where((d) {
+                  final data = d.data();
+                  if (data == null) return false;
+                  return normalizeJobStatus(data['status']) == 'completed';
+                }).toList()
+                  ..sort((a, b) => (jobDate(b.data() ?? {}) ?? DateTime.now())
+                      .compareTo(jobDate(a.data() ?? {}) ?? DateTime.now()));
 
-                  // Recent Completed Activity
-                  final recentCompletedDocs = myJobs.where((d) {
-                    final data = d.data();
-                    if (data == null) return false;
-                    return normalizeJobStatus(data['status']) == 'completed';
-                  }).toList()
-                    ..sort((a, b) => (jobDate(b.data() ?? {}) ?? DateTime.now())
-                        .compareTo(jobDate(a.data() ?? {}) ?? DateTime.now()));
+                final currentStatusMode = !_isOnline
+                    ? 'offline'
+                    : (rawStatus == 'busy' ? 'busy' : 'available');
 
-                  final currentStatusMode = !_isOnline
-                      ? 'offline'
-                      : (rawStatus == 'busy' ? 'busy' : 'available');
+                return SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(
+                      parent: BouncingScrollPhysics()),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 500),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(18, 16, 18, 140),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // 1. Header: Avatar + Greetings + Tech Name + Tech ID + Copy + Notification & Calendar Buttons
+                            _buildHeader(
+                              name: techName,
+                              techId: techId,
+                              photoUrl: photoUrl,
+                              isOnline: _isOnline,
+                              isAr: isAr,
+                            ),
+                            const SizedBox(height: 16),
 
-                  return SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 500),
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(18, 16, 18, 140),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // 1. Header: Avatar + Greetings + Tech Name + Tech ID + Copy + Notification & Calendar Buttons
-                              _buildHeader(
-                                name: techName,
-                                techId: techId,
-                                photoUrl: photoUrl,
-                                isOnline: _isOnline,
-                                isAr: isAr,
-                              ),
-                              const SizedBox(height: 16),
+                            // 2. Status Banner (You're online | GPS Live | Last sync | Battery)
+                            _buildOnlineStatusBanner(
+                              isOnline: _isOnline,
+                              batteryLevel: batteryLevel,
+                              isAr: isAr,
+                            ),
+                            const SizedBox(height: 12),
 
-                              // 2. Status Banner (You're online | GPS Live | Last sync | Battery)
-                              _buildOnlineStatusBanner(
-                                isOnline: _isOnline,
-                                batteryLevel: batteryLevel,
-                                isAr: isAr,
-                              ),
-                              const SizedBox(height: 12),
+                            // 3. Status Selector (Available | Busy | Offline)
+                            _buildStatusSelector(
+                              currentMode: currentStatusMode,
+                              isAr: isAr,
+                            ),
+                            const SizedBox(height: 18),
 
-                              // 3. Status Selector (Available | Busy | Offline)
-                              _buildStatusSelector(
-                                currentMode: currentStatusMode,
-                                isAr: isAr,
-                              ),
-                              const SizedBox(height: 24),
+                            // 4. Next Job Section Header + Card
+                            _buildNextJobSection(
+                              activeJobDoc: activeJobDoc,
+                              isAr: isAr,
+                            ),
+                            const SizedBox(height: 24),
 
-                              // 4. Next Job Section Header + Card
-                              _buildNextJobSection(
-                                activeJobDoc: activeJobDoc,
-                                isAr: isAr,
-                              ),
-                              const SizedBox(height: 24),
+                            // 5. Today Overview Header + 3 Metric Cards
+                            _buildTodayOverview(
+                              jobsToday: todayJobs.length,
+                              completedJobs: completedTodayJobs.length,
+                              earningsToday: earningsToday,
+                              activeJobs: activeTodayJobs.length,
+                              isAr: isAr,
+                            ),
+                            const SizedBox(height: 24),
 
-                              // 5. Today Overview Header + 3 Metric Cards
-                              _buildTodayOverview(
-                                jobsToday: todayJobs.isNotEmpty ? todayJobs.length : 3,
-                                completedJobs: completedTodayJobs.length,
-                                earningsToday: earningsToday > 0 ? earningsToday : 650,
-                                activeJobs: activeTodayJobs.isNotEmpty ? activeTodayJobs.length : 1,
-                                isAr: isAr,
-                              ),
-                              const SizedBox(height: 24),
-
-                              // 6. Recent Activity
-                              _buildRecentActivity(
-                                completedDocs: recentCompletedDocs,
-                                isAr: isAr,
-                              ),
-                            ],
-                          ),
+                            // 6. Recent Activity
+                            _buildRecentActivity(
+                              completedDocs: recentCompletedDocs,
+                              isAr: isAr,
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  );
-                },
-              );
-            },
-          ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }
@@ -397,7 +434,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 width: 14,
                 height: 14,
                 decoration: BoxDecoration(
-                  color: isOnline ? const Color(0xFF22C55E) : const Color(0xFF94A3B8),
+                  color: isOnline
+                      ? const Color(0xFF22C55E)
+                      : const Color(0xFF94A3B8),
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 2.5),
                 ),
@@ -440,10 +479,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   HapticFeedback.selectionClick();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(isAr ? 'تم نسخ المعرف: $techId' : 'Copied ID: $techId'),
+                      content: Text(isAr
+                          ? 'تم نسخ المعرف: $techId'
+                          : 'Copied ID: $techId'),
                       duration: const Duration(seconds: 1),
                       behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
                   );
                 },
@@ -495,11 +537,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 clipBehavior: Clip.none,
                 children: [
                   IconButton(
-                    icon: const Icon(CupertinoIcons.bell, size: 20, color: Color(0xFF334155)),
+                    icon: const Icon(CupertinoIcons.bell,
+                        size: 20, color: Color(0xFF334155)),
                     onPressed: () {
                       Navigator.push(
                         context,
-                        CupertinoPageRoute(builder: (_) => const NotificationsScreen()),
+                        CupertinoPageRoute(
+                            builder: (_) => const NotificationsScreen()),
                       );
                     },
                   ),
@@ -508,12 +552,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     right: isAr ? null : 6,
                     left: isAr ? 6 : null,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 1),
                       decoration: const BoxDecoration(
                         color: Color(0xFF2563EB),
                         shape: BoxShape.circle,
                       ),
-                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                      constraints:
+                          const BoxConstraints(minWidth: 16, minHeight: 16),
                       child: const Center(
                         child: Text(
                           '3',
@@ -548,7 +594,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
               child: IconButton(
-                icon: const Icon(CupertinoIcons.calendar, size: 20, color: Color(0xFF334155)),
+                icon: const Icon(CupertinoIcons.calendar,
+                    size: 20, color: Color(0xFF334155)),
                 onPressed: () => widget.onNavigate?.call(1),
               ),
             ),
@@ -602,7 +649,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             width: 18,
             height: 18,
             decoration: BoxDecoration(
-              color: (isOnline ? const Color(0xFF22C55E) : const Color(0xFF94A3B8)).withValues(alpha: 0.2),
+              color:
+                  (isOnline ? const Color(0xFF22C55E) : const Color(0xFF94A3B8))
+                      .withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -610,7 +659,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 width: 9,
                 height: 9,
                 decoration: BoxDecoration(
-                  color: isOnline ? const Color(0xFF22C55E) : const Color(0xFF94A3B8),
+                  color: isOnline
+                      ? const Color(0xFF22C55E)
+                      : const Color(0xFF94A3B8),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -634,8 +685,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 1),
                 Text(
                   isOnline
-                      ? (isAr ? 'متاح للطلبات الجديدة' : 'Available for new orders')
-                      : (isAr ? 'لا تستقبل طلبات جديدة' : 'Not receiving orders'),
+                      ? (isAr
+                          ? 'متاح للطلبات الجديدة'
+                          : 'Available for new orders')
+                      : (isAr
+                          ? 'لا تستقبل طلبات جديدة'
+                          : 'Not receiving orders'),
                   style: const TextStyle(
                     color: Color(0xFF94A3B8),
                     fontSize: 11.5,
@@ -654,7 +709,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.location_on_rounded, size: 14, color: Color(0xFF22C55E)),
+                  const Icon(Icons.location_on_rounded,
+                      size: 14, color: Color(0xFF22C55E)),
                   const SizedBox(width: 3),
                   Text(
                     isAr ? 'مباشر' : 'GPS Live',
@@ -672,14 +728,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(CupertinoIcons.arrow_2_circlepath, size: 13, color: Color(0xFF3B82F6)),
+                  const Icon(CupertinoIcons.arrow_2_circlepath,
+                      size: 13, color: Color(0xFF3B82F6)),
                   const SizedBox(width: 3),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         isAr ? 'مزامنة' : 'Last sync',
-                        style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 8.5),
+                        style: const TextStyle(
+                            color: Color(0xFF94A3B8), fontSize: 8.5),
                       ),
                       const Text(
                         '10s ago',
@@ -699,14 +757,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(CupertinoIcons.battery_75_percent, size: 15, color: Color(0xFF22C55E)),
+                  const Icon(CupertinoIcons.battery_75_percent,
+                      size: 15, color: Color(0xFF22C55E)),
                   const SizedBox(width: 3),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         isAr ? 'البطارية' : 'Battery',
-                        style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 8.5),
+                        style: const TextStyle(
+                            color: Color(0xFF94A3B8), fontSize: 8.5),
                       ),
                       Text(
                         '$batteryLevel%',
@@ -854,65 +914,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // ==========================================
   // 4. NEXT JOB SECTION & CARD
   // ==========================================
-  Widget _buildNextJobSection({
-    required DocumentSnapshot<Map<String, dynamic>>? activeJobDoc,
-    required bool isAr,
-  }) {
-    final data = activeJobDoc?.data() ?? <String, dynamic>{};
-    final String orderNum = (data['orderNumber'] ?? data['orderId'] ?? data['trackingCode'] ?? 'ORD-8421').toString();
-    final String device = (data['device'] ?? data['deviceModel'] ?? 'iPhone 14 Pro Max').toString();
-    final String service = (data['service'] ?? data['serviceType'] ?? data['issue'] ?? 'Screen Replacement').toString();
-    final String address = _extractGeneralArea(data['address']?.toString());
-    final String timeSlot = (data['scheduledTime'] ?? data['timeSlot'] ?? '10:30 AM – 12:00 PM').toString();
-    final String phone = (data['customerPhone'] ?? data['phone'] ?? '+971502491034').toString();
-    final String rawStatus = normalizeJobStatus(data['status']);
-    final String statusPillLabel = rawStatus == 'on_the_way'
-        ? (isAr ? 'في الطريق' : 'On The Way')
-        : (rawStatus == 'in_progress' ? (isAr ? 'قيد الصيانة' : 'In Progress') : (isAr ? 'في الطريق' : 'On The Way'));
-
-    // -------------------------------------------------------------
-    // Extract Real Destination Location and Calculate Live Distance & ETA
-    // -------------------------------------------------------------
-    final rawLat = data['latitude'] ?? (data['location'] is Map ? (data['location'] as Map)['lat'] : null);
-    final rawLng = data['longitude'] ?? (data['location'] is Map ? (data['location'] as Map)['lng'] : null);
-    final double destLat = (rawLat is num) ? rawLat.toDouble() : 25.2048; // Default Dubai center if unpinned
-    final double destLng = (rawLng is num) ? rawLng.toDouble() : 55.2708;
-    final latlng.LatLng jobPoint = latlng.LatLng(destLat, destLng);
-
-    // Get current tech position
-    final Position? techPos = LocationTrackingService.instance.lastPosition;
-    final latlng.LatLng techPoint = techPos != null
-        ? latlng.LatLng(techPos.latitude, techPos.longitude)
-        : latlng.LatLng(destLat - 0.025, destLng - 0.02);
-
-    // Calculate real road distance (or geodesic fallback)
-    final double distanceMeters = Geolocator.distanceBetween(
-      techPoint.latitude,
-      techPoint.longitude,
-      destLat,
-      destLng,
-    );
-
-    // Real distance display
-    final String distanceDisplay = distanceMeters < 1000
-        ? '${distanceMeters.round()} m'
-        : '${(distanceMeters / 1000).toStringAsFixed(1)} km';
-
-    // Real ETA calculation: assume average city traffic speed 35 km/h
-    final int etaMinutes = ((distanceMeters / 1000) / 35 * 60).round().clamp(1, 180);
-    final String etaDisplay = etaMinutes < 60
-        ? '$etaMinutes min'
-        : '${etaMinutes ~/ 60}h ${etaMinutes % 60}m';
-
-    // Midpoint for map camera center
-    final latlng.LatLng mapCenter = latlng.LatLng(
-      (techPoint.latitude + destLat) / 2,
-      (techPoint.longitude + destLng) / 2,
-    );
-
+  Widget _buildEmptyNextJobSection({required bool isAr}) {
     return Column(
       children: [
-        // Section Header
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -939,18 +943,201 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(22),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFFF1F5F9)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: kbiBlue.withValues(alpha: 0.09),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: const Icon(
+                  CupertinoIcons.bell,
+                  color: kbiBlue,
+                  size: 21,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isAr ? 'جاهز لطلب جديد' : 'Ready for a new order',
+                      style: const TextStyle(
+                        color: kbiLabel,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isAr
+                          ? 'سيظهر أي طلب جديد هنا فور تعيينه لك.'
+                          : 'A new dispatch will appear here as soon as it is assigned to you.',
+                      style: const TextStyle(
+                        color: kbiSecondaryLabel,
+                        fontSize: 12,
+                        height: 1.4,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNextJobSection({
+    required DocumentSnapshot<Map<String, dynamic>>? activeJobDoc,
+    required bool isAr,
+  }) {
+    if (activeJobDoc == null) {
+      return _buildEmptyNextJobSection(isAr: isAr);
+    }
+
+    final data = activeJobDoc.data() ?? <String, dynamic>{};
+    final String orderNum = (data['orderNumber'] ??
+            data['orderId'] ??
+            data['trackingCode'] ??
+            data['bookingId'] ??
+            activeJobDoc.id)
+        .toString();
+    final rawDevices = data['devices'];
+    final firstDevice =
+        rawDevices is List && rawDevices.isNotEmpty ? rawDevices.first : null;
+    final firstDeviceData =
+        firstDevice is Map ? Map<String, dynamic>.from(firstDevice) : null;
+    final fallbackDevice = [
+      firstDeviceData?['brand'],
+      firstDeviceData?['model'],
+    ]
+        .where((value) => value != null && value.toString().trim().isNotEmpty)
+        .join(' ');
+    final String device = (data['device'] ??
+            data['deviceModel'] ??
+            (fallbackDevice.isEmpty ? 'Device repair' : fallbackDevice))
+        .toString();
+    final String service = (data['service'] ??
+            data['serviceType'] ??
+            data['issue'] ??
+            firstDeviceData?['issue'] ??
+            data['description'] ??
+            'Service details pending')
+        .toString();
+    final String address = _extractGeneralArea(data['address']?.toString());
+    final String timeSlot =
+        (data['scheduledTime'] ?? data['timeSlot'] ?? 'Time not set')
+            .toString();
+    final String phone =
+        (data['customerPhone'] ?? data['phone'] ?? '').toString();
+    final String rawStatus = normalizeJobStatus(data['status']);
+    final bool isNewAssignment = jobHomePriority(rawStatus) == 0;
+    final String statusPillLabel = isAr
+        ? (isNewAssignment ? 'طلب جديد' : jobStatusLabel(rawStatus))
+        : jobStatusLabel(rawStatus);
+    final Color statusColor = jobStatusColor(rawStatus);
+
+    // -------------------------------------------------------------
+    // Extract Real Destination Location and Calculate Live Distance & ETA
+    // -------------------------------------------------------------
+    final rawLat = data['latitude'] ??
+        (data['location'] is Map ? (data['location'] as Map)['lat'] : null);
+    final rawLng = data['longitude'] ??
+        (data['location'] is Map ? (data['location'] as Map)['lng'] : null);
+    final double destLat = (rawLat is num)
+        ? rawLat.toDouble()
+        : 25.2048; // Default Dubai center if unpinned
+    final double destLng = (rawLng is num) ? rawLng.toDouble() : 55.2708;
+    final latlng.LatLng jobPoint = latlng.LatLng(destLat, destLng);
+
+    // Get current tech position
+    final Position? techPos = LocationTrackingService.instance.lastPosition;
+    final latlng.LatLng techPoint = techPos != null
+        ? latlng.LatLng(techPos.latitude, techPos.longitude)
+        : latlng.LatLng(destLat - 0.025, destLng - 0.02);
+
+    // Calculate real road distance (or geodesic fallback)
+    final double distanceMeters = Geolocator.distanceBetween(
+      techPoint.latitude,
+      techPoint.longitude,
+      destLat,
+      destLng,
+    );
+
+    // Real distance display
+    final String distanceDisplay = distanceMeters < 1000
+        ? '${distanceMeters.round()} m'
+        : '${(distanceMeters / 1000).toStringAsFixed(1)} km';
+
+    // Real ETA calculation: assume average city traffic speed 35 km/h
+    final int etaMinutes =
+        ((distanceMeters / 1000) / 35 * 60).round().clamp(1, 180);
+    final String etaDisplay = etaMinutes < 60
+        ? '$etaMinutes min'
+        : '${etaMinutes ~/ 60}h ${etaMinutes % 60}m';
+
+    // Midpoint for map camera center
+    final latlng.LatLng mapCenter = latlng.LatLng(
+      (techPoint.latitude + destLat) / 2,
+      (techPoint.longitude + destLng) / 2,
+    );
+
+    return Column(
+      children: [
+        // Section Header
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              isNewAssignment
+                  ? (isAr ? 'طلب جديد' : 'New Assignment')
+                  : (isAr ? 'الطلب القادم' : 'Next Job'),
+              style: const TextStyle(
+                color: Color(0xFF0F172A),
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.3,
+              ),
+            ),
+            GestureDetector(
+              onTap: () => widget.onNavigate?.call(1),
+              child: Text(
+                isAr ? 'عرض الكل' : 'View all',
+                style: const TextStyle(
+                  color: Color(0xFF2563EB),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
 
         // Main Card
         GestureDetector(
           onTap: () {
-            if (activeJobDoc != null) {
-              Navigator.push(
-                context,
-                CupertinoPageRoute(
-                  builder: (_) => JobDetailsScreen(job: ServiceRequestModel.fromDoc(activeJobDoc)),
-                ),
-              );
-            }
+            Navigator.push(
+              context,
+              CupertinoPageRoute(
+                builder: (_) => JobDetailsScreen(
+                    job: ServiceRequestModel.fromDoc(activeJobDoc)),
+              ),
+            );
           },
           child: Container(
             padding: const EdgeInsets.all(18),
@@ -981,21 +1168,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         children: [
                           // Status Badge (Blue Pill with Navigation Icon)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 9, vertical: 4),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFEFF6FF),
+                              color: statusColor.withValues(alpha: 0.10),
                               borderRadius: BorderRadius.circular(999),
-                              border: Border.all(color: const Color(0xFFBFDBFE)),
+                              border: Border.all(
+                                color: statusColor.withValues(alpha: 0.25),
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(CupertinoIcons.location_north_fill, size: 11, color: Color(0xFF2563EB)),
+                                Icon(
+                                  isNewAssignment
+                                      ? CupertinoIcons.bell_fill
+                                      : CupertinoIcons.location_north_fill,
+                                  size: 11,
+                                  color: statusColor,
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   statusPillLabel,
-                                  style: const TextStyle(
-                                    color: Color(0xFF2563EB),
+                                  style: TextStyle(
+                                    color: statusColor,
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -1040,7 +1236,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(CupertinoIcons.location, size: 13, color: Color(0xFF94A3B8)),
+                              const Icon(CupertinoIcons.location,
+                                  size: 13, color: Color(0xFF94A3B8)),
                               const SizedBox(width: 5),
                               Expanded(
                                 child: Text(
@@ -1061,7 +1258,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           // Time Row
                           Row(
                             children: [
-                              const Icon(CupertinoIcons.clock, size: 13, color: Color(0xFF94A3B8)),
+                              const Icon(CupertinoIcons.clock,
+                                  size: 13, color: Color(0xFF94A3B8)),
                               const SizedBox(width: 5),
                               Text(
                                 timeSlot,
@@ -1099,14 +1297,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     options: fmap.MapOptions(
                                       initialCenter: mapCenter,
                                       initialZoom: 12.5,
-                                      interactionOptions: const fmap.InteractionOptions(
+                                      interactionOptions:
+                                          const fmap.InteractionOptions(
                                         flags: fmap.InteractiveFlag.none,
                                       ),
                                     ),
                                     children: [
                                       fmap.TileLayer(
-                                        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                        userAgentPackageName: 'ae.kbi.kbiTechnicianApp',
+                                        urlTemplate:
+                                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                        userAgentPackageName:
+                                            'ae.kbi.kbiTechnicianApp',
                                         maxZoom: 19,
                                       ),
                                       fmap.PolylineLayer(
@@ -1129,10 +1330,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                               decoration: BoxDecoration(
                                                 color: const Color(0xFF2563EB),
                                                 shape: BoxShape.circle,
-                                                border: Border.all(color: Colors.white, width: 2.5),
+                                                border: Border.all(
+                                                    color: Colors.white,
+                                                    width: 2.5),
                                                 boxShadow: [
                                                   BoxShadow(
-                                                    color: Colors.black.withValues(alpha: 0.2),
+                                                    color: Colors.black
+                                                        .withValues(alpha: 0.2),
                                                     blurRadius: 4,
                                                   ),
                                                 ],
@@ -1164,13 +1368,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               left: isAr ? null : 8,
                               right: isAr ? 8 : null,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 7, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.95),
                                   borderRadius: BorderRadius.circular(10),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.08),
+                                      color:
+                                          Colors.black.withValues(alpha: 0.08),
                                       blurRadius: 6,
                                       offset: const Offset(0, 2),
                                     ),
@@ -1179,10 +1385,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(CupertinoIcons.location_solid, size: 11, color: Color(0xFF2563EB)),
+                                    const Icon(CupertinoIcons.location_solid,
+                                        size: 11, color: Color(0xFF2563EB)),
                                     const SizedBox(width: 4),
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           distanceDisplay,
@@ -1213,13 +1421,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               left: isAr ? null : 8,
                               right: isAr ? 8 : null,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 7, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.95),
                                   borderRadius: BorderRadius.circular(10),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.08),
+                                      color:
+                                          Colors.black.withValues(alpha: 0.08),
                                       blurRadius: 6,
                                       offset: const Offset(0, 2),
                                     ),
@@ -1228,10 +1438,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(CupertinoIcons.time, size: 11, color: Color(0xFF2563EB)),
+                                    const Icon(CupertinoIcons.time,
+                                        size: 11, color: Color(0xFF2563EB)),
                                     const SizedBox(width: 4),
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           etaDisplay,
@@ -1274,7 +1486,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           final uri = Uri.parse('tel:$phone');
                           if (await canLaunchUrl(uri)) launchUrl(uri);
                         },
-                        icon: const Icon(CupertinoIcons.phone, size: 15, color: Color(0xFF2563EB)),
+                        icon: const Icon(CupertinoIcons.phone,
+                            size: 15, color: Color(0xFF2563EB)),
                         label: Text(
                           isAr ? 'اتصال' : 'Call',
                           style: const TextStyle(
@@ -1286,7 +1499,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           side: const BorderSide(color: Color(0xFFE2E8F0)),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
                         ),
                       ),
                     ),
@@ -1297,11 +1511,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       flex: 9,
                       child: OutlinedButton.icon(
                         onPressed: () async {
-                          final cleanPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
+                          final cleanPhone =
+                              phone.replaceAll(RegExp(r'[^0-9]'), '');
                           final uri = Uri.parse('https://wa.me/$cleanPhone');
-                          if (await canLaunchUrl(uri)) launchUrl(uri, mode: LaunchMode.externalApplication);
+                          if (await canLaunchUrl(uri))
+                            launchUrl(uri,
+                                mode: LaunchMode.externalApplication);
                         },
-                        icon: const Icon(Icons.chat_bubble_outline_rounded, size: 15, color: Color(0xFF22C55E)),
+                        icon: const Icon(Icons.chat_bubble_outline_rounded,
+                            size: 15, color: Color(0xFF22C55E)),
                         label: Text(
                           isAr ? 'واتساب' : 'WhatsApp',
                           style: const TextStyle(
@@ -1313,7 +1531,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           side: const BorderSide(color: Color(0xFFE2E8F0)),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
                         ),
                       ),
                     ),
@@ -1324,15 +1543,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       flex: 9,
                       child: FilledButton.icon(
                         onPressed: () {
-                          final lat = data['latitude'] ?? (data['location'] is Map ? (data['location'] as Map)['lat'] : null);
-                          final lng = data['longitude'] ?? (data['location'] is Map ? (data['location'] as Map)['lng'] : null);
+                          final lat = data['latitude'] ??
+                              (data['location'] is Map
+                                  ? (data['location'] as Map)['lat']
+                                  : null);
+                          final lng = data['longitude'] ??
+                              (data['location'] is Map
+                                  ? (data['location'] as Map)['lng']
+                                  : null);
                           _openNavigation(
                             lat != null ? (lat as num).toDouble() : null,
                             lng != null ? (lng as num).toDouble() : null,
                             address,
                           );
                         },
-                        icon: const Icon(CupertinoIcons.paperplane_fill, size: 14, color: Colors.white),
+                        icon: const Icon(CupertinoIcons.paperplane_fill,
+                            size: 14, color: Colors.white),
                         label: Text(
                           isAr ? 'توجيه' : 'Navigate',
                           style: const TextStyle(
@@ -1344,7 +1570,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         style: FilledButton.styleFrom(
                           backgroundColor: const Color(0xFF2563EB),
                           padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
                           elevation: 0,
                         ),
                       ),
@@ -1397,242 +1624,247 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         const SizedBox(height: 12),
-
         IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-            // Card 1: Jobs Today (Blue Icon)
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFF1F5F9)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.02),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6FF),
-                        borderRadius: BorderRadius.circular(10),
+              // Card 1: Jobs Today (Blue Icon)
+              Expanded(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFF1F5F9)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.02),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
                       ),
-                      child: const Icon(CupertinoIcons.briefcase, color: Color(0xFF2563EB), size: 17),
-                    ),
-                    const SizedBox(height: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            '$jobsToday',
-                            style: const TextStyle(
-                              color: Color(0xFF0F172A),
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.3,
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEFF6FF),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(CupertinoIcons.briefcase,
+                            color: Color(0xFF2563EB), size: 17),
+                      ),
+                      const SizedBox(height: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              '$jobsToday',
+                              style: const TextStyle(
+                                color: Color(0xFF0F172A),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.3,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          isAr ? 'طلبات اليوم' : 'Jobs Today',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Color(0xFF64748B),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
+                          const SizedBox(height: 2),
+                          Text(
+                            isAr ? 'طلبات اليوم' : 'Jobs Today',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Color(0xFF64748B),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          isAr ? '$completedJobs مكتمل' : '$completedJobs Completed',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Color(0xFF94A3B8),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
+                          const SizedBox(height: 3),
+                          Text(
+                            isAr
+                                ? '$completedJobs مكتمل'
+                                : '$completedJobs Completed',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Color(0xFF94A3B8),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 8),
+              const SizedBox(width: 8),
 
-            // Card 2: Earnings Today (Green Icon)
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFF1F5F9)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.02),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF0FDF4),
-                        borderRadius: BorderRadius.circular(10),
+              // Card 2: Earnings Today (Green Icon)
+              Expanded(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFF1F5F9)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.02),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
                       ),
-                      child: const Icon(CupertinoIcons.creditcard, color: Color(0xFF22C55E), size: 17),
-                    ),
-                    const SizedBox(height: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            'AED ${earningsToday.toStringAsFixed(0)}',
-                            style: const TextStyle(
-                              color: Color(0xFF0F172A),
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.3,
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0FDF4),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(CupertinoIcons.creditcard,
+                            color: Color(0xFF22C55E), size: 17),
+                      ),
+                      const SizedBox(height: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              'AED ${earningsToday.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                color: Color(0xFF0F172A),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.3,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          isAr ? 'أرباح اليوم' : 'Earnings Today',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Color(0xFF64748B),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
+                          const SizedBox(height: 2),
+                          Text(
+                            isAr ? 'أرباح اليوم' : 'Earnings Today',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Color(0xFF64748B),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          isAr ? '+12% اليوم' : '+12% Today',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Color(0xFF22C55E),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
+                          const SizedBox(height: 3),
+                          Text(
+                            isAr ? '+12% اليوم' : '+12% Today',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Color(0xFF22C55E),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 8),
+              const SizedBox(width: 8),
 
-            // Card 3: Active Job (Orange Icon)
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFF1F5F9)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.02),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFFBEB),
-                        borderRadius: BorderRadius.circular(10),
+              // Card 3: Active Job (Orange Icon)
+              Expanded(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFF1F5F9)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.02),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
                       ),
-                      child: const Icon(CupertinoIcons.square_grid_2x2, color: Color(0xFFF59E0B), size: 17),
-                    ),
-                    const SizedBox(height: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            '$activeJobs',
-                            style: const TextStyle(
-                              color: Color(0xFF0F172A),
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.3,
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFFBEB),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(CupertinoIcons.square_grid_2x2,
+                            color: Color(0xFFF59E0B), size: 17),
+                      ),
+                      const SizedBox(height: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              '$activeJobs',
+                              style: const TextStyle(
+                                color: Color(0xFF0F172A),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.3,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          isAr ? 'طلب نشط' : 'Active Job',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Color(0xFF64748B),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
+                          const SizedBox(height: 2),
+                          Text(
+                            isAr ? 'طلب نشط' : 'Active Job',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Color(0xFF64748B),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          isAr ? 'قيد التنفيذ' : 'In Progress',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Color(0xFF94A3B8),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
+                          const SizedBox(height: 3),
+                          Text(
+                            isAr ? 'قيد التنفيذ' : 'In Progress',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Color(0xFF94A3B8),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    ],
-  );
-}
-
-
+      ],
+    );
+  }
 
   // ==========================================
   // 7. RECENT ACTIVITY
@@ -1643,10 +1875,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     final topDoc = completedDocs.isNotEmpty ? completedDocs.first : null;
     final topData = topDoc?.data() ?? <String, dynamic>{};
-    final String ordNum = (topData['orderNumber'] ?? topData['orderId'] ?? 'ORD-8412').toString();
-    final String service = (topData['service'] ?? topData['serviceType'] ?? 'Screen Replacement').toString();
-    final String address = _extractGeneralArea(topData['address']?.toString() ?? 'Al Reem Island');
-    final num amt = topData['finalAmount'] ?? topData['totalAmount'] ?? topData['price'] ?? 250;
+    final String ordNum =
+        (topData['orderNumber'] ?? topData['orderId'] ?? 'ORD-8412').toString();
+    final String service =
+        (topData['service'] ?? topData['serviceType'] ?? 'Screen Replacement')
+            .toString();
+    final String address =
+        _extractGeneralArea(topData['address']?.toString() ?? 'Al Reem Island');
+    final num amt = topData['finalAmount'] ??
+        topData['totalAmount'] ??
+        topData['price'] ??
+        250;
 
     return Column(
       children: [
@@ -1676,7 +1915,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         const SizedBox(height: 12),
-
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
@@ -1702,7 +1940,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   shape: BoxShape.circle,
                 ),
                 child: const Center(
-                  child: Icon(Icons.check_rounded, color: Colors.white, size: 22),
+                  child:
+                      Icon(Icons.check_rounded, color: Colors.white, size: 22),
                 ),
               ),
               const SizedBox(width: 14),
@@ -1757,7 +1996,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   const SizedBox(width: 4),
-                  const Icon(CupertinoIcons.chevron_forward, size: 14, color: Color(0xFF94A3B8)),
+                  const Icon(CupertinoIcons.chevron_forward,
+                      size: 14, color: Color(0xFF94A3B8)),
                 ],
               ),
             ],

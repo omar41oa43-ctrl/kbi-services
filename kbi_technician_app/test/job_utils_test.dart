@@ -11,6 +11,14 @@ void main() {
     });
   });
 
+  test('Home prioritizes new assignments before active work', () {
+    expect(jobHomePriority('Assigned'), 0);
+    expect(jobHomePriority('pending_acceptance'), 0);
+    expect(jobHomePriority('On The Way'), 1);
+    expect(jobHomePriority('In Progress'), 1);
+    expect(jobHomePriority('Completed'), 3);
+  });
+
   group('job date filters', () {
     test('reads Firestore timestamps', () {
       final value = DateTime(2026, 8, 10, 9, 30);

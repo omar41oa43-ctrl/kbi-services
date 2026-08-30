@@ -13,7 +13,7 @@ class LiquidGlassBackdrop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: const Color(0xFFF2F2F7),
+      color: const Color(0xFFF4F7FB),
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -24,8 +24,8 @@ class LiquidGlassBackdrop extends StatelessWidget {
                 end: Alignment.bottomRight,
                 colors: [
                   Color(0xFFF7FAFF),
-                  Color(0xFFF2F2F7),
-                  Color(0xFFF8F7FC),
+                  Color(0xFFF3F6FB),
+                  Color(0xFFF8FAFC),
                 ],
               ),
             ),
@@ -35,7 +35,7 @@ class LiquidGlassBackdrop extends StatelessWidget {
             right: -150,
             child: _AmbientOrb(
               size: 360,
-              color: const Color(0xFF64D2FF).withValues(alpha: 0.055),
+              color: const Color(0xFF2563EB).withValues(alpha: 0.075),
             ),
           ),
           Positioned(
@@ -43,7 +43,7 @@ class LiquidGlassBackdrop extends StatelessWidget {
             left: -170,
             child: _AmbientOrb(
               size: 380,
-              color: const Color(0xFFBF5AF2).withValues(alpha: 0.035),
+              color: const Color(0xFF06B6D4).withValues(alpha: 0.055),
             ),
           ),
           child ?? const SizedBox.expand(),

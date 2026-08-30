@@ -7,7 +7,16 @@ import {
   assertSucceeds,
   initializeTestEnvironment,
 } from "@firebase/rules-unit-testing"
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore"
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  setDoc,
+  updateDoc,
+  where,
+} from "firebase/firestore"
 
 let environment
 
@@ -29,6 +38,20 @@ before(async () => {
       available: true,
     })
     await setDoc(doc(db, "notifications", "notice-1"), { userId: "tech-1", isRead: false })
+    await setDoc(doc(db, "orders", "primary-order"), {
+      technicianId: "tech-1",
+      status: "Assigned",
+    })
+    await setDoc(doc(db, "orders", "team-order"), {
+      technicianId: "tech-2",
+      technicianIds: ["tech-2", "tech-1"],
+      status: "Assigned",
+    })
+    await setDoc(doc(db, "orders", "other-order"), {
+      technicianId: "tech-2",
+      technicianIds: ["tech-2"],
+      status: "Assigned",
+    })
   })
 })
 
@@ -61,6 +84,30 @@ test("technicians can only mark their own notifications as read", async () => {
   const db = environment.authenticatedContext("tech-1", { role: "technician" }).firestore()
   await assertSucceeds(updateDoc(doc(db, "notifications", "notice-1"), { isRead: true }))
   await assertFails(updateDoc(doc(db, "notifications", "notice-1"), { isRead: false, userId: "other" }))
+})
+
+test("technicians receive orders assigned through singular and team fields", async () => {
+  const db = environment.authenticatedContext("tech-1", { role: "technician" }).firestore()
+
+  const primary = await assertSucceeds(getDocs(query(
+    collection(db, "orders"),
+    where("technicianId", "==", "tech-1"),
+  )))
+  assert.deepEqual(primary.docs.map((snapshot) => snapshot.id), ["primary-order"])
+
+  const team = await assertSucceeds(getDocs(query(
+    collection(db, "orders"),
+    where("technicianIds", "array-contains", "tech-1"),
+  )))
+  assert.deepEqual(team.docs.map((snapshot) => snapshot.id), ["team-order"])
+})
+
+test("technicians cannot query another technician's orders", async () => {
+  const db = environment.authenticatedContext("tech-1", { role: "technician" }).firestore()
+  await assertFails(getDocs(query(
+    collection(db, "orders"),
+    where("technicianId", "==", "tech-2"),
+  )))
 })
 
 test("authenticated non-admin users cannot write arbitrary collections", async () => {

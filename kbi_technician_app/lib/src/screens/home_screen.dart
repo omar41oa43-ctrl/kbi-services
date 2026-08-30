@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../theme.dart';
+import '../widgets/liquid_glass.dart';
 import 'dashboard_screen.dart';
 import 'jobs_screen.dart';
 import 'notifications_screen.dart';
@@ -100,8 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context, notificationsSnap) {
           final unread = notificationsSnap.data?.docs.length ?? 0;
           return LayoutBuilder(builder: (context, constraints) {
-            final useSidebar =
-                constraints.maxWidth >= _wideLayoutBreakpoint;
+            final useSidebar = constraints.maxWidth >= _wideLayoutBreakpoint;
             if (useSidebar) {
               return Scaffold(
                 backgroundColor: Colors.transparent,
@@ -128,11 +128,11 @@ class _HomeScreenState extends State<HomeScreen> {
             }
 
             return Scaffold(
-              backgroundColor: const Color(0xFFF8FAFC),
+              backgroundColor: Colors.transparent,
               extendBody: true,
               body: SafeArea(
                 bottom: false,
-                child: _pageBody(),
+                child: LiquidGlassBackdrop(child: _pageBody()),
               ),
               bottomNavigationBar: SafeArea(
                 minimum: const EdgeInsets.fromLTRB(12, 0, 12, 10),
@@ -224,7 +224,6 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
-
 }
 
 class _NavigationGlass extends StatelessWidget {
@@ -290,19 +289,11 @@ class _NavigationGlass extends StatelessWidget {
       );
     });
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(axis == Axis.horizontal ? 32 : 32),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return LiquidGlassSurface(
+      borderRadius: BorderRadius.circular(30),
+      blur: 34,
+      tint: Colors.white.withValues(alpha: 0.82),
+      borderColor: Colors.white.withValues(alpha: 0.92),
       padding: EdgeInsets.symmetric(
         horizontal: axis == Axis.horizontal ? 12 : 8,
         vertical: axis == Axis.horizontal ? 8 : 12,
@@ -322,9 +313,20 @@ class _NavigationGlass extends StatelessWidget {
                     width: 40,
                     height: 40,
                     margin: const EdgeInsets.only(bottom: 14),
-                    decoration: const BoxDecoration(
-                      color: kbiLabel,
-                      shape: BoxShape.circle,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [kbiBlue, kbiBlueDark],
+                      ),
+                      borderRadius: BorderRadius.circular(13),
+                      boxShadow: [
+                        BoxShadow(
+                          color: kbiBlue.withValues(alpha: 0.28),
+                          blurRadius: 14,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
                     ),
                     alignment: Alignment.center,
                     child: const Text(
@@ -386,7 +388,13 @@ class _NavigationItem extends StatelessWidget {
               minHeight: axis == Axis.horizontal ? 52 : 62,
               minWidth: 48,
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
+            decoration: BoxDecoration(
+              color: selected
+                  ? kbiBlue.withValues(alpha: 0.10)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(18),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -400,7 +408,7 @@ class _NavigationItem extends StatelessWidget {
                         selected ? selectedIcon : icon,
                         key: ValueKey(selected),
                         size: 22,
-                        color: selected ? const Color(0xFF2563EB) : const Color(0xFF94A3B8),
+                        color: selected ? kbiBlue : const Color(0xFF94A3B8),
                       ),
                     ),
                     if (badgeCount > 0)
@@ -414,7 +422,7 @@ class _NavigationItem extends StatelessWidget {
                             vertical: 1,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF2563EB),
+                            color: kbiBlue,
                             borderRadius: BorderRadius.circular(999),
                             border: Border.all(color: Colors.white, width: 1.5),
                           ),
@@ -438,7 +446,7 @@ class _NavigationItem extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: selected ? const Color(0xFF2563EB) : const Color(0xFF94A3B8),
+                    color: selected ? kbiBlue : const Color(0xFF94A3B8),
                     fontSize: 10.5,
                     height: 1.1,
                     fontWeight: selected ? FontWeight.w800 : FontWeight.w500,

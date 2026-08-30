@@ -2,14 +2,17 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-const kbiBlue = Color(0xFF007AFF);
-const kbiGreen = Color(0xFF30D158);
-const kbiOrange = Color(0xFFFF9F0A);
-const kbiRed = Color(0xFFFF3B30);
-const kbiLabel = Color(0xFF1C1C1E);
-const kbiSecondaryLabel = Color(0xFF636366);
-const kbiGroupedBackground = Color(0xFFF2F2F7);
-const kbiSeparator = Color(0x1F3C3C43);
+const kbiBlue = Color(0xFF2563EB);
+const kbiBlueDark = Color(0xFF1D4ED8);
+const kbiNavy = Color(0xFF0B1220);
+const kbiCyan = Color(0xFF06B6D4);
+const kbiGreen = Color(0xFF10B981);
+const kbiOrange = Color(0xFFF59E0B);
+const kbiRed = Color(0xFFEF4444);
+const kbiLabel = Color(0xFF0F172A);
+const kbiSecondaryLabel = Color(0xFF64748B);
+const kbiGroupedBackground = Color(0xFFF4F7FB);
+const kbiSeparator = Color(0x1F475569);
 
 /// A platform-adaptive theme that keeps Cupertino typography, sizing, motion,
 /// and color conventions while retaining Material widgets used by the app.
@@ -112,7 +115,7 @@ ThemeData buildKbiTheme({bool highContrast = false}) {
       primaryColor: kbiBlue,
       primaryContrastingColor: Colors.white,
       scaffoldBackgroundColor: kbiGroupedBackground,
-      barBackgroundColor: Color(0xCCF9F9FB),
+      barBackgroundColor: Color(0xE6F8FAFC),
       textTheme: CupertinoTextThemeData(primaryColor: kbiBlue),
     ),
     pageTransitionsTheme: const PageTransitionsTheme(
@@ -140,12 +143,12 @@ ThemeData buildKbiTheme({bool highContrast = false}) {
       ),
     ),
     cardTheme: CardThemeData(
-      color: Colors.white,
+      color: Color(0xFFFEFEFF),
       elevation: 0,
       margin: EdgeInsets.zero,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
-        borderRadius: const BorderRadius.all(Radius.circular(22)),
+        borderRadius: const BorderRadius.all(Radius.circular(24)),
         side: BorderSide(color: scheme.outlineVariant),
       ),
     ),
@@ -182,23 +185,23 @@ ThemeData buildKbiTheme({bool highContrast = false}) {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: const Color(0xFFF7F7F9),
+      fillColor: const Color(0xFFF8FAFC),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
       hintStyle: const TextStyle(color: Color(0xFF8E8E93), fontSize: 16),
       border: OutlineInputBorder(
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         borderSide: BorderSide(color: scheme.outlineVariant),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         borderSide: BorderSide(color: scheme.outlineVariant),
       ),
       focusedBorder: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(14)),
+        borderRadius: BorderRadius.all(Radius.circular(16)),
         borderSide: BorderSide(color: kbiBlue, width: 1.5),
       ),
       errorBorder: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(14)),
+        borderRadius: BorderRadius.all(Radius.circular(16)),
         borderSide: BorderSide(color: kbiRed),
       ),
     ),
@@ -212,7 +215,7 @@ ThemeData buildKbiTheme({bool highContrast = false}) {
         minimumSize: const Size(44, 50),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(15)),
+          borderRadius: BorderRadius.all(Radius.circular(16)),
         ),
         textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
       ),
@@ -225,7 +228,7 @@ ThemeData buildKbiTheme({bool highContrast = false}) {
         minimumSize: const Size(44, 50),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(15)),
+          borderRadius: BorderRadius.all(Radius.circular(16)),
         ),
         textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
       ),

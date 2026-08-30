@@ -46,10 +46,16 @@ Color jobStatusColor(Object? value) {
   final s = normalizeJobStatus(value);
   return switch (s) {
     'completed' => const Color(0xFF10B981), // Emerald
-    'in progress' || 'repairing' || 'inspection' => const Color(0xFF6366F1), // Indigo
+    'in progress' ||
+    'repairing' ||
+    'inspection' =>
+      const Color(0xFF6366F1), // Indigo
     'on the way' || 'en route' || 'arrived' => const Color(0xFF06B6D4), // Cyan
     'accepted' => const Color(0xFF3B82F6), // Blue
-    'assigned' || 'pending' || 'pending acceptance' => const Color(0xFFF59E0B), // Amber
+    'assigned' ||
+    'pending' ||
+    'pending acceptance' =>
+      const Color(0xFFF59E0B), // Amber
     'rejected' || 'cancelled' => const Color(0xFFEF4444), // Red
     _ => const Color(0xFF64748B), // Slate
   };
@@ -106,6 +112,28 @@ bool isJobActive(Object? status) => const {
       'repairing',
       'inspection',
     }.contains(normalizeJobStatus(status));
+
+/// Lower values appear first in the technician's Home screen focus card.
+/// A fresh dispatch must remain more visible than work already in progress so
+/// it can be accepted before the technician misses it.
+int jobHomePriority(Object? status) {
+  final normalized = normalizeJobStatus(status);
+  if (const {
+    'assigned',
+    'pending',
+    'pending acceptance',
+    'offered',
+    'awaiting acceptance',
+  }.contains(normalized)) {
+    return 0;
+  }
+  if (isJobActive(normalized)) return 1;
+  if (const {'completed', 'delivered', 'done', 'cancelled', 'rejected'}
+      .contains(normalized)) {
+    return 3;
+  }
+  return 2;
+}
 
 DateTime? jobDate(Map<String, dynamic> data) {
   for (final key in const [

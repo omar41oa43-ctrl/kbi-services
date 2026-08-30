@@ -921,7 +921,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             : 'Bronze Technician';
 
                 return Scaffold(
-                  backgroundColor: kbiGroupedBackground,
+                  backgroundColor: Colors.transparent,
                   appBar: AppBar(
                     elevation: 0,
                     scrolledUnderElevation: 0,
@@ -1080,11 +1080,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildExpandableProfileSection(String title, Widget child) {
     return Theme(
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
+      child: Material(
+        color: Colors.white,
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: kbiSeparator),
+          side: const BorderSide(color: kbiSeparator),
         ),
         clipBehavior: Clip.antiAlias,
         child: ExpansionTile(

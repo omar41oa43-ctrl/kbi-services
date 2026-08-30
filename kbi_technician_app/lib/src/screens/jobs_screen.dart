@@ -103,6 +103,25 @@ class _JobsScreenState extends State<JobsScreen> {
             final docs =
                 snapshot.data ?? <DocumentSnapshot<Map<String, dynamic>>>[];
 
+            final awaitingCount = docs.where((doc) {
+              final status = normalizeJobStatus(doc.data()?['status']);
+              return const {
+                'assigned',
+                'pending',
+                'pending acceptance',
+              }.contains(status);
+            }).length;
+            final inProgressCount = docs.where((doc) {
+              final status = normalizeJobStatus(doc.data()?['status']);
+              return const {
+                'accepted',
+                'on the way',
+                'arrived',
+                'in progress',
+                'working',
+              }.contains(status);
+            }).length;
+
             // Process, filter, and sort docs
             final processedDocs = _filterAndSortDocs(docs);
 
@@ -112,6 +131,18 @@ class _JobsScreenState extends State<JobsScreen> {
               backgroundColor: const Color(0xF2FFFFFF),
               child: CustomScrollView(
                 slivers: [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 2, 16, 12),
+                      child: _buildQueueBriefing(
+                        total: docs.length,
+                        awaiting: awaitingCount,
+                        inProgress: inProgressCount,
+                        isAr: isAr,
+                      ),
+                    ),
+                  ),
+
                   // Queue summary and always-available search.
                   SliverToBoxAdapter(
                     child: Padding(
@@ -224,6 +255,168 @@ class _JobsScreenState extends State<JobsScreen> {
     );
   }
 
+  Widget _buildQueueBriefing({
+    required int total,
+    required int awaiting,
+    required int inProgress,
+    required bool isAr,
+  }) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.88),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: Colors.white),
+        boxShadow: [
+          BoxShadow(
+            color: kbiNavy.withValues(alpha: 0.055),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [kbiBlue, kbiBlueDark],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: kbiBlue.withValues(alpha: 0.22),
+                      blurRadius: 14,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  CupertinoIcons.waveform_path_ecg,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isAr ? 'نبض قائمة العمل' : 'Queue pulse',
+                      style: const TextStyle(
+                        color: kbiLabel,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.25,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isAr
+                          ? 'ملخص مباشر للطلبات التي تحتاج انتباهك'
+                          : 'A live view of work that needs your attention',
+                      style: const TextStyle(
+                        color: kbiSecondaryLabel,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                decoration: BoxDecoration(
+                  color: kbiGreen.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  isAr ? 'مباشر' : 'LIVE',
+                  style: const TextStyle(
+                    color: Color(0xFF047857),
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 15),
+          Row(
+            children: [
+              Expanded(
+                child: _buildQueueMetric(
+                  '$total',
+                  isAr ? 'إجمالي الطلبات' : 'Total orders',
+                  kbiBlue,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildQueueMetric(
+                  '$awaiting',
+                  isAr ? 'بانتظارك' : 'Awaiting you',
+                  kbiOrange,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildQueueMetric(
+                  '$inProgress',
+                  isAr ? 'قيد التنفيذ' : 'In progress',
+                  kbiGreen,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQueueMetric(String value, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 11),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.075),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.4,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: kbiSecondaryLabel,
+              fontSize: 9.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // --- APP BAR ---
   AppBar _buildM3AppBar() {
     return AppBar(
@@ -264,7 +457,10 @@ class _JobsScreenState extends State<JobsScreen> {
             : 'Search by order ID, customer, device…',
         backgroundColor: Colors.transparent,
         borderRadius: BorderRadius.circular(16),
-        style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14.5, fontWeight: FontWeight.w600),
+        style: const TextStyle(
+            color: Color(0xFF0F172A),
+            fontSize: 14.5,
+            fontWeight: FontWeight.w600),
         itemColor: const Color(0xFF2563EB),
         onSuffixTap: () {
           _searchController.clear();
@@ -2057,7 +2253,17 @@ class _JobsScreenState extends State<JobsScreen> {
       if (data == null) return false;
       // Search Query Filter
       if (_searchQuery.isNotEmpty) {
-        final orderId = (data['bookingId'] ?? doc.id).toString().toLowerCase();
+        final orderIdentifiers = [
+          doc.id,
+          data['orderNumber'],
+          data['trackingCode'],
+          data['orderId'],
+          data['bookingId'],
+          data['reference'],
+        ]
+            .where((value) => value != null)
+            .map((value) => value.toString().toLowerCase())
+            .join(' ');
         final clientName = (data['clientName'] ?? data['customerName'] ?? '')
             .toString()
             .toLowerCase();
@@ -2068,7 +2274,7 @@ class _JobsScreenState extends State<JobsScreen> {
         final device = (data['device'] ?? '').toString().toLowerCase();
         final brand = (data['brand'] ?? '').toString().toLowerCase();
 
-        final match = orderId.contains(_searchQuery) ||
+        final match = orderIdentifiers.contains(_searchQuery) ||
             clientName.contains(_searchQuery) ||
             phone.contains(_searchQuery) ||
             address.contains(_searchQuery) ||

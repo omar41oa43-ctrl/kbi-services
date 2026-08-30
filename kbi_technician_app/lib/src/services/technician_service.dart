@@ -258,11 +258,42 @@ class TechnicianService {
 
     final controller = StreamController<
         List<DocumentSnapshot<Map<String, dynamic>>>>.broadcast();
-    List<DocumentSnapshot<Map<String, dynamic>>> bookingsDocs = [];
-    List<DocumentSnapshot<Map<String, dynamic>>> ordersDocs = [];
+    final docsByQuery =
+        <String, List<DocumentSnapshot<Map<String, dynamic>>>>{};
 
     void emitMerged() {
       final map = <String, DocumentSnapshot<Map<String, dynamic>>>{};
+
+      int documentUsefulness(Map<String, dynamic>? data) {
+        if (data == null) return 0;
+        var score = 0;
+        for (final key in const [
+          'orderNumber',
+          'trackingCode',
+          'orderId',
+          'bookingId',
+          'customerName',
+          'clientName',
+          'customerPhone',
+          'device',
+          'deviceModel',
+          'devices',
+          'service',
+          'serviceType',
+          'issue',
+          'description',
+          'address',
+          'location',
+        ]) {
+          final value = data[key];
+          if (value == null) continue;
+          if (value is String && value.trim().isEmpty) continue;
+          if (value is Iterable && value.isEmpty) continue;
+          if (value is Map && value.isEmpty) continue;
+          score++;
+        }
+        return score;
+      }
 
       void addMostUseful(DocumentSnapshot<Map<String, dynamic>> doc) {
         final current = map[doc.id];
@@ -283,6 +314,13 @@ class TechnicianService {
           return;
         }
         if (currentCompleted && !nextCompleted) return;
+        final currentUsefulness = documentUsefulness(current.data());
+        final nextUsefulness = documentUsefulness(doc.data());
+        if (nextUsefulness > currentUsefulness) {
+          map[doc.id] = doc;
+          return;
+        }
+        if (currentUsefulness > nextUsefulness) return;
         final currentDate = extractDocDate(current.data());
         final nextDate = extractDocDate(doc.data());
         if (currentDate == null ||
@@ -291,11 +329,10 @@ class TechnicianService {
         }
       }
 
-      for (final doc in bookingsDocs) {
-        addMostUseful(doc);
-      }
-      for (final doc in ordersDocs) {
-        addMostUseful(doc);
+      for (final docs in docsByQuery.values) {
+        for (final doc in docs) {
+          addMostUseful(doc);
+        }
       }
       final list = map.values.toList();
       list.sort((a, b) {
@@ -311,70 +348,68 @@ class TechnicianService {
       }
     }
 
-    StreamSubscription? subBookings;
-    StreamSubscription? subOrders;
+    final subscriptions =
+        <StreamSubscription<QuerySnapshot<Map<String, dynamic>>>>[];
+
+    void subscribeToAssignment({
+      required String collectionName,
+      required String field,
+      required bool isArray,
+    }) {
+      final queryKey = '$collectionName:$field';
+      final collection = FirebaseFirestore.instance.collection(collectionName);
+      final query = isArray
+          ? collection.where(field, arrayContains: u)
+          : collection.where(field, isEqualTo: u);
+
+      subscriptions.add(query.snapshots().listen((snapshot) {
+        docsByQuery[queryKey] = snapshot.docs;
+        emitMerged();
+      }, onError: (Object error) {
+        // Each legacy assignment shape is isolated so one unsupported filter
+        // can never take the technician's entire live order feed offline.
+        debugPrint('$collectionName/$field subscription notice: $error');
+        docsByQuery[queryKey] = const [];
+        emitMerged();
+      }));
+    }
 
     controller.onListen = () {
-      subBookings = FirebaseFirestore.instance
-          .collection('bookings')
-          .where(
-            Filter.or(
-              Filter('assignedTechnician', isEqualTo: u),
-              Filter('assignedTechnicianId', isEqualTo: u),
-              Filter('technicianId', isEqualTo: u),
-              Filter('techId', isEqualTo: u),
-              Filter('assignedTechnicians', arrayContains: u),
-              Filter('technicianIds', arrayContains: u),
-            ),
-          )
-          .snapshots()
-          .listen((snap) {
-        bookingsDocs = snap.docs;
-        emitMerged();
-      }, onError: (err) {
-        debugPrint('Bookings filter notice: $err');
-        FirebaseFirestore.instance
-            .collection('bookings')
-            .where('assignedTechnician', isEqualTo: u)
-            .snapshots()
-            .listen((fallbackSnap) {
-          bookingsDocs = fallbackSnap.docs;
-          emitMerged();
-        });
-      });
+      docsByQuery.clear();
+      subscriptions.clear();
 
-      subOrders = FirebaseFirestore.instance
-          .collection('orders')
-          .where(
-            Filter.or(
-              Filter('assignedTechnician', isEqualTo: u),
-              Filter('assignedTechnicianId', isEqualTo: u),
-              Filter('technicianId', isEqualTo: u),
-              Filter('techId', isEqualTo: u),
-              Filter('assignedTechnicians', arrayContains: u),
-              Filter('technicianIds', arrayContains: u),
-            ),
-          )
-          .snapshots()
-          .listen((snap) {
-        ordersDocs = snap.docs;
-        emitMerged();
-      }, onError: (err) {
-        debugPrint('Orders filter notice: $err');
-        FirebaseFirestore.instance
-            .collection('orders')
-            .where('assignedTechnician', isEqualTo: u)
-            .snapshots()
-            .listen((fallbackSnap) {
-          ordersDocs = fallbackSnap.docs;
-          emitMerged();
-        });
-      });
+      for (final collectionName in const ['bookings', 'orders']) {
+        for (final field in const [
+          'assignedTechnician',
+          'assignedTechnicianId',
+          'technicianId',
+          'techId',
+        ]) {
+          subscribeToAssignment(
+            collectionName: collectionName,
+            field: field,
+            isArray: false,
+          );
+        }
+        for (final field in const [
+          'assignedTechnicians',
+          'technicianIds',
+        ]) {
+          subscribeToAssignment(
+            collectionName: collectionName,
+            field: field,
+            isArray: true,
+          );
+        }
+      }
     };
 
     controller.onCancel = () {
-      subBookings?.cancel();
-      subOrders?.cancel();
+      for (final subscription in subscriptions) {
+        subscription.cancel();
+      }
+      subscriptions.clear();
+      docsByQuery.clear();
     };
 
     return controller.stream;

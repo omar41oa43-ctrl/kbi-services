@@ -10,6 +10,8 @@ service cloud.firestore {
         || resource.data.assignedTechnicianId == request.auth.uid
         || resource.data.technicianId == request.auth.uid
         || resource.data.techId == request.auth.uid
+        || request.auth.uid in resource.data.assignedTechnicians
+        || request.auth.uid in resource.data.technicianIds
       );
     }
 

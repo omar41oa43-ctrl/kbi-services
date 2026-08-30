@@ -48,7 +48,7 @@ class _WalletScreenState extends State<WalletScreen> {
     return Directionality(
       textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: Colors.transparent,
         body: SafeArea(
           bottom: false,
           child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
@@ -63,7 +63,9 @@ class _WalletScreenState extends State<WalletScreen> {
               final techData = techSnap.data?.data();
               final rawRate = techData?['commissionRate'];
               final double commissionRate = rawRate is num
-                  ? (rawRate > 1 ? rawRate.toDouble() : rawRate.toDouble() * 100)
+                  ? (rawRate > 1
+                      ? rawRate.toDouble()
+                      : rawRate.toDouble() * 100)
                   : 0;
 
               return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -182,8 +184,7 @@ class _WalletScreenState extends State<WalletScreen> {
                         final device = data['device'] ??
                             data['deviceModel'] ??
                             'Service Repair';
-                        final service =
-                            data['service'] ?? 'Repair Completed';
+                        final service = data['service'] ?? 'Repair Completed';
                         final payable =
                             calculateJobPayout(data, commissionRate);
                         final timestamp = (data['updatedAt'] ??
@@ -198,7 +199,8 @@ class _WalletScreenState extends State<WalletScreen> {
                         });
                       }
 
-                      final filteredTransactions = allTransactions.where((item) {
+                      final filteredTransactions =
+                          allTransactions.where((item) {
                         if (_selectedFilter == 'COMPLETED') {
                           final st = (item['status'] as String).toLowerCase();
                           return st == 'paid' || st == 'completed';
@@ -216,7 +218,8 @@ class _WalletScreenState extends State<WalletScreen> {
                           // Header App Bar
                           SliverToBoxAdapter(
                             child: Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                              padding:
+                                  const EdgeInsets.fromLTRB(20, 16, 20, 12),
                               child: Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -286,7 +289,8 @@ class _WalletScreenState extends State<WalletScreen> {
                                                   SnackBarBehavior.floating,
                                               shape: RoundedRectangleBorder(
                                                   borderRadius:
-                                                      BorderRadius.circular(10)),
+                                                      BorderRadius.circular(
+                                                          10)),
                                             ),
                                           );
                                         }
@@ -316,7 +320,8 @@ class _WalletScreenState extends State<WalletScreen> {
                           // QUICK STATS SUMMARY ROW
                           SliverToBoxAdapter(
                             child: Padding(
-                              padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
+                              padding:
+                                  const EdgeInsets.fromLTRB(18, 14, 18, 14),
                               child: Row(
                                 children: [
                                   // Stat 1: Total Completed Repairs
@@ -337,7 +342,8 @@ class _WalletScreenState extends State<WalletScreen> {
                                       icon: CupertinoIcons.clock_fill,
                                       iconColor: const Color(0xFFF59E0B),
                                       bgColor: const Color(0xFFFFFBEB),
-                                      value: 'AED ${pendingAmount.toStringAsFixed(0)}',
+                                      value:
+                                          'AED ${pendingAmount.toStringAsFixed(0)}',
                                       label: isAr ? 'مستحقات معلقة' : 'Pending',
                                       isAr: isAr,
                                     ),
@@ -352,7 +358,8 @@ class _WalletScreenState extends State<WalletScreen> {
                                       value: commissionRate == 0
                                           ? (isAr ? '0%' : '0%')
                                           : '${commissionRate.toStringAsFixed(0)}%',
-                                      label: isAr ? 'نسبة العمولة' : 'Tech Split',
+                                      label:
+                                          isAr ? 'نسبة العمولة' : 'Tech Split',
                                       isAr: isAr,
                                     ),
                                   ),
@@ -364,13 +371,16 @@ class _WalletScreenState extends State<WalletScreen> {
                           // TRANSACTION HISTORY TITLE & FILTERS
                           SliverToBoxAdapter(
                             child: Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                              padding:
+                                  const EdgeInsets.fromLTRB(20, 10, 20, 10),
                               child: Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    isAr ? 'سجل المعاملات' : 'Transaction History',
+                                    isAr
+                                        ? 'سجل المعاملات'
+                                        : 'Transaction History',
                                     style: const TextStyle(
                                       color: Color(0xFF0F172A),
                                       fontSize: 16,
@@ -381,11 +391,14 @@ class _WalletScreenState extends State<WalletScreen> {
                                   // Filter Pills (All / Completed / Pending)
                                   Row(
                                     children: [
-                                      _buildFilterPill('ALL', isAr ? 'الكل' : 'All'),
+                                      _buildFilterPill(
+                                          'ALL', isAr ? 'الكل' : 'All'),
                                       const SizedBox(width: 6),
-                                      _buildFilterPill('PENDING', isAr ? 'معلقة' : 'Pending'),
+                                      _buildFilterPill('PENDING',
+                                          isAr ? 'معلقة' : 'Pending'),
                                       const SizedBox(width: 6),
-                                      _buildFilterPill('COMPLETED', isAr ? 'مكتملة' : 'Paid'),
+                                      _buildFilterPill('COMPLETED',
+                                          isAr ? 'مكتملة' : 'Paid'),
                                     ],
                                   ),
                                 ],
@@ -400,7 +413,8 @@ class _WalletScreenState extends State<WalletScreen> {
                             )
                           else
                             SliverPadding(
-                              padding: const EdgeInsets.fromLTRB(18, 4, 18, 110),
+                              padding:
+                                  const EdgeInsets.fromLTRB(18, 4, 18, 110),
                               sliver: SliverList(
                                 delegate: SliverChildBuilderDelegate(
                                   (context, index) {
@@ -523,7 +537,9 @@ class _WalletScreenState extends State<WalletScreen> {
                                   size: 13, color: Color(0xFF38BDF8)),
                               const SizedBox(width: 5),
                               Text(
-                                isAr ? 'محفظة الفني المعتمد' : 'KBI Verified Tech',
+                                isAr
+                                    ? 'محفظة الفني المعتمد'
+                                    : 'KBI Verified Tech',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 11,
@@ -594,8 +610,8 @@ class _WalletScreenState extends State<WalletScreen> {
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.22),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.08)),
+                    border:
+                        Border.all(color: Colors.white.withValues(alpha: 0.08)),
                   ),
                   child: Row(
                     children: [
@@ -619,7 +635,8 @@ class _WalletScreenState extends State<WalletScreen> {
                                   Text(
                                     isAr ? 'قيد المعالجة' : 'Pending Payout',
                                     style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.6),
+                                      color:
+                                          Colors.white.withValues(alpha: 0.6),
                                       fontSize: 10,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -715,7 +732,9 @@ class _WalletScreenState extends State<WalletScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          isAr ? 'طلب سحب الرصيد البنكي' : 'Request Payout / Withdrawal',
+                          isAr
+                              ? 'طلب سحب الرصيد البنكي'
+                              : 'Request Payout / Withdrawal',
                           style: const TextStyle(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w800,
@@ -819,7 +838,8 @@ class _WalletScreenState extends State<WalletScreen> {
           color: isSelected ? const Color(0xFF0284C7) : const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: isSelected ? const Color(0xFF0284C7) : const Color(0xFFE2E8F0),
+            color:
+                isSelected ? const Color(0xFF0284C7) : const Color(0xFFE2E8F0),
           ),
         ),
         child: Text(
@@ -856,7 +876,9 @@ class _WalletScreenState extends State<WalletScreen> {
         : (isCompleted ? const Color(0xFF15803D) : const Color(0xFFB91C1C));
     String statusText = isPending
         ? (isAr ? 'بانتظار الصرف' : 'Pending Payout')
-        : (isCompleted ? (isAr ? 'تم التحويل' : 'Paid') : (isAr ? 'فشل' : 'Failed'));
+        : (isCompleted
+            ? (isAr ? 'تم التحويل' : 'Paid')
+            : (isAr ? 'فشل' : 'Failed'));
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -881,9 +903,8 @@ class _WalletScreenState extends State<WalletScreen> {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: isPending
-                  ? const Color(0xFFFFFBEB)
-                  : const Color(0xFFF0FDF4),
+              color:
+                  isPending ? const Color(0xFFFFFBEB) : const Color(0xFFF0FDF4),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: isPending

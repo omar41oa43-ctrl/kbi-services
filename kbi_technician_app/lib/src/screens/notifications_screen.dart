@@ -75,7 +75,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             backgroundColor: Colors.transparent,
             surfaceTintColor: Colors.transparent,
             elevation: 0,
-            title: Text(isAr ? 'صندوق الوارد' : 'Inbox'),
+            toolbarHeight: 70,
+            titleSpacing: 16,
+            title: Text(
+              isAr ? 'صندوق الوارد' : 'Inbox',
+              style: Theme.of(context).textTheme.displaySmall,
+            ),
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(50),
               child: Container(
@@ -83,15 +88,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 margin: const EdgeInsets.fromLTRB(16, 2, 16, 10),
                 padding: const EdgeInsets.all(3),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE5E5EA).withValues(alpha: 0.72),
-                  borderRadius: BorderRadius.circular(11),
+                  color: Colors.white.withValues(alpha: 0.68),
+                  borderRadius: BorderRadius.circular(13),
+                  border: Border.all(color: Colors.white),
                 ),
                 child: TabBar(
                   indicatorSize: TabBarIndicatorSize.tab,
                   dividerColor: Colors.transparent,
                   indicator: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(9),
+                    borderRadius: BorderRadius.circular(10),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.08),
