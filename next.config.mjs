@@ -75,12 +75,6 @@ const nextConfig = {
 
     return [
       {
-        source: '/images/:path*',
-        headers: [
-          { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' },
-        ],
-      },
-      {
         source: '/admin/:path*',
         headers: [
           { key: 'Cache-Control', value: noStore },
@@ -114,20 +108,36 @@ const nextConfig = {
         ],
       },
       {
-        source: '/admin-sw.js',
-        headers: [
-          { key: 'Cache-Control', value: swCache },
-          { key: 'Service-Worker-Allowed', value: '/' },
-        ],
-      },
-      {
         source: '/:path*',
         headers: [
+          { key: 'Cache-Control', value: noStore },
+          { key: 'CDN-Cache-Control', value: noStore },
+          { key: 'Vercel-CDN-Cache-Control', value: noStore },
+          { key: 'Pragma', value: 'no-cache' },
+          { key: 'Expires', value: '0' },
+          { key: 'Surrogate-Control', value: 'no-store' },
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=(self)' },
           { key: 'Content-Security-Policy', value: cspHeader },
+        ],
+      },
+      {
+        source: '/images/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' },
+          { key: 'CDN-Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' },
+          { key: 'Vercel-CDN-Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' },
+        ],
+      },
+      {
+        source: '/admin-sw.js',
+        headers: [
+          { key: 'Cache-Control', value: swCache },
+          { key: 'CDN-Cache-Control', value: swCache },
+          { key: 'Vercel-CDN-Cache-Control', value: swCache },
+          { key: 'Service-Worker-Allowed', value: '/' },
         ],
       },
       {
