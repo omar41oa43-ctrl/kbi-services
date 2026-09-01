@@ -229,7 +229,7 @@ class _JobsScreenState extends State<JobsScreen> {
                                       right: 4,
                                     ),
                                     child: Text(
-                                      group,
+                                      _localizedOrderGroup(group, isAr),
                                       style: const TextStyle(
                                         color: kbiSecondaryLabel,
                                         fontSize: 11,
@@ -524,13 +524,20 @@ class _JobsScreenState extends State<JobsScreen> {
 
   Widget _buildCompactJobRow(
       String docId, Map<String, dynamic> data, ServiceRequestModel job) {
+    final isAr = widget.locale.languageCode == 'ar';
     final status = (data['status'] ?? job.status).toString();
-    final customer =
-        (data['clientName'] ?? data['customerName'] ?? 'Customer').toString();
+    final customer = (data['clientName'] ??
+            data['customerName'] ??
+            (isAr ? 'اسم العميل غير متوفر' : 'Customer not provided'))
+        .toString();
+    final orderReference = compactOrderReference(
+      data,
+      documentId: docId,
+    );
     final time = jobTimeLabel(data);
     final location = job.address?.trim().isNotEmpty == true
         ? job.address!
-        : 'Location not provided';
+        : (isAr ? 'الموقع غير متوفر' : 'Location not provided');
     final isPending = {
       'assigned',
       'pending',
@@ -550,15 +557,15 @@ class _JobsScreenState extends State<JobsScreen> {
             !service.toLowerCase().contains(device.toLowerCase())
         ? '$device • $service'
         : service;
-    final displayLocation =
-        isPending ? '${location.split(',').first.trim()} • 6.2 km' : location;
+    final displayLocation = location;
 
     final price = data['assignedPrice'] ?? data['price'] ?? data['cost'];
     final priceStr = price != null ? '$price AED' : null;
 
     return Semantics(
       button: true,
-      label: '$displayTitle, $customer, $time, $status',
+      label:
+          '$orderReference, $displayTitle, $customer, $time, ${localizedJobStatusLabel(status, isArabic: isAr)}',
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
@@ -623,6 +630,19 @@ class _JobsScreenState extends State<JobsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Text(
+                              orderReference,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textDirection: TextDirection.ltr,
+                              style: const TextStyle(
+                                color: kbiBlue,
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.25,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
                             Text(
                               displayTitle,
                               maxLines: 2,
@@ -735,9 +755,9 @@ class _JobsScreenState extends State<JobsScreen> {
                             color: kbiBlue,
                             borderRadius: BorderRadius.circular(999),
                           ),
-                          child: const Text(
-                            'Current job',
-                            style: TextStyle(
+                          child: Text(
+                            isAr ? 'الطلب الحالي' : 'Current job',
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 10.5,
                               fontWeight: FontWeight.w700,
@@ -1221,29 +1241,7 @@ class _JobsScreenState extends State<JobsScreen> {
       'awaiting_acceptance'
     }.contains(status);
 
-    // Extract clean Order ID (e.g. #KBI-1002)
-    String rawId =
-        (data['orderNumber'] ?? data['trackingCode'] ?? data['orderId'] ?? '')
-            .toString()
-            .trim();
-    String cleanSuffix = rawId
-        .replaceAll(RegExp(r'[^a-zA-Z0-9]'), '')
-        .replaceAll('KBI', '')
-        .replaceAll('kbi', '')
-        .trim();
-    if (cleanSuffix.isEmpty) {
-      final docClean = docId
-          .replaceAll(RegExp(r'[^a-zA-Z0-9]'), '')
-          .replaceAll('KBI', '')
-          .replaceAll('kbi', '')
-          .trim();
-      cleanSuffix = docClean.isNotEmpty
-          ? (docClean.length >= 4
-              ? docClean.substring(0, 4).toUpperCase()
-              : docClean)
-          : '1002';
-    }
-    final orderId = '#KBI-$cleanSuffix';
+    final orderId = compactOrderReference(data, documentId: docId);
 
     final priority = (data['priority'] ?? 'NORMAL').toString().toUpperCase();
     final price =
@@ -2008,7 +2006,10 @@ class _JobsScreenState extends State<JobsScreen> {
   // --- STATUS BADGE UTILS ---
   Widget _buildStatusBadge(String rawStatus) {
     final norm = normalizeJobStatus(rawStatus);
-    final label = jobStatusLabel(rawStatus);
+    final label = localizedJobStatusLabel(
+      rawStatus,
+      isArabic: widget.locale.languageCode == 'ar',
+    );
 
     Color bg;
     Color fg;
@@ -2018,12 +2019,12 @@ class _JobsScreenState extends State<JobsScreen> {
         bg = const Color(0xFF10B981).withValues(alpha: 0.12);
         fg = const Color(0xFF059669);
         break;
-      case 'in_progress':
+      case 'in progress':
         bg = const Color(0xFF3B82F6).withValues(alpha: 0.12);
         fg = const Color(0xFF2563EB);
         break;
       case 'arrived':
-      case 'on_the_way':
+      case 'on the way':
         bg = const Color(0xFF8B5CF6).withValues(alpha: 0.12);
         fg = const Color(0xFF7C3AED);
         break;
@@ -2201,6 +2202,17 @@ class _JobsScreenState extends State<JobsScreen> {
     if (isSameLocalDay(date, now)) return 'TODAY';
     if (date != null && date.isAfter(now)) return 'UPCOMING';
     return 'ACTIVE';
+  }
+
+  String _localizedOrderGroup(String group, bool isAr) {
+    if (!isAr) return group;
+    return switch (group) {
+      'ACTIVE' => 'قيد التنفيذ',
+      'TODAY' => 'اليوم',
+      'UPCOMING' => 'قادمة',
+      'COMPLETED' => 'مكتملة',
+      _ => group,
+    };
   }
 
   int _orderGroupRank(Map<String, dynamic> data) {

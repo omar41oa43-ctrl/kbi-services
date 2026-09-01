@@ -124,14 +124,15 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const results = verified.map((doc) => {
+    const rawResults = verified.map((doc) => {
       const data = doc.data() || {}
       const brand = data.brand || ""
       const model = data.model || data.deviceModel || ""
       const device = data.device || data.deviceType || data.serviceType || `${brand} ${model}`.trim() || "Device repair"
+      const publicOrderId = data.orderNumber || data.reference || data.trackingCode || data.orderId || orderQuery || doc.id
 
       return {
-        orderId: data.orderId || data.orderNumber || orderQuery || doc.id,
+        orderId: String(publicOrderId).toUpperCase(),
         status: String(data.status || "Order Created"),
         device,
         issue: data.issueType || data.issue || data.service || (Array.isArray(data.deviceIssues) ? data.deviceIssues.join(", ") : ""),
@@ -143,6 +144,41 @@ export async function GET(request: NextRequest) {
           ? data.statusHistory.map((item: any) => ({ ...item, timestamp: safeDate(item.timestamp) }))
           : [],
       }
+    })
+
+    // A booking is mirrored across multiple collections for compatibility.
+    // Group those documents by their public order number so phone searches show
+    // one card per request instead of duplicate order/booking records.
+    const groupedResults = new Map<string, (typeof rawResults)[number]>()
+    for (const result of rawResults) {
+      const key = normalizeOrderId(result.orderId)
+      const current = groupedResults.get(key)
+      if (!current) {
+        groupedResults.set(key, result)
+        continue
+      }
+
+      let devices = Array.from(new Set([current.device, result.device].filter(Boolean)))
+      if (devices.length > 1) devices = devices.filter((device) => device !== "Device repair")
+      const issues = Array.from(new Set([current.issue, result.issue].filter(Boolean)))
+      const timelines = [...(current.timeline || []), ...(result.timeline || [])]
+
+      groupedResults.set(key, {
+        ...current,
+        device: devices.join(" · "),
+        issue: issues.join(" · "),
+        createdAt: current.createdAt || result.createdAt,
+        updatedAt: result.updatedAt || current.updatedAt,
+        technicianName: current.technicianName || result.technicianName,
+        estimatedCompletion: current.estimatedCompletion || result.estimatedCompletion,
+        timeline: timelines,
+      })
+    }
+
+    const results = [...groupedResults.values()].sort((a, b) => {
+      const aTime = a.createdAt ? Date.parse(a.createdAt) : 0
+      const bTime = b.createdAt ? Date.parse(b.createdAt) : 0
+      return bTime - aTime
     })
 
     return NextResponse.json(

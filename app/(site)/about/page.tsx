@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   description: "Learn about KBI Services, providing professional on-site device repair and IT solutions for homes, offices and businesses across all seven Emirates of the UAE.",
   alternates: {
     canonical: "/about",
+    languages: { en: "/about", ar: "/ar/about", "x-default": "/about" },
   },
   openGraph: {
     title: "About KBI Services | On-Site Repair Across the UAE",

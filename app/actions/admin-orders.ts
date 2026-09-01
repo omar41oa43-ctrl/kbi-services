@@ -3,6 +3,7 @@
 import { adminDb } from "@/lib/firebase-admin"
 import { FieldValue } from "firebase-admin/firestore"
 import { verifyAdmin } from "@/lib/server-auth"
+import { reserveNextOrderNumber } from "@/lib/order-number"
 
 // Check if Firebase is ready
 function isFirebaseReady(): boolean {
@@ -225,7 +226,7 @@ export async function getNextInvoiceNumberAction() {
 
 export async function getNextOrderNumberAction() {
     try {
-        const num = await nextCounter("KBI", "orders")
+        const num = await reserveNextOrderNumber()
         return { orderNumber: num }
     } catch (error: any) {
         return { error: error.message }
@@ -349,7 +350,7 @@ export async function createOrderAction(input: {
     location?: string
 }) {
     try {
-        const orderNumber = await nextCounter("KBI", "orders")
+        const orderNumber = await reserveNextOrderNumber()
         const now = new Date()
         const docRef = await adminDb.collection("orders").add({
             orderId: orderNumber,

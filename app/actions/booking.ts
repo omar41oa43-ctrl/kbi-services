@@ -5,7 +5,6 @@ import { Timestamp } from "firebase-admin/firestore"
 import { getNextOrderNumberAction } from "./admin-orders"
 import prisma from "@/lib/prisma"
 import { z } from "zod"
-import { randomBytes } from "node:crypto"
 
 const bookingSchema = z.object({
     name: z.string().trim().min(2).max(100),
@@ -51,7 +50,6 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
 
         formData = validated.data.formData
         deviceEntries = validated.data.deviceEntries
-        const createdIds: string[] = []
         const customerName = String(formData?.name || "Customer").trim() || "Customer"
         const customerPhone = String(formData?.phone || "").trim()
 
@@ -67,10 +65,7 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
         }
 
         if (!pgOrderNumber) {
-            // High-entropy timestamp-based fallback to guarantee uniqueness
-            const now = Date.now()
-            const timeSeq = (now % 1000000).toString().padStart(6, "0")
-            pgOrderNumber = `KBI-${timeSeq}`
+            return { error: "Unable to reserve a unique order number. Please try again." }
         }
 
         let pgUserId = ""
@@ -128,8 +123,10 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
             console.error("Prisma order creation fallback:", pgErr)
         }
 
-        const publicTrackingCode = `KBI-${randomBytes(8).toString("hex").toUpperCase()}`
-        createdIds.push(publicTrackingCode)
+        // Use one short, atomic counter value everywhere the customer sees or
+        // searches for the request. Legacy long tracking codes remain searchable
+        // through the tracking API, but all new bookings use KBI-000000 format.
+        const publicTrackingCode = pgOrderNumber
 
         // Continue with Firebase for backward compatibility
         for (const entry of deviceEntries) {
@@ -265,7 +262,7 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
             }
         }
 
-        return { success: true, orderIds: createdIds, primaryOrderId: publicTrackingCode }
+        return { success: true, orderIds: [publicTrackingCode], primaryOrderId: publicTrackingCode }
 
     } catch (error: any) {
         console.error("Error in createBookingAction:", error)

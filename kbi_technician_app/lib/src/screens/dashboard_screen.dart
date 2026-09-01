@@ -1010,12 +1010,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     final data = activeJobDoc.data() ?? <String, dynamic>{};
-    final String orderNum = (data['orderNumber'] ??
-            data['orderId'] ??
-            data['trackingCode'] ??
-            data['bookingId'] ??
-            activeJobDoc.id)
-        .toString();
+    final String orderNum = compactOrderReference(
+      data,
+      documentId: activeJobDoc.id,
+    );
     final rawDevices = data['devices'];
     final firstDevice =
         rawDevices is List && rawDevices.isNotEmpty ? rawDevices.first : null;
@@ -1046,9 +1044,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         (data['customerPhone'] ?? data['phone'] ?? '').toString();
     final String rawStatus = normalizeJobStatus(data['status']);
     final bool isNewAssignment = jobHomePriority(rawStatus) == 0;
-    final String statusPillLabel = isAr
-        ? (isNewAssignment ? 'طلب جديد' : jobStatusLabel(rawStatus))
-        : jobStatusLabel(rawStatus);
+    final String statusPillLabel = isNewAssignment
+        ? (isAr ? 'طلب جديد' : 'New Assignment')
+        : localizedJobStatusLabel(rawStatus, isArabic: isAr);
     final Color statusColor = jobStatusColor(rawStatus);
 
     // -------------------------------------------------------------
@@ -1875,8 +1873,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     final topDoc = completedDocs.isNotEmpty ? completedDocs.first : null;
     final topData = topDoc?.data() ?? <String, dynamic>{};
-    final String ordNum =
-        (topData['orderNumber'] ?? topData['orderId'] ?? 'ORD-8412').toString();
+    final String ordNum = compactOrderReference(
+      topData,
+      documentId: topDoc?.id ?? 'recent-order',
+    );
     final String service =
         (topData['service'] ?? topData['serviceType'] ?? 'Screen Replacement')
             .toString();

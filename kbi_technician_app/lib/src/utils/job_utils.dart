@@ -4,6 +4,56 @@ import 'package:flutter/material.dart';
 String normalizeJobStatus(Object? value) =>
     (value ?? '').toString().trim().toLowerCase().replaceAll('_', ' ');
 
+/// Returns the best persisted reference for an order without changing it.
+String rawOrderReference(
+  Map<String, dynamic> data, {
+  required String documentId,
+}) {
+  for (final key in const [
+    'orderNumber',
+    'trackingCode',
+    'orderId',
+    'bookingId',
+    'reference',
+  ]) {
+    final value = data[key]?.toString().trim() ?? '';
+    if (value.isNotEmpty) return value;
+  }
+  return documentId.trim();
+}
+
+/// A compact technician-facing reference. New numeric KBI references retain
+/// their canonical six digits, while legacy UUID-like values show only their
+/// last six characters so they cannot stretch job cards or app bars.
+String compactOrderReference(
+  Map<String, dynamic> data, {
+  required String documentId,
+}) {
+  final raw = rawOrderReference(data, documentId: documentId)
+      .replaceAll(RegExp(r'\s+'), '')
+      .toUpperCase();
+  final withoutPrefix = raw.replaceFirst(RegExp(r'^#?KBI[-_]?'), '');
+  final clean = withoutPrefix.replaceAll(RegExp(r'[^A-Z0-9]'), '');
+  if (clean.isEmpty) return 'KBI------';
+  if (RegExp(r'^\d{1,6}$').hasMatch(clean)) {
+    return 'KBI-${clean.padLeft(6, '0')}';
+  }
+  final suffix = clean.length > 6 ? clean.substring(clean.length - 6) : clean;
+  return 'KBI-$suffix';
+}
+
+/// Stable identity used to merge the same work order when it exists in both
+/// legacy `bookings` and current `orders` collections under different doc IDs.
+String jobIdentityKey(
+  Map<String, dynamic> data, {
+  required String documentId,
+}) {
+  final reference = rawOrderReference(data, documentId: documentId)
+      .toLowerCase()
+      .replaceAll(RegExp(r'[^a-z0-9]'), '');
+  return reference.isEmpty ? documentId.toLowerCase() : reference;
+}
+
 /// The single source of truth for how a job status is shown to a technician.
 String jobStatusLabel(Object? value) {
   final s = normalizeJobStatus(value);
@@ -17,6 +67,22 @@ String jobStatusLabel(Object? value) {
     'rejected' => 'Rejected',
     'cancelled' => 'Cancelled',
     '' => 'Unknown',
+    _ => (value ?? '').toString(),
+  };
+}
+
+String localizedJobStatusLabel(Object? value, {required bool isArabic}) {
+  if (!isArabic) return jobStatusLabel(value);
+  return switch (normalizeJobStatus(value)) {
+    'assigned' || 'pending' || 'pending acceptance' => 'بانتظار القبول',
+    'accepted' => 'مقبول',
+    'on the way' || 'en route' => 'في الطريق',
+    'arrived' => 'تم الوصول',
+    'in progress' || 'repairing' || 'inspection' => 'جارٍ العمل',
+    'completed' || 'delivered' || 'done' => 'مكتمل',
+    'rejected' => 'مرفوض',
+    'cancelled' => 'ملغي',
+    '' => 'غير معروف',
     _ => (value ?? '').toString(),
   };
 }
@@ -70,6 +136,18 @@ String? jobNextActionTitle(Object? value) {
     'on the way' || 'en route' => 'Mark as Arrived',
     'arrived' => 'Start Working (In Progress)',
     'in progress' || 'repairing' || 'inspection' => 'Complete Job',
+    _ => null,
+  };
+}
+
+String? localizedJobNextActionTitle(Object? value, {required bool isArabic}) {
+  if (!isArabic) return jobNextActionTitle(value);
+  return switch (normalizeJobStatus(value)) {
+    'assigned' || 'pending' || 'pending acceptance' => 'قبول الطلب',
+    'accepted' => 'بدء الرحلة',
+    'on the way' || 'en route' => 'تأكيد الوصول',
+    'arrived' => 'بدء العمل',
+    'in progress' || 'repairing' || 'inspection' => 'إكمال الطلب',
     _ => null,
   };
 }

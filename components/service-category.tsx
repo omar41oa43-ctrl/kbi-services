@@ -5,6 +5,7 @@ import { ChevronRight, ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import type { ReactNode } from "react"
 import { useLanguage, useT } from "@/components/language-provider"
+import { LEGACY_SLUG_MAP } from "@/lib/services-seo-data"
 
 interface ServiceCategoryProps {
   id: string
@@ -60,22 +61,14 @@ export function ServiceCategory({ id, name, icon, brands, issues, accentColor }:
             ))}
           </div>
           <Link
-            href={`/book?device=${id}`}
+            href={`/services/${LEGACY_SLUG_MAP[id] ?? id}`}
             className={`mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-full font-bold text-sm ${colors.bg} ${colors.text} border ${colors.border} hover:bg-muted transition-colors shadow-xs`}
           >
             {(() => {
               if (isAr) {
-                if (name === "TV Installation" || name.includes("تركيب")) return "احجز تركيب التلفزيونات"
-                if (name.includes("Network") || name.includes("Support") || name.includes("الشبكات")) return "احجز الشبكات والدعم التقني"
-                if (name === "CCTV" || name.includes("كاميرات")) return "احجز تركيب وصيانة كاميرات المراقبة"
-                return `احجز ${t(name)}`
+                return `اعرف المزيد عن ${t(name)}`
               }
-              if (name === "Network Installation & Support" || name === "Network Installation & Maintenance") return "Book Network Service"
-              if (name === "TV Installation") return "Book TV Installation"
-              if (name === "IT Support" || name === "Technical Support") return "Book IT Support"
-              if (name === "CCTV") return "Book CCTV Installation & Maintenance"
-              if (name.endsWith("Repair") || name.endsWith("Installation") || name.endsWith("Support") || name.endsWith("Service")) return `Book ${name}`
-              return `Book ${name} Repair`
+              return `View ${name} Service`
             })()}
             {isAr ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </Link>

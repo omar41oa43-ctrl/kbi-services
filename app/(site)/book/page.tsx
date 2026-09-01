@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   description: "Book a professional KBI technician for on-site device repair or IT support at your home or office anywhere across the UAE.",
   alternates: {
     canonical: "/book",
+    languages: { en: "/book", ar: "/ar/book", "x-default": "/book" },
   },
   robots: { index: true, follow: true },
   openGraph: {

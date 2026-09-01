@@ -10,7 +10,11 @@ interface Props {
     params: Promise<{ slug: string }>
 }
 
-// generateStaticParams removed to force dynamic rendering
+export function generateStaticParams() {
+    return locations.map((location) => ({ slug: location.slug }))
+}
+
+export const dynamicParams = false
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params
@@ -33,6 +37,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         description,
         alternates: {
             canonical: `/locations/${loc.slug}`,
+            languages: {
+                en: `/locations/${loc.slug}`,
+                ar: `/ar/locations/${loc.slug}`,
+                "x-default": `/locations/${loc.slug}`,
+            },
         },
         openGraph: {
             title: `${title} | KBI Services`,

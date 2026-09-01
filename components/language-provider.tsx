@@ -273,6 +273,7 @@ const DICTIONARY: Record<string, string> = {
   "Cabling & Infrastructure (Cat6/Fiber)": "تمديد الكابلات والبنية التحتية (Cat6/ألياف)",
   "Gaming Console Repair": "صيانة PlayStation وXbox",
   "Services We Offer": "الخدمات المتاحة",
+  "View Service": "عرض تفاصيل الخدمة",
   "Brands We Service": "الععلامات التجارية التي نخدمها",
   "Brand names identify devices we repair and do not imply manufacturer authorization.": "أسماء العلامات توضح الأجهزة التي نصونها ولا تعني أننا جهة معتمدة من الشركة المصنّعة.",
   "Popular models we repair:": "نماذج شائعة نقوم بإصلاحها:",
@@ -1084,6 +1085,7 @@ export function LanguageProvider({ children, initialLang }: { children: React.Re
   }, [lang])
 
   useEffect(() => {
+    if (initialLang) return
     if (typeof window === "undefined") return
     const stored = window.localStorage.getItem("kbi-lang") as Lang | null
     if (stored === "ar" || stored === "en") {
@@ -1093,7 +1095,7 @@ export function LanguageProvider({ children, initialLang }: { children: React.Re
       // Default to English if no valid storage
       setLang("en")
     }
-  }, [])
+  }, [initialLang])
 
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") return

@@ -1,9 +1,9 @@
-import { randomUUID } from "crypto"
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 
 import prisma from "@/lib/prisma"
 import { getClientIP, rateLimit } from "@/lib/rate-limit"
+import { reserveNextOrderNumber } from "@/lib/order-number"
 
 const orderSchema = z.object({
   customerName: z.string().trim().min(2).max(100),
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { customerName, phone, email, address, latitude, longitude, devices, description } = parsed.data
-    const orderNumber = `KBI-${Date.now().toString(36).toUpperCase()}-${randomUUID().slice(0, 4).toUpperCase()}`
+    const orderNumber = await reserveNextOrderNumber()
     const existingUser = await prisma.user.findUnique({ where: { phone } })
     const user = existingUser
       ? await prisma.user.update({ where: { id: existingUser.id }, data: { name: customerName } })

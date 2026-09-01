@@ -27,6 +27,7 @@ export function Navbar({ contact }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
+  const hasArabicUrls = pathname === "/ar" || pathname?.startsWith("/ar/")
 
   const [supportReady, setSupportReady] = useState(false)
   const isExcluded = pathname?.startsWith("/admin") || pathname?.startsWith("/tech")
@@ -81,7 +82,7 @@ export function Navbar({ contact }: NavbarProps) {
   }, [isBookingPage, isExcluded])
 
   const desktopLogo = (
-    <Link href="/" className="hidden md:flex items-center gap-2 group" dir="ltr" aria-label="KBI home">
+    <Link href={hasArabicUrls ? "/ar" : "/"} className="hidden md:flex items-center gap-2 group" dir="ltr" aria-label="KBI home">
       <span className="text-2xl font-bold tracking-tighter text-foreground dark:text-white inline-flex items-center" dir="ltr" style={{ direction: "ltr", unicodeBidi: "isolate" }}>
         <span>KBI</span><span className="text-cyan-500 dark:text-cyan-400">.</span>
       </span>
@@ -91,7 +92,28 @@ export function Navbar({ contact }: NavbarProps) {
   const languageSwitcher = (
     <button
       type="button"
-      onClick={() => setLang(lang === "en" ? "ar" : "en")}
+      onClick={() => {
+        const isArabicRoute = pathname === "/ar" || pathname?.startsWith("/ar/")
+        const supportsArabicRoute = pathname === "/"
+          || pathname === "/services"
+          || pathname?.startsWith("/services/")
+          || pathname === "/about"
+          || pathname === "/contact"
+          || pathname === "/book"
+          || pathname === "/corporate"
+          || pathname?.startsWith("/locations/")
+
+        if (isArabicRoute) {
+          setLang("en")
+          router.push(pathname === "/ar" ? "/" : pathname.replace(/^\/ar/, ""))
+          return
+        }
+
+        setLang("ar")
+        if (supportsArabicRoute) {
+          router.push(pathname === "/" ? "/ar" : `/ar${pathname}`)
+        }
+      }}
       title={lang === "en" ? "التغيير إلى العربية" : "Switch to English"}
       aria-label={lang === "en" ? "Switch to Arabic" : "Switch to English"}
       className={cn(
@@ -109,12 +131,12 @@ export function Navbar({ contact }: NavbarProps) {
   }
 
   const navLinks = [
-    { name: t("Home"), raw: "Home", href: "/" },
-    { name: t("Services"), raw: "Services", href: "/services" },
-    { name: t("Book Now"), raw: "Book Now", href: "/book" },
-    { name: t("Corporate Services"), raw: "Corporate Services", href: "/corporate" },
-    { name: t("About"), raw: "About", href: "/about" },
-    { name: t("Contact"), raw: "Contact", href: "/contact" },
+    { name: t("Home"), raw: "Home", href: hasArabicUrls ? "/ar" : "/" },
+    { name: t("Services"), raw: "Services", href: hasArabicUrls ? "/ar/services" : "/services" },
+    { name: t("Book Now"), raw: "Book Now", href: hasArabicUrls ? "/ar/book" : "/book" },
+    { name: t("Corporate Services"), raw: "Corporate Services", href: hasArabicUrls ? "/ar/corporate" : "/corporate" },
+    { name: t("About"), raw: "About", href: hasArabicUrls ? "/ar/about" : "/about" },
+    { name: t("Contact"), raw: "Contact", href: hasArabicUrls ? "/ar/contact" : "/contact" },
     { name: t("Track Order"), raw: "Track Order", href: "/track" },
   ]
 
@@ -145,7 +167,7 @@ export function Navbar({ contact }: NavbarProps) {
 
           {/* Mobile Centered Logo */}
           <div className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-auto" dir="ltr">
-            <Link href="/" className="flex items-center justify-center py-1 group" dir="ltr" style={{ direction: "ltr", unicodeBidi: "isolate" }} aria-label="KBI home">
+            <Link href={hasArabicUrls ? "/ar" : "/"} className="flex items-center justify-center py-1 group" dir="ltr" style={{ direction: "ltr", unicodeBidi: "isolate" }} aria-label="KBI home">
               <span className="text-[1.35rem] sm:text-2xl font-black tracking-tight text-foreground dark:text-white inline-flex items-center leading-none" dir="ltr" style={{ direction: "ltr", unicodeBidi: "isolate" }}>
                 <span>KBI</span><span className="text-cyan-500 dark:text-cyan-400">.</span>
               </span>
@@ -162,7 +184,7 @@ export function Navbar({ contact }: NavbarProps) {
           <nav aria-label="Primary" className="hidden md:flex items-center justify-center flex-1">
             <ul className="flex items-center justify-center gap-1 xl:gap-2">
               {sortedNavLinks.map((link) => {
-                const active = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href)
+                const active = link.href === "/" || link.href === "/ar" ? pathname === link.href : pathname.startsWith(link.href)
                 return (
                   <li key={link.raw}>
                     <Link

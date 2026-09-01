@@ -24,11 +24,16 @@ class KbiTechnicianApp extends StatefulWidget {
 class _KbiTechnicianAppState extends State<KbiTechnicianApp> {
   Locale _locale = const Locale('en');
   bool _launchWelcomeSeen = true;
+  bool _authShowLogin = true;
 
   void _setLocale(Locale locale) {
     setState(() {
       _locale = locale;
     });
+  }
+
+  void _rememberAuthView(bool showLogin) {
+    _authShowLogin = showLogin;
   }
 
   @override
@@ -111,10 +116,17 @@ class _KbiTechnicianAppState extends State<KbiTechnicianApp> {
               onLocaleChanged: _setLocale,
               locale: _locale,
               onWelcomeContinue: _continueFromLaunchWelcome,
+              initialShowLoginForm: _authShowLogin,
+              onViewChanged: _rememberAuthView,
             );
           }
           if (user == null) {
-            return AuthScreen(onLocaleChanged: _setLocale, locale: _locale);
+            return AuthScreen(
+              onLocaleChanged: _setLocale,
+              locale: _locale,
+              initialShowLoginForm: _authShowLogin,
+              onViewChanged: _rememberAuthView,
+            );
           }
           return _TechnicianGate(
               uid: user.uid, onLocaleChanged: _setLocale, locale: _locale);

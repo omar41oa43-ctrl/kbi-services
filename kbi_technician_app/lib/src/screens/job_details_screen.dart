@@ -16,7 +16,6 @@ import '../services/technician_service.dart';
 import '../theme.dart';
 import '../utils/job_utils.dart';
 import '../widgets/liquid_glass.dart';
-import '../i18n.dart';
 import 'parts_inventory_screen.dart';
 import 'invoice_form_screen.dart';
 
@@ -60,6 +59,11 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
       'Cash Received'; // 'Cash Received', 'POS Terminal', 'Paid Online'
 
   String? _preferredNavigationApp;
+
+  String get _orderReference => compactOrderReference(
+        {'orderId': _job.orderId},
+        documentId: _job.id,
+      );
 
   @override
   void initState() {
@@ -143,7 +147,11 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: const Color(0xFF10B981),
-            content: Text('Status updated to ${jobStatusLabel(nextStatus)}'),
+            content: Text(
+              Localizations.localeOf(context).languageCode == 'ar'
+                  ? 'تم تحديث الحالة إلى ${localizedJobStatusLabel(nextStatus, isArabic: true)}'
+                  : 'Status updated to ${jobStatusLabel(nextStatus)}',
+            ),
           ),
         );
       }
@@ -293,7 +301,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
     final customerName = _job.customerName ?? 'Customer';
     final customerPhone = _job.customerPhone ?? '+971502491034';
     final cleanPhone = customerPhone.replaceAll(RegExp(r'[^\d]'), '');
-    final orderRef = _job.orderId ?? _job.id;
+    final orderRef = _orderReference;
     final deviceModel = _job.deviceName?.trim().isNotEmpty == true
         ? _job.deviceName!
         : (_job.type.isNotEmpty ? _job.type : 'your device');
@@ -731,7 +739,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
     final customerName = _job.customerName ?? 'Customer';
     final customerPhone = _job.customerPhone ?? '+971502491034';
     final cleanPhone = customerPhone.replaceAll(RegExp(r'[^\d]'), '');
-    final orderRef = _job.orderId ?? _job.id;
+    final orderRef = _orderReference;
     final device = _job.deviceName?.trim().isNotEmpty == true
         ? _job.deviceName!
         : (_job.type.isNotEmpty ? _job.type : 'Smartphone / Laptop');
@@ -766,7 +774,7 @@ Thank you for choosing KBI Services!
   // --- TECHNICIAN RATING QR CODE MODAL ---
   void _showRatingQrModal(BuildContext context) {
     const techName = 'Rashad';
-    final orderRef = _job.orderId ?? _job.id;
+    final orderRef = _orderReference;
     const ratingUrl = 'https://g.page/r/CWG_uPaqr-MjEAI/review';
 
     showModalBottomSheet(
@@ -960,9 +968,16 @@ Thank you for choosing KBI Services!
       context: context,
       builder: (sheetContext) => CupertinoActionSheet(
         title: Text(
-          _job.orderId != null ? 'Order #${_job.orderId}' : 'Order actions',
+          Localizations.localeOf(context).languageCode == 'ar'
+              ? 'إجراءات الطلب $_orderReference'
+              : 'Order $_orderReference actions',
         ),
-        message: Text(jobStatusLabel(_job.status)),
+        message: Text(
+          localizedJobStatusLabel(
+            _job.status,
+            isArabic: Localizations.localeOf(context).languageCode == 'ar',
+          ),
+        ),
         actions: [
           CupertinoActionSheetAction(
             onPressed: () {
@@ -1010,7 +1025,10 @@ Thank you for choosing KBI Services!
     const defaultAbuDhabi = ll.LatLng(24.4539, 54.3773);
     final point = hasCoords ? ll.LatLng(_job.lat!, _job.lng!) : defaultAbuDhabi;
 
-    final nextAction = jobNextActionTitle(_job.status);
+    final nextAction = localizedJobNextActionTitle(
+      _job.status,
+      isArabic: isAr,
+    );
     final nextStatusKey = jobNextStatusKey(_job.status);
     final currentStep = jobStatusStepIndex(_job.status);
     return Directionality(
@@ -1022,14 +1040,12 @@ Thank you for choosing KBI Services!
           backgroundColor: Colors.transparent,
           foregroundColor: kbiLabel,
           title: Text(
-            _job.orderId != null
-                ? 'Order #${_job.orderId}'
-                : t(context, 'details'),
+            isAr ? 'الطلب $_orderReference' : 'Order $_orderReference',
             style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
           ),
           actions: [
             IconButton(
-              tooltip: 'More actions',
+              tooltip: isAr ? 'إجراءات إضافية' : 'More actions',
               onPressed: _showJobActions,
               icon: const Icon(CupertinoIcons.ellipsis, size: 22),
             ),
@@ -1066,10 +1082,10 @@ Thank you for choosing KBI Services!
                   fontWeight: FontWeight.w600,
                   fontSize: 12,
                 ),
-                tabs: const [
-                  Tab(text: 'Overview'),
-                  Tab(text: 'Diagnostics'),
-                  Tab(text: 'Closeout'),
+                tabs: [
+                  Tab(text: isAr ? 'نظرة عامة' : 'Overview'),
+                  Tab(text: isAr ? 'الفحص' : 'Diagnostics'),
+                  Tab(text: isAr ? 'الإنهاء' : 'Closeout'),
                 ],
               ),
             ),
@@ -1720,7 +1736,8 @@ Thank you for choosing KBI Services!
     final coll = _job.collectionName ?? 'orders';
 
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance.collection(coll).doc(docId).snapshots(),
+      stream:
+          FirebaseFirestore.instance.collection(coll).doc(docId).snapshots(),
       builder: (context, snapshot) {
         final data = snapshot.data?.data();
         final usedParts = (data?['usedParts'] as List<dynamic>?) ?? [];
@@ -1848,8 +1865,10 @@ Thank you for choosing KBI Services!
                               color: kbiOrange.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Icon(CupertinoIcons.checkmark_seal_fill,
-                                color: kbiOrange, size: 16),
+                            child: const Icon(
+                                CupertinoIcons.checkmark_seal_fill,
+                                color: kbiOrange,
+                                size: 16),
                           ),
                           const SizedBox(width: 10),
                           Expanded(

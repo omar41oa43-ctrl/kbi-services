@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { authenticateCustomer, findPrismaUser } from '@/lib/api-auth'
-import { randomUUID } from 'crypto'
+import { reserveNextOrderNumber } from '@/lib/order-number'
 
 export async function GET(request: Request) {
   try {
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       })
     }
 
-    const orderNumber = `KBI-${Date.now().toString(36).toUpperCase()}-${randomUUID().slice(0, 4).toUpperCase()}`
+    const orderNumber = await reserveNextOrderNumber()
 
     const order = await prisma.order.create({
       data: {

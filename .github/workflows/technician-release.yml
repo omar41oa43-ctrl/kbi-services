@@ -1,0 +1,62 @@
+name: Publish KBI Technician App
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: kbi_technician_app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.1"
+          channel: stable
+          cache: true
+
+      - name: Configure Firebase and Android signing
+        env:
+          FIREBASE_ANDROID_CONFIG: ${{ secrets.FIREBASE_ANDROID_CONFIG }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          printf '%s' "$FIREBASE_ANDROID_CONFIG" | base64 --decode > android/app/google-services.json
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/kbi-release.jks
+          printf 'storeFile=kbi-release.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+            "$ANDROID_KEYSTORE_PASSWORD" \
+            "$ANDROID_KEY_ALIAS" \
+            "$ANDROID_KEY_PASSWORD" > android/key.properties
+
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: flutter test test/job_utils_test.dart test/auth_language_navigation_test.dart
+      - run: flutter build apk --release
+
+      - name: Prepare release file
+        run: cp build/app/outputs/flutter-apk/app-release.apk ../kbi-technician.apk
+
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: KBI Technician Mobile App ${{ github.ref_name }}
+          generate_release_notes: true
+          files: kbi-technician.apk

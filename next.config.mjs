@@ -28,6 +28,26 @@ const nextConfig = {
   generateBuildId: async () => {
     return `build-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
   },
+  async redirects() {
+    return [
+      ['mobile', 'mobile-phone-repair'],
+      ['laptop', 'laptop-repair'],
+      ['pc', 'computer-repair'],
+      ['printer', 'printer-repair'],
+      ['tv', 'tv-repair'],
+      ['monitor', 'monitor-repair'],
+      ['tablet', 'tablet-repair'],
+      ['apple-watch', 'apple-watch-repair'],
+      ['gaming', 'gaming-console-repair'],
+      ['networking', 'network-support'],
+      ['tech-support', 'it-support'],
+      ['tv-install', 'tv-installation'],
+    ].map(([source, destination]) => ({
+      source: `/services/${source}`,
+      destination: `/services/${destination}`,
+      permanent: true,
+    }))
+  },
   async headers() {
     const noStore = 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0'
     const swCache = 'public, max-age=0, must-revalidate'

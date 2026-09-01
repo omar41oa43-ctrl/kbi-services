@@ -34,7 +34,7 @@ export function JsonLd({ contact }: { contact: SiteContact }) {
     "@id": "https://kbi.services/#business",
     name: "KBI Services",
     legalName: "KBI GLOBAL TECHNOLOGIES",
-    image: "https://kbi.services/og-image.png",
+    image: "https://kbi.services/opengraph-image",
     url: "https://kbi.services/",
     parentOrganization: {
       "@id": "https://kbi.services/#organization",

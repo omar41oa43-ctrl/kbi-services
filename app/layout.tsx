@@ -7,9 +7,9 @@ import { LanguageProvider } from "@/components/language-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 
 const cairo = Cairo({
-  subsets: ["arabic", "latin"],
+  subsets: ["latin"],
   variable: "--font-sans",
-  display: "swap",
+  display: "optional",
 })
 
 export const revalidate = 600
@@ -36,7 +36,7 @@ export async function generateMetadata(): Promise<Metadata> {
       description: "Professional on-site device repair and IT services across the UAE. KBI technicians come to your home or office for phones, laptops, PCs, printers, TVs, CCTV, gaming consoles and more.",
       images: [
         {
-          url: "/og-image.png",
+          url: "/opengraph-image",
           width: 1200,
           height: 630,
           alt: "KBI Services on-site device repair and IT support across the UAE",
@@ -47,7 +47,7 @@ export async function generateMetadata(): Promise<Metadata> {
       card: "summary_large_image",
       title: "On-Site Device Repair & IT Services Across the UAE | KBI Services",
       description: "Professional on-site device repair and IT services across the UAE. KBI technicians come to your home or office for phones, laptops, PCs, printers, TVs, CCTV, gaming consoles and more.",
-      images: ["/og-image.png"],
+      images: ["/opengraph-image"],
     },
   }
 }

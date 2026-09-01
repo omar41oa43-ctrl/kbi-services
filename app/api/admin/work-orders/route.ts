@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { verifyAdmin, getAdminDb, getAdminMessaging } from "@/lib/firebase-admin"
 import { normalizeOrderStatus, ORDER_STATUSES } from "@/lib/order-status"
+import { reserveNextOrderNumber } from "@/lib/order-number"
 
 export async function POST(request: NextRequest) {
   const identity = await verifyAdmin(request)
@@ -79,14 +80,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: false, error: `${orderNumber} already exists.` }, { status: 409 })
     }
   } else {
-    const counterRef = db.collection("counters").doc("orders")
-    orderNumber = await db.runTransaction(async (transaction) => {
-      const counter = await transaction.get(counterRef)
-      const previous = Number(counter.data()?.current || 0)
-      const next = Number.isFinite(previous) ? previous + 1 : 1
-      transaction.set(counterRef, { current: next, updatedAt: FieldValue.serverTimestamp() }, { merge: true })
-      return `KBI-${String(next).padStart(6, "0")}`
-    })
+    orderNumber = await reserveNextOrderNumber()
   }
 
   const latNum = Number(body.latitude)

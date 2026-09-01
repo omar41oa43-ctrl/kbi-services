@@ -13,12 +13,16 @@ class AuthScreen extends StatefulWidget {
   final Locale locale;
   final void Function(Locale) onLocaleChanged;
   final bool Function()? onWelcomeContinue;
+  final bool initialShowLoginForm;
+  final ValueChanged<bool>? onViewChanged;
 
   const AuthScreen({
     super.key,
     required this.onLocaleChanged,
     required this.locale,
     this.onWelcomeContinue,
+    this.initialShowLoginForm = true,
+    this.onViewChanged,
   });
 
   @override
@@ -38,7 +42,7 @@ class _AuthScreenState extends State<AuthScreen>
   static const _savedEmailKey = 'kbi_biometric_email';
   static const _savedPasswordKey = 'kbi_biometric_password';
 
-  bool _showLoginForm = true;
+  late bool _showLoginForm;
   bool _loading = false;
   bool _obscurePassword = true;
   bool _rememberMe = true;
@@ -48,8 +52,7 @@ class _AuthScreenState extends State<AuthScreen>
   @override
   void initState() {
     super.initState();
-    _email.text = 'tech1@kbi.services';
-    _password.text = 'Password123!';
+    _showLoginForm = widget.initialShowLoginForm;
     _checkBiometrics();
   }
 
@@ -148,7 +151,10 @@ class _AuthScreenState extends State<AuthScreen>
       final uid = cred.user?.uid;
       if (uid != null) {
         try {
-          await FirebaseFirestore.instance.collection('technicians').doc(uid).set({
+          await FirebaseFirestore.instance
+              .collection('technicians')
+              .doc(uid)
+              .set({
             'isOnline': true,
             'online': true,
             'isAvailable': true,
@@ -159,7 +165,8 @@ class _AuthScreenState extends State<AuthScreen>
             'updatedAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
         } catch (statusErr) {
-          debugPrint('Error setting initial online status on login: $statusErr');
+          debugPrint(
+              'Error setting initial online status on login: $statusErr');
         }
       }
       if (_rememberMe) {
@@ -310,7 +317,14 @@ class _AuthScreenState extends State<AuthScreen>
   void _continueFromWelcome() {
     final handledByApp = widget.onWelcomeContinue?.call() ?? false;
     if (!handledByApp && mounted) {
-      setState(() => _showLoginForm = true);
+      _setAuthView(showLogin: true);
+    }
+  }
+
+  void _setAuthView({required bool showLogin}) {
+    widget.onViewChanged?.call(showLogin);
+    if (mounted && _showLoginForm != showLogin) {
+      setState(() => _showLoginForm = showLogin);
     }
   }
 
@@ -424,9 +438,6 @@ class _AuthScreenState extends State<AuthScreen>
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final compact = constraints.maxHeight < 650;
-                final heroGap = compact
-                    ? constraints.maxHeight * 0.18
-                    : constraints.maxHeight * 0.35;
 
                 return SingleChildScrollView(
                   padding: EdgeInsets.fromLTRB(
@@ -439,142 +450,153 @@ class _AuthScreenState extends State<AuthScreen>
                     constraints: BoxConstraints(
                       minHeight: constraints.maxHeight - 28,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Align(
-                          alignment: AlignmentDirectional.topStart,
-                          child: Container(
-                            key: const Key('welcome-header'),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.94),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: Colors.white),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF06111F)
-                                      .withValues(alpha: 0.10),
-                                  blurRadius: 18,
-                                  offset: const Offset(0, 6),
+                    child: IntrinsicHeight(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                key: const Key('welcome-header'),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
                                 ),
-                              ],
-                            ),
-                            child: const _KbiWordmark(size: 21),
-                          ),
-                        ),
-                        SizedBox(height: heroGap),
-                        Text(
-                          isArabic
-                              ? 'يوم عملك.\nتواصل أفضل.'
-                              : 'Your workday.\nBetter connected.',
-                          textAlign: TextAlign.start,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: isArabic
-                                ? (compact ? 27 : 32)
-                                : (compact ? 29 : 36),
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: isArabic ? 0 : -1.0,
-                            height: isArabic ? 1.18 : 1.06,
-                          ),
-                        ),
-                        SizedBox(height: compact ? 8 : 12),
-                        Text(
-                          isArabic
-                              ? 'أدِر المهام المسندة إليك، وانتقل إلى العملاء، وحدّث حالة كل خدمة من مكان واحد.'
-                              : 'Manage assigned jobs, navigate to customers, and keep every service update in one place.',
-                          textAlign: TextAlign.start,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.76),
-                            fontSize: compact ? 12.5 : 14,
-                            fontWeight: FontWeight.w500,
-                            height: 1.45,
-                          ),
-                        ),
-                        SizedBox(height: compact ? 16 : 24),
-                        SizedBox(
-                          height: 58,
-                          child: FilledButton(
-                            key: const Key('welcome-primary-action'),
-                            onPressed: _continueFromWelcome,
-                            style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFF0D67E8),
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    isArabic
-                                        ? 'المتابعة لتسجيل الدخول'
-                                        : 'Continue to sign in',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.fade,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w800,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.94),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(color: Colors.white),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFF06111F)
+                                          .withValues(alpha: 0.10),
+                                      blurRadius: 18,
+                                      offset: const Offset(0, 6),
                                     ),
-                                  ),
+                                  ],
                                 ),
-                                const SizedBox(width: 12),
-                                Container(
-                                  width: 30,
-                                  height: 30,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.16),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Directionality(
-                                    textDirection: TextDirection.ltr,
-                                    child: Icon(
+                                child: const _KbiWordmark(size: 21),
+                              ),
+                              _buildGlassIconButton(
+                                text: isArabic ? 'EN' : 'عربي',
+                                onTap: () => widget.onLocaleChanged(
+                                  Locale(isArabic ? 'en' : 'ar'),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                          Text(
+                            isArabic
+                                ? 'يوم عملك.\nتواصل أفضل.'
+                                : 'Your workday.\nBetter connected.',
+                            textAlign: TextAlign.start,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: isArabic
+                                  ? (compact ? 27 : 32)
+                                  : (compact ? 29 : 36),
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: isArabic ? 0 : -1.0,
+                              height: isArabic ? 1.18 : 1.06,
+                            ),
+                          ),
+                          SizedBox(height: compact ? 8 : 12),
+                          Text(
+                            isArabic
+                                ? 'أدِر المهام المسندة إليك، وانتقل إلى العملاء، وحدّث حالة كل خدمة من مكان واحد.'
+                                : 'Manage assigned jobs, navigate to customers, and keep every service update in one place.',
+                            textAlign: TextAlign.start,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.76),
+                              fontSize: compact ? 12.5 : 14,
+                              fontWeight: FontWeight.w500,
+                              height: 1.45,
+                            ),
+                          ),
+                          SizedBox(height: compact ? 16 : 24),
+                          SizedBox(
+                            height: 58,
+                            child: FilledButton(
+                              key: const Key('welcome-primary-action'),
+                              onPressed: _continueFromWelcome,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFF0D67E8),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Flexible(
+                                    child: Text(
                                       isArabic
-                                          ? Icons.arrow_back_rounded
-                                          : Icons.arrow_forward_rounded,
-                                      size: 18,
+                                          ? 'المتابعة لتسجيل الدخول'
+                                          : 'Continue to sign in',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.fade,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w800,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.verified_user_outlined,
-                              size: 14,
-                              color: Colors.white.withValues(alpha: 0.52),
-                            ),
-                            const SizedBox(width: 7),
-                            Flexible(
-                              child: Text(
-                                isArabic
-                                    ? 'دخول آمن لمتخصصي الخدمة الميدانية'
-                                    : 'Secure access for field professionals',
-                                maxLines: 1,
-                                overflow: TextOverflow.fade,
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.52),
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                  const SizedBox(width: 12),
+                                  Container(
+                                    width: 30,
+                                    height: 30,
+                                    decoration: BoxDecoration(
+                                      color:
+                                          Colors.white.withValues(alpha: 0.16),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Directionality(
+                                      textDirection: TextDirection.ltr,
+                                      child: Icon(
+                                        isArabic
+                                            ? Icons.arrow_back_rounded
+                                            : Icons.arrow_forward_rounded,
+                                        size: 18,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.verified_user_outlined,
+                                size: 14,
+                                color: Colors.white.withValues(alpha: 0.52),
+                              ),
+                              const SizedBox(width: 7),
+                              Flexible(
+                                child: Text(
+                                  isArabic
+                                      ? 'دخول آمن لمتخصصي الخدمة الميدانية'
+                                      : 'Secure access for field professionals',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.fade,
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.52),
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -629,7 +651,7 @@ class _AuthScreenState extends State<AuthScreen>
                         icon: isArabic
                             ? Icons.arrow_forward_rounded
                             : Icons.arrow_back_rounded,
-                        onTap: () => setState(() => _showLoginForm = false),
+                        onTap: () => _setAuthView(showLogin: false),
                       ),
                       const SizedBox(width: 8),
                       Container(
@@ -1002,14 +1024,19 @@ class _AuthScreenState extends State<AuthScreen>
                                       color: Color(0xFF64748B),
                                     ),
                                     const SizedBox(width: 6),
-                                    Text(
-                                      isArabic
-                                          ? 'خدمة العملاء والدعم الفني'
-                                          : 'Customer & Technical Support',
-                                      style: const TextStyle(
-                                        color: Color(0xFF64748B),
-                                        fontSize: 11.5,
-                                        fontWeight: FontWeight.w700,
+                                    Expanded(
+                                      child: Text(
+                                        isArabic
+                                            ? 'خدمة العملاء والدعم الفني'
+                                            : 'Customer & Technical Support',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          color: Color(0xFF64748B),
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.w700,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -1046,17 +1073,23 @@ class _AuthScreenState extends State<AuthScreen>
                                                 MainAxisAlignment.center,
                                             children: [
                                               Icon(
-                                                Icons.chat_bubble_outline_rounded,
+                                                Icons
+                                                    .chat_bubble_outline_rounded,
                                                 color: Color(0xFF22C55E),
                                                 size: 14,
                                               ),
                                               SizedBox(width: 5),
-                                              Text(
-                                                '0502491034',
-                                                style: TextStyle(
-                                                  color: Color(0xFF15803D),
-                                                  fontSize: 11.5,
-                                                  fontWeight: FontWeight.w800,
+                                              Flexible(
+                                                child: Text(
+                                                  '0502491034',
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    color: Color(0xFF15803D),
+                                                    fontSize: 11.5,
+                                                    fontWeight: FontWeight.w800,
+                                                  ),
                                                 ),
                                               ),
                                             ],
@@ -1104,7 +1137,8 @@ class _AuthScreenState extends State<AuthScreen>
                                                 child: Text(
                                                   'support@kbi.services',
                                                   maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                   style: TextStyle(
                                                     color: Color(0xFF1D4ED8),
                                                     fontSize: 10.5,

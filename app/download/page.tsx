@@ -4,8 +4,7 @@ import React, { useState } from 'react';
 
 export default function DownloadAppPage() {
   const [copied, setCopied] = useState(false);
-  const apkDownloadUrl = 'https://github.com/omar41oa43-ctrl/kbi-services/releases/download/v1.0.0/kbi-technician.apk';
-  const ipaDownloadUrl = 'https://github.com/omar41oa43-ctrl/kbi-services/releases/download/v1.0.0/kbi-technician.ipa';
+  const apkDownloadUrl = 'https://github.com/omar41oa43-ctrl/kbi-services/releases/download/v1.1.0/kbi-technician.apk';
 
   const copyToClipboard = (url: string) => {
     navigator.clipboard.writeText(url);
@@ -32,7 +31,7 @@ export default function DownloadAppPage() {
             </div>
           </div>
           <span className="px-3 py-1 bg-teal-500/10 border border-teal-500/20 text-teal-400 text-xs font-semibold rounded-full uppercase tracking-wider mb-2">
-            Technician Portal App • v1.0.0
+            Technician Portal App • v1.1.0
           </span>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-2">
             Download KBI Technician App
@@ -68,15 +67,15 @@ export default function DownloadAppPage() {
             <span>Download Android APK (64 MB)</span>
           </a>
 
-          <a
-            href={ipaDownloadUrl}
-            className="w-full flex items-center justify-center gap-3 bg-slate-800 hover:bg-slate-700 active:scale-[0.98] border border-slate-700 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg transition-all"
+          <div
+            aria-disabled="true"
+            className="w-full flex items-center justify-center gap-3 bg-slate-800/70 border border-slate-700 text-slate-400 font-bold py-3.5 px-6 rounded-2xl"
           >
             <svg className="w-5 h-5 text-slate-300" fill="currentColor" viewBox="0 0 24 24">
               <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 0.92-2.85-.9.04-1.99.6-2.63 1.35-.57.65-1.06 1.72-.93 2.74 1.01.08 2.02-.49 2.64-1.24z"/>
             </svg>
-            <span>Download iOS Package (IPA - 24 MB)</span>
-          </a>
+            <span>iOS • TestFlight release coming soon</span>
+          </div>
 
           {/* Copy Direct Link */}
           <button
@@ -90,6 +89,15 @@ export default function DownloadAppPage() {
           </button>
         </div>
 
+        <div className="mt-6 rounded-2xl border border-blue-500/20 bg-blue-500/10 p-4">
+          <h2 className="text-sm font-bold text-blue-200">What&apos;s new in v1.1.0</h2>
+          <ul className="mt-2 space-y-1 text-xs text-slate-300 list-disc list-inside">
+            <li>Improved welcome, sign-in, orders, and job details screens</li>
+            <li>Short, consistent KBI order references with duplicate prevention</li>
+            <li>Better Arabic layout, status labels, and language switching</li>
+          </ul>
+        </div>
+
         {/* Instructions */}
         <div className="mt-6 pt-5 border-t border-slate-800/80 text-left space-y-3">
           <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
@@ -100,7 +108,7 @@ export default function DownloadAppPage() {
               <strong className="text-slate-200">Android:</strong> Tap <span className="text-blue-400">Download</span>. When prompted, allow <em>"Install from Unknown Sources"</em> or <em>"Download anyway"</em>.
             </li>
             <li>
-              <strong className="text-slate-200">iOS (iPhone):</strong> Run directly on your connected iPhone via Xcode / Flutter or access the technician dashboard via web app.
+              <strong className="text-slate-200">iOS (iPhone):</strong> Installation will be provided through TestFlight after Apple signing and review are completed.
             </li>
             <li>
               <strong className="text-slate-200">Login:</strong> Use your registered technician email and password.

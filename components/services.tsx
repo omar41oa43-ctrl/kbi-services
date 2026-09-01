@@ -4,6 +4,7 @@ import Link from "next/link"
 import { ArrowRight, Smartphone, Laptop, Printer, Tv, Gamepad2, Camera, MonitorUp, Wifi, Headset } from "lucide-react"
 import { useLanguage, useT } from "@/components/language-provider"
 import { devices } from "@/lib/data"
+import { LEGACY_SLUG_MAP } from "@/lib/services-seo-data"
 
 export function Services() {
   const { lang } = useLanguage()
@@ -60,7 +61,7 @@ export function Services() {
                 key={device.id}
                 className="group"
               >
-                <Link href={`/book?device=${device.id}`}>
+                <Link href={`/services/${LEGACY_SLUG_MAP[device.id] ?? device.id}`}>
                   <div className={`h-full p-6 rounded-3xl bg-card border border-border/80 hover:border-cyan-500/50 shadow-sm hover:shadow-xl transition-all duration-300 ${colors.bg} flex flex-col items-center text-center justify-between`}>
                     <div className="flex flex-col items-center text-center w-full">
                       <div className={`p-4 rounded-2xl ${colors.bg} mb-4 flex items-center justify-center mx-auto`}>
@@ -81,7 +82,7 @@ export function Services() {
                       </p>
                     </div>
                     <div className={`flex items-center justify-center gap-2 ${colors.text} font-semibold text-sm group-hover:gap-3 transition-all mx-auto`}>
-                      {t("Book Now")}
+                      {t("View Service")}
                       {isAr ? <ArrowRight className="w-4 h-4 rotate-180" /> : <ArrowRight className="w-4 h-4" />}
                     </div>
                   </div>

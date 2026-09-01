@@ -12,6 +12,11 @@ export const metadata: Metadata = {
   description: "Explore KBI Services for professional phone, laptop, PC, printer, TV, gaming console, CCTV, networking and IT support across all seven Emirates of the UAE.",
   alternates: {
     canonical: "/services",
+    languages: {
+      en: "/services",
+      ar: "/ar/services",
+      "x-default": "/services",
+    },
   },
   openGraph: {
     title: "Device Repair & IT Services Across the UAE | KBI Services",

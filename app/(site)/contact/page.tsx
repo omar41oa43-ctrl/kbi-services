@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   description: "Contact KBI Services for professional on-site device repair and IT support across Abu Dhabi, Dubai, Sharjah, Ajman, Ras Al Khaimah, Fujairah and Umm Al Quwain.",
   alternates: {
     canonical: "/contact",
+    languages: { en: "/contact", ar: "/ar/contact", "x-default": "/contact" },
   },
   openGraph: {
     title: "Contact KBI Services | Device Repair & IT Support UAE",

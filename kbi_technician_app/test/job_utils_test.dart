@@ -11,6 +11,48 @@ void main() {
     });
   });
 
+  group('order references', () {
+    test('keeps new numeric references short and padded', () {
+      expect(
+        compactOrderReference({'orderNumber': 'KBI-17'}, documentId: 'doc'),
+        'KBI-000017',
+      );
+    });
+
+    test('shortens legacy UUID-like references for display', () {
+      expect(
+        compactOrderReference(
+          {'orderId': 'KBI-55E3FB2A77EF6A6A'},
+          documentId: 'doc',
+        ),
+        'KBI-EF6A6A',
+      );
+    });
+
+    test('deduplicates matching references across collections', () {
+      final booking = jobIdentityKey(
+        {'bookingId': 'KBI-000017'},
+        documentId: 'booking-doc',
+      );
+      final order = jobIdentityKey(
+        {'orderNumber': '#kbi_000017'},
+        documentId: 'order-doc',
+      );
+      expect(booking, order);
+    });
+  });
+
+  test('localizes technician statuses and next actions', () {
+    expect(
+      localizedJobStatusLabel('in_progress', isArabic: true),
+      'جارٍ العمل',
+    );
+    expect(
+      localizedJobNextActionTitle('accepted', isArabic: true),
+      'بدء الرحلة',
+    );
+  });
+
   test('Home prioritizes new assignments before active work', () {
     expect(jobHomePriority('Assigned'), 0);
     expect(jobHomePriority('pending_acceptance'), 0);

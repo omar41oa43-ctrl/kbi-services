@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 
+import '../utils/job_utils.dart';
+
 class TechnicianService {
   static final TechnicianService instance = TechnicianService._();
   TechnicianService._();
@@ -296,9 +298,13 @@ class TechnicianService {
       }
 
       void addMostUseful(DocumentSnapshot<Map<String, dynamic>> doc) {
-        final current = map[doc.id];
+        final identity = jobIdentityKey(
+          doc.data() ?? const <String, dynamic>{},
+          documentId: doc.id,
+        );
+        final current = map[identity];
         if (current == null) {
-          map[doc.id] = doc;
+          map[identity] = doc;
           return;
         }
         final currentStatus =
@@ -310,14 +316,14 @@ class TechnicianService {
         final nextCompleted =
             const {'completed', 'delivered', 'done'}.contains(nextStatus);
         if (nextCompleted && !currentCompleted) {
-          map[doc.id] = doc;
+          map[identity] = doc;
           return;
         }
         if (currentCompleted && !nextCompleted) return;
         final currentUsefulness = documentUsefulness(current.data());
         final nextUsefulness = documentUsefulness(doc.data());
         if (nextUsefulness > currentUsefulness) {
-          map[doc.id] = doc;
+          map[identity] = doc;
           return;
         }
         if (currentUsefulness > nextUsefulness) return;
@@ -325,7 +331,7 @@ class TechnicianService {
         final nextDate = extractDocDate(doc.data());
         if (currentDate == null ||
             (nextDate != null && nextDate.isAfter(currentDate))) {
-          map[doc.id] = doc;
+          map[identity] = doc;
         }
       }
 
