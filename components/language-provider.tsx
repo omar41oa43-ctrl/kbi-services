@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react"
+import { usePathname } from "next/navigation"
 
 type Lang = "en" | "ar"
 
@@ -1070,6 +1071,7 @@ const DICTIONARY: Record<string, string> = {
 
 export function LanguageProvider({ children, initialLang }: { children: React.ReactNode; initialLang?: Lang }) {
   const [lang, setLang] = useState<Lang>(initialLang ?? "en")
+  const pathname = usePathname()
 
   useEffect(() => {
     if (typeof document === "undefined") return
@@ -1086,16 +1088,9 @@ export function LanguageProvider({ children, initialLang }: { children: React.Re
 
   useEffect(() => {
     if (initialLang) return
-    if (typeof window === "undefined") return
-    const stored = window.localStorage.getItem("kbi-lang") as Lang | null
-    if (stored === "ar" || stored === "en") {
-      const id = requestAnimationFrame(() => setLang(stored))
-      return () => cancelAnimationFrame(id)
-    } else {
-      // Default to English if no valid storage
-      setLang("en")
-    }
-  }, [initialLang])
+    const routeLang: Lang = pathname === "/ar" || pathname?.startsWith("/ar/") ? "ar" : "en"
+    setLang(routeLang)
+  }, [initialLang, pathname])
 
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") return
