@@ -264,7 +264,8 @@ class TechnicianService {
         <String, List<DocumentSnapshot<Map<String, dynamic>>>>{};
 
     void emitMerged() {
-      final map = <String, DocumentSnapshot<Map<String, dynamic>>>{};
+      final mergedDocs = <DocumentSnapshot<Map<String, dynamic>>>[];
+      final mergedAliases = <Set<String>>[];
 
       int documentUsefulness(Map<String, dynamic>? data) {
         if (data == null) return 0;
@@ -297,41 +298,66 @@ class TechnicianService {
         return score;
       }
 
-      void addMostUseful(DocumentSnapshot<Map<String, dynamic>> doc) {
-        final identity = jobIdentityKey(
-          doc.data() ?? const <String, dynamic>{},
-          documentId: doc.id,
-        );
-        final current = map[identity];
-        if (current == null) {
-          map[identity] = doc;
-          return;
-        }
+      DocumentSnapshot<Map<String, dynamic>> mostUseful(
+        DocumentSnapshot<Map<String, dynamic>> current,
+        DocumentSnapshot<Map<String, dynamic>> next,
+      ) {
         final currentStatus =
             (current.data()?['status'] ?? '').toString().toLowerCase();
         final nextStatus =
-            (doc.data()?['status'] ?? '').toString().toLowerCase();
+            (next.data()?['status'] ?? '').toString().toLowerCase();
         final currentCompleted =
             const {'completed', 'delivered', 'done'}.contains(currentStatus);
         final nextCompleted =
             const {'completed', 'delivered', 'done'}.contains(nextStatus);
         if (nextCompleted && !currentCompleted) {
-          map[identity] = doc;
-          return;
+          return next;
         }
-        if (currentCompleted && !nextCompleted) return;
+        if (currentCompleted && !nextCompleted) return current;
         final currentUsefulness = documentUsefulness(current.data());
-        final nextUsefulness = documentUsefulness(doc.data());
+        final nextUsefulness = documentUsefulness(next.data());
         if (nextUsefulness > currentUsefulness) {
-          map[identity] = doc;
-          return;
+          return next;
         }
-        if (currentUsefulness > nextUsefulness) return;
+        if (currentUsefulness > nextUsefulness) return current;
         final currentDate = extractDocDate(current.data());
-        final nextDate = extractDocDate(doc.data());
+        final nextDate = extractDocDate(next.data());
         if (currentDate == null ||
             (nextDate != null && nextDate.isAfter(currentDate))) {
-          map[identity] = doc;
+          return next;
+        }
+        return current;
+      }
+
+      void addMostUseful(DocumentSnapshot<Map<String, dynamic>> doc) {
+        final aliases = jobIdentityAliases(
+          doc.data() ?? const <String, dynamic>{},
+          documentId: doc.id,
+        );
+        final matches = <int>[];
+        for (var index = 0; index < mergedAliases.length; index++) {
+          if (aliases.any(mergedAliases[index].contains)) matches.add(index);
+        }
+
+        if (matches.isEmpty) {
+          mergedDocs.add(doc);
+          mergedAliases.add({...aliases});
+          return;
+        }
+
+        final primary = matches.first;
+        mergedDocs[primary] = mostUseful(mergedDocs[primary], doc);
+        mergedAliases[primary].addAll(aliases);
+
+        // Merge every transitive alias group as well. This covers a legacy
+        // record linked by document ID to one copy and by order number to
+        // another copy without leaving a third duplicate behind.
+        for (final index in matches.skip(1).toList().reversed) {
+          mergedDocs[primary] =
+              mostUseful(mergedDocs[primary], mergedDocs[index]);
+          mergedAliases[primary].addAll(mergedAliases[index]);
+          mergedDocs.removeAt(index);
+          mergedAliases.removeAt(index);
         }
       }
 
@@ -340,7 +366,7 @@ class TechnicianService {
           addMostUseful(doc);
         }
       }
-      final list = map.values.toList();
+      final list = [...mergedDocs];
       list.sort((a, b) {
         final aDate = extractDocDate(a.data());
         final bDate = extractDocDate(b.data());

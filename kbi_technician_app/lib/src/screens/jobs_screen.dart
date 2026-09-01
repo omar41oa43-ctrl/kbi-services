@@ -72,7 +72,11 @@ class _JobsScreenState extends State<JobsScreen> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unable to refresh jobs: $error')),
+          SnackBar(
+            content: Text(widget.locale.languageCode == 'ar'
+                ? 'تعذر تحديث الطلبات. حاول مرة أخرى.'
+                : 'Unable to refresh jobs. Please try again.'),
+          ),
         );
       }
     } finally {
@@ -477,6 +481,7 @@ class _JobsScreenState extends State<JobsScreen> {
 
   // --- SORT POPUP ---
   Widget _buildSortPopupMenu() {
+    final isAr = widget.locale.languageCode == 'ar';
     return PopupMenuButton<OrderSortOption>(
       icon: Container(
         padding: const EdgeInsets.all(8),
@@ -498,26 +503,31 @@ class _JobsScreenState extends State<JobsScreen> {
           borderRadius: BorderRadius.all(Radius.circular(24))),
       onSelected: (option) => setState(() => _sortOption = option),
       itemBuilder: (context) => [
-        const PopupMenuItem(
+        PopupMenuItem(
             value: OrderSortOption.newest,
-            child: Text('Newest first',
-                style: TextStyle(color: Color(0xFF111318), fontSize: 13))),
-        const PopupMenuItem(
+            child: Text(isAr ? 'الأحدث أولًا' : 'Newest first',
+                style:
+                    const TextStyle(color: Color(0xFF111318), fontSize: 13))),
+        PopupMenuItem(
             value: OrderSortOption.oldest,
-            child: Text('Oldest first',
-                style: TextStyle(color: Color(0xFF111318), fontSize: 13))),
-        const PopupMenuItem(
+            child: Text(isAr ? 'الأقدم أولًا' : 'Oldest first',
+                style:
+                    const TextStyle(color: Color(0xFF111318), fontSize: 13))),
+        PopupMenuItem(
             value: OrderSortOption.today,
-            child: Text('Today\'s jobs',
-                style: TextStyle(color: Color(0xFF111318), fontSize: 13))),
-        const PopupMenuItem(
+            child: Text(isAr ? 'طلبات اليوم' : 'Today\'s jobs',
+                style:
+                    const TextStyle(color: Color(0xFF111318), fontSize: 13))),
+        PopupMenuItem(
             value: OrderSortOption.highestPriority,
-            child: Text('Highest priority',
-                style: TextStyle(color: Color(0xFF111318), fontSize: 13))),
-        const PopupMenuItem(
+            child: Text(isAr ? 'الأعلى أولوية' : 'Highest priority',
+                style:
+                    const TextStyle(color: Color(0xFF111318), fontSize: 13))),
+        PopupMenuItem(
             value: OrderSortOption.recentlyUpdated,
-            child: Text('Recently updated',
-                style: TextStyle(color: Color(0xFF111318), fontSize: 13))),
+            child: Text(isAr ? 'المحدثة مؤخرًا' : 'Recently updated',
+                style:
+                    const TextStyle(color: Color(0xFF111318), fontSize: 13))),
       ],
     );
   }
@@ -550,9 +560,12 @@ class _JobsScreenState extends State<JobsScreen> {
 
     final device =
         (data['device'] ?? data['deviceModel'] ?? '').toString().trim();
-    final service = job.type.isNotEmpty
+    final rawService = job.type.isNotEmpty
         ? job.type
-        : (data['service'] ?? 'Service Repair').toString().trim();
+        : (data['service'] ?? (isAr ? 'خدمة صيانة' : 'Service Repair'))
+            .toString()
+            .trim();
+    final service = localizedJobContentLabel(rawService, isArabic: isAr);
     final displayTitle = device.isNotEmpty &&
             !service.toLowerCase().contains(device.toLowerCase())
         ? '$device • $service'
@@ -782,6 +795,7 @@ class _JobsScreenState extends State<JobsScreen> {
   // --- WORKFLOW STATE ACTION BUTTONS ---
   Widget _buildWorkflowStateActionButtons(String docId, String status,
       Map<String, dynamic> data, ServiceRequestModel job) {
+    final isAr = widget.locale.languageCode == 'ar';
     if (status == 'assigned' ||
         status == 'pending' ||
         status == 'pending acceptance') {
@@ -797,8 +811,9 @@ class _JobsScreenState extends State<JobsScreen> {
               ),
               onPressed: () => _showAcceptConfirmationDialog(docId),
               icon: const Icon(Icons.check_circle_outline, size: 18),
-              label: const Text('Accept Order',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              label: Text(isAr ? 'قبول الطلب' : 'Accept Order',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 13)),
             ),
           ),
           const SizedBox(width: 10),
@@ -812,8 +827,9 @@ class _JobsScreenState extends State<JobsScreen> {
               ),
               onPressed: () => _showRejectReasonBottomSheet(docId),
               icon: const Icon(Icons.cancel_outlined, size: 18),
-              label: const Text('Reject Order',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              label: Text(isAr ? 'رفض الطلب' : 'Reject Order',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 13)),
             ),
           ),
         ],
@@ -830,8 +846,9 @@ class _JobsScreenState extends State<JobsScreen> {
         onPressed: () => _updateOrderStatus(
             docId, 'on_the_way', 'Technician started driving to location.'),
         icon: const Icon(Icons.directions_car_outlined, size: 18),
-        label: const Text('Start Driving (On The Way)',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+        label: Text(
+            isAr ? 'بدء التوجه إلى العميل' : 'Start Driving (On The Way)',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
       );
     } else if (status == 'on the way' || status == 'on_the_way') {
       return ElevatedButton.icon(
@@ -845,8 +862,8 @@ class _JobsScreenState extends State<JobsScreen> {
         onPressed: () => _updateOrderStatus(
             docId, 'arrived', 'Technician arrived at customer address.'),
         icon: const Icon(Icons.place_outlined, size: 18),
-        label: const Text('I Have Arrived',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+        label: Text(isAr ? 'وصلت إلى الموقع' : 'I Have Arrived',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
       );
     } else if (status == 'arrived') {
       return ElevatedButton.icon(
@@ -860,8 +877,8 @@ class _JobsScreenState extends State<JobsScreen> {
         onPressed: () => _updateOrderStatus(
             docId, 'in_progress', 'Technician started repair work.'),
         icon: const Icon(Icons.build_outlined, size: 18),
-        label: const Text('Start Repair Work',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+        label: Text(isAr ? 'بدء أعمال الصيانة' : 'Start Repair Work',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
       );
     } else if (status == 'in progress' || status == 'in_progress') {
       return Row(
@@ -887,8 +904,9 @@ class _JobsScreenState extends State<JobsScreen> {
               ),
               onPressed: () => _showCompleteJobBottomSheet(docId, data),
               icon: const Icon(Icons.task_alt_rounded, size: 18),
-              label: const Text('Complete Job',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              label: Text(isAr ? 'إنهاء الطلب' : 'Complete Job',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 13)),
             ),
           ),
         ],
@@ -906,7 +924,9 @@ class _JobsScreenState extends State<JobsScreen> {
             const Icon(Icons.history_rounded, color: Colors.black54, size: 16),
             const SizedBox(width: 6),
             Text(
-              'Order Status: ${status.toUpperCase()}',
+              isAr
+                  ? 'حالة الطلب: ${localizedJobStatusLabel(status, isArabic: true)}'
+                  : 'Order Status: ${status.toUpperCase()}',
               style: const TextStyle(
                   color: Colors.black87,
                   fontSize: 11,
@@ -2346,6 +2366,7 @@ class _JobsScreenState extends State<JobsScreen> {
 
   // --- EMPTY & SKELETON STATES ---
   Widget _buildEmptyState() {
+    final isAr = widget.locale.languageCode == 'ar';
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32.0),
@@ -2355,16 +2376,18 @@ class _JobsScreenState extends State<JobsScreen> {
             const Icon(Icons.assignment_outlined,
                 size: 48, color: Color(0xFF9B9FA7)),
             const SizedBox(height: 20),
-            const Text('No assigned jobs',
-                style: TextStyle(
+            Text(isAr ? 'لا توجد طلبات مسندة' : 'No assigned jobs',
+                style: const TextStyle(
                     color: Color(0xFF111318),
                     fontSize: 18,
                     fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            const Text(
-                'New assignments from dispatch will appear here automatically.',
-                style:
-                    TextStyle(color: Colors.black54, fontSize: 13, height: 1.4),
+            Text(
+                isAr
+                    ? 'ستظهر الطلبات الجديدة هنا تلقائيًا عند إسنادها إليك.'
+                    : 'New assignments from dispatch will appear here automatically.',
+                style: const TextStyle(
+                    color: Colors.black54, fontSize: 13, height: 1.4),
                 textAlign: TextAlign.center),
             const SizedBox(height: 24),
             ElevatedButton.icon(
@@ -2373,7 +2396,7 @@ class _JobsScreenState extends State<JobsScreen> {
                   foregroundColor: Colors.white),
               onPressed: _handleRefresh,
               icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: const Text('Refresh'),
+              label: Text(isAr ? 'تحديث' : 'Refresh'),
             ),
           ],
         ),
@@ -2397,6 +2420,7 @@ class _JobsScreenState extends State<JobsScreen> {
   }
 
   Widget _buildErrorState(Object? error) {
+    final isAr = widget.locale.languageCode == 'ar';
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -2406,14 +2430,14 @@ class _JobsScreenState extends State<JobsScreen> {
             const Icon(Icons.cloud_off_outlined,
                 size: 52, color: Colors.redAccent),
             const SizedBox(height: 16),
-            const Text(
-              'Jobs could not be loaded',
-              style: TextStyle(
+            Text(
+              isAr ? 'تعذر تحميل الطلبات' : 'Jobs could not be loaded',
+              style: const TextStyle(
                   color: Color(0xFF111318), fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
-              '$error',
+              isAr ? 'تحقق من الاتصال ثم حاول مرة أخرى.' : '$error',
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.black87, fontSize: 12),
             ),
@@ -2421,7 +2445,7 @@ class _JobsScreenState extends State<JobsScreen> {
             ElevatedButton.icon(
               onPressed: _handleRefresh,
               icon: const Icon(Icons.refresh),
-              label: const Text('Try again'),
+              label: Text(isAr ? 'حاول مرة أخرى' : 'Try again'),
             ),
           ],
         ),

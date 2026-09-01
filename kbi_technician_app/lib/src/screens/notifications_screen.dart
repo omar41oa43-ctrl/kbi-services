@@ -17,6 +17,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   bool _markingAllRead = false;
   Stream<QuerySnapshot<Map<String, dynamic>>>? _notificationsStream;
 
+  bool get _isArabic =>
+      Localizations.localeOf(context).languageCode.toLowerCase() == 'ar';
+
   @override
   void initState() {
     super.initState();
@@ -44,12 +47,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       await batch.commit();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('All notifications marked as read.')),
+        SnackBar(
+          content: Text(_isArabic
+              ? 'تم تحديد جميع الإشعارات كمقروءة.'
+              : 'All notifications marked as read.'),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error marking as read: $e')),
+        SnackBar(
+          content: Text(_isArabic
+              ? 'تعذر تحديث الإشعارات. حاول مرة أخرى.'
+              : 'Could not update notifications. Please try again.'),
+        ),
       );
     } finally {
       if (mounted) {
@@ -112,19 +123,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     fontWeight: FontWeight.w600,
                     fontSize: 12,
                   ),
-                  tabs: const [
-                    Tab(text: 'Jobs'),
-                    Tab(text: 'Payments'),
-                    Tab(text: 'System'),
+                  tabs: [
+                    Tab(text: isAr ? 'الطلبات' : 'Jobs'),
+                    Tab(text: isAr ? 'المدفوعات' : 'Payments'),
+                    Tab(text: isAr ? 'النظام' : 'System'),
                   ],
                 ),
               ),
             ),
           ),
           body: uid == null
-              ? const Center(
-                  child: Text('Not logged in',
-                      style: TextStyle(color: Color(0xFF111318))))
+              ? Center(
+                  child: Text(isAr ? 'لم يتم تسجيل الدخول' : 'Not logged in',
+                      style: const TextStyle(color: Color(0xFF111318))))
               : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                   stream: _notificationsStream,
                   builder: (context, snap) {
@@ -150,7 +161,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         child: Padding(
                           padding: const EdgeInsets.all(32),
                           child: Text(
-                            'Notifications could not be loaded.\n${snap.error}',
+                            isAr
+                                ? 'تعذر تحميل الإشعارات.'
+                                : 'Notifications could not be loaded.',
                             textAlign: TextAlign.center,
                             style: const TextStyle(color: Colors.black87),
                           ),
@@ -193,7 +206,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  '$unreadCount unread',
+                                  isAr
+                                      ? '$unreadCount غير مقروء'
+                                      : '$unreadCount unread',
                                   style: const TextStyle(
                                       color: Colors.black87, fontSize: 12),
                                 ),
@@ -211,8 +226,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                         icon: const Icon(
                                             Icons.done_all_outlined,
                                             size: 16),
-                                        label: const Text('Mark all read',
-                                            style: TextStyle(fontSize: 12)),
+                                        label: Text(
+                                            isAr
+                                                ? 'تحديد الكل كمقروء'
+                                                : 'Mark all read',
+                                            style:
+                                                const TextStyle(fontSize: 12)),
                                         style: TextButton.styleFrom(
                                           foregroundColor: kbiBlue,
                                           disabledForegroundColor:
@@ -275,14 +294,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       itemBuilder: (context, index) {
         final d = filtered[index];
         final data = d.data();
-        final title = (data['title'] ?? 'Notification').toString();
+        final isAr = _isArabic;
+        final title =
+            (data['title'] ?? (isAr ? 'إشعار' : 'Notification')).toString();
         final body = (data['body'] ?? '').toString();
         final isRead = data['isRead'] == true;
         final timestamp = data['createdAt'] as Timestamp?;
         final String dateStr = timestamp != null
             ? DateFormat('d MMM yyyy, HH:mm')
                 .format(timestamp.toDate().toLocal())
-            : 'Time not provided';
+            : (isAr ? 'الوقت غير متوفر' : 'Time not provided');
 
         return _buildNotificationItem(
             title, body, isRead, dateStr, d.reference);
@@ -356,12 +377,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Widget _buildEmptyState(String filterType) {
-    String message = 'No new job offers or schedule updates';
+    final isAr = _isArabic;
+    String message = isAr
+        ? 'لا توجد عروض طلبات أو تحديثات للمواعيد'
+        : 'No new job offers or schedule updates';
     if (filterType == 'payment') {
-      message = 'No payment clearances or payout alerts';
+      message = isAr
+          ? 'لا توجد تحديثات أو تنبيهات للمدفوعات'
+          : 'No payment clearances or payout alerts';
     }
     if (filterType == 'system') {
-      message = 'No system notifications or admin messages';
+      message = isAr
+          ? 'لا توجد إشعارات للنظام أو رسائل إدارية'
+          : 'No system notifications or admin messages';
     }
 
     return Center(

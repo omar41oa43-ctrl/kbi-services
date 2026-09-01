@@ -156,7 +156,9 @@ class _WalletScreenState extends State<WalletScreen> {
 
                       for (final d in payments) {
                         final data = d.data();
-                        final type = (data['type'] ?? 'Job Payout').toString();
+                        final type = (data['type'] ??
+                                (isAr ? 'مستحقات طلب' : 'Job Payout'))
+                            .toString();
                         final status =
                             (data['status'] ?? 'completed').toString();
                         final technicianShare = readFirstMeaningfulAmount(
@@ -183,8 +185,9 @@ class _WalletScreenState extends State<WalletScreen> {
                         final data = job.data() ?? {};
                         final device = data['device'] ??
                             data['deviceModel'] ??
-                            'Service Repair';
-                        final service = data['service'] ?? 'Repair Completed';
+                            (isAr ? 'خدمة صيانة' : 'Service Repair');
+                        final service = data['service'] ??
+                            (isAr ? 'تم إنجاز الصيانة' : 'Repair Completed');
                         final payable =
                             calculateJobPayout(data, commissionRate);
                         final timestamp = (data['updatedAt'] ??

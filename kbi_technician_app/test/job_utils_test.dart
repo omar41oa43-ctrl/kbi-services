@@ -40,6 +40,31 @@ void main() {
       );
       expect(booking, order);
     });
+
+    test('deduplicates mirrored documents when only one copy has a KBI number',
+        () {
+      expect(
+        jobIdentityAliasesOverlap(
+          const {},
+          firstDocumentId: 'oEiHODnhOY0kshALrlHC',
+          second: const {'orderNumber': 'KBI-000017'},
+          secondDocumentId: 'oEiHODnhOY0kshALrlHC',
+        ),
+        isTrue,
+      );
+    });
+
+    test('does not merge unrelated orders', () {
+      expect(
+        jobIdentityAliasesOverlap(
+          const {'bookingId': 'booking-a'},
+          firstDocumentId: 'doc-a',
+          second: const {'orderNumber': 'KBI-000017'},
+          secondDocumentId: 'doc-b',
+        ),
+        isFalse,
+      );
+    });
   });
 
   test('localizes technician statuses and next actions', () {
@@ -50,6 +75,17 @@ void main() {
     expect(
       localizedJobNextActionTitle('accepted', isArabic: true),
       'بدء الرحلة',
+    );
+  });
+
+  test('localizes common service labels without changing model names', () {
+    expect(
+      localizedJobContentLabel('Battery Replacement', isArabic: true),
+      'استبدال البطارية',
+    );
+    expect(
+      localizedJobContentLabel('Xiaomi Poco X6 Pro', isArabic: true),
+      'Xiaomi Poco X6 Pro',
     );
   });
 

@@ -739,9 +739,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         style: const TextStyle(
                             color: Color(0xFF94A3B8), fontSize: 8.5),
                       ),
-                      const Text(
-                        '10s ago',
-                        style: TextStyle(
+                      Text(
+                        isAr ? 'قبل ١٠ ثوانٍ' : '10s ago',
+                        style: const TextStyle(
                           color: Color(0xFF475569),
                           fontSize: 9.5,
                           fontWeight: FontWeight.w700,
@@ -1027,19 +1027,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
         .join(' ');
     final String device = (data['device'] ??
             data['deviceModel'] ??
-            (fallbackDevice.isEmpty ? 'Device repair' : fallbackDevice))
+            (fallbackDevice.isEmpty
+                ? (isAr ? 'صيانة جهاز' : 'Device repair')
+                : fallbackDevice))
         .toString();
-    final String service = (data['service'] ??
+    final String service = localizedJobContentLabel(
+        data['service'] ??
             data['serviceType'] ??
             data['issue'] ??
             firstDeviceData?['issue'] ??
             data['description'] ??
-            'Service details pending')
+            (isAr ? 'تفاصيل الخدمة قيد التحديث' : 'Service details pending'),
+        isArabic: isAr);
+    final rawAddress = data['address']?.toString();
+    final String address = rawAddress == null || rawAddress.trim().isEmpty
+        ? (isAr ? 'نطاق الخدمة داخل الإمارات' : 'UAE Service Area')
+        : _extractGeneralArea(rawAddress);
+    final String timeSlot = (data['scheduledTime'] ??
+            data['timeSlot'] ??
+            (isAr ? 'لم يُحدد الوقت' : 'Time not set'))
         .toString();
-    final String address = _extractGeneralArea(data['address']?.toString());
-    final String timeSlot =
-        (data['scheduledTime'] ?? data['timeSlot'] ?? 'Time not set')
-            .toString();
     final String phone =
         (data['customerPhone'] ?? data['phone'] ?? '').toString();
     final String rawStatus = normalizeJobStatus(data['status']);
@@ -1056,43 +1063,58 @@ class _DashboardScreenState extends State<DashboardScreen> {
         (data['location'] is Map ? (data['location'] as Map)['lat'] : null);
     final rawLng = data['longitude'] ??
         (data['location'] is Map ? (data['location'] as Map)['lng'] : null);
-    final double destLat = (rawLat is num)
-        ? rawLat.toDouble()
-        : 25.2048; // Default Dubai center if unpinned
-    final double destLng = (rawLng is num) ? rawLng.toDouble() : 55.2708;
+    final bool hasDestination = rawLat is num && rawLng is num;
+    final double destLat = hasDestination ? rawLat.toDouble() : 25.2048;
+    final double destLng = hasDestination ? rawLng.toDouble() : 55.2708;
     final latlng.LatLng jobPoint = latlng.LatLng(destLat, destLng);
 
     // Get current tech position
     final Position? techPos = LocationTrackingService.instance.lastPosition;
-    final latlng.LatLng techPoint = techPos != null
-        ? latlng.LatLng(techPos.latitude, techPos.longitude)
-        : latlng.LatLng(destLat - 0.025, destLng - 0.02);
+    final latlng.LatLng? rawTechPoint = techPos == null
+        ? null
+        : latlng.LatLng(techPos.latitude, techPos.longitude);
+    final bool techLocationIsInServiceArea = rawTechPoint != null &&
+        rawTechPoint.latitude >= 22.5 &&
+        rawTechPoint.latitude <= 26.5 &&
+        rawTechPoint.longitude >= 51.0 &&
+        rawTechPoint.longitude <= 56.7;
+    final latlng.LatLng? techPoint =
+        techLocationIsInServiceArea ? rawTechPoint : null;
 
     // Calculate real road distance (or geodesic fallback)
-    final double distanceMeters = Geolocator.distanceBetween(
-      techPoint.latitude,
-      techPoint.longitude,
-      destLat,
-      destLng,
-    );
+    final double? distanceMeters = hasDestination && techPoint != null
+        ? Geolocator.distanceBetween(
+            techPoint.latitude,
+            techPoint.longitude,
+            destLat,
+            destLng,
+          )
+        : null;
 
     // Real distance display
-    final String distanceDisplay = distanceMeters < 1000
-        ? '${distanceMeters.round()} m'
-        : '${(distanceMeters / 1000).toStringAsFixed(1)} km';
+    final String distanceDisplay = distanceMeters == null
+        ? (isAr ? 'غير متاحة' : 'Unavailable')
+        : distanceMeters < 1000
+            ? '${distanceMeters.round()} ${isAr ? 'م' : 'm'}'
+            : '${(distanceMeters / 1000).toStringAsFixed(1)} ${isAr ? 'كم' : 'km'}';
 
     // Real ETA calculation: assume average city traffic speed 35 km/h
-    final int etaMinutes =
-        ((distanceMeters / 1000) / 35 * 60).round().clamp(1, 180);
-    final String etaDisplay = etaMinutes < 60
-        ? '$etaMinutes min'
-        : '${etaMinutes ~/ 60}h ${etaMinutes % 60}m';
+    final int? etaMinutes = distanceMeters == null
+        ? null
+        : ((distanceMeters / 1000) / 35 * 60).round().clamp(1, 180);
+    final String etaDisplay = etaMinutes == null
+        ? (isAr ? 'غير متاح' : 'Unavailable')
+        : etaMinutes < 60
+            ? '$etaMinutes ${isAr ? 'د' : 'min'}'
+            : '${etaMinutes ~/ 60}${isAr ? 'س' : 'h'} ${etaMinutes % 60}${isAr ? 'د' : 'm'}';
 
     // Midpoint for map camera center
-    final latlng.LatLng mapCenter = latlng.LatLng(
-      (techPoint.latitude + destLat) / 2,
-      (techPoint.longitude + destLng) / 2,
-    );
+    final latlng.LatLng mapCenter = techPoint == null
+        ? jobPoint
+        : latlng.LatLng(
+            (techPoint.latitude + destLat) / 2,
+            (techPoint.longitude + destLng) / 2,
+          );
 
     return Column(
       children: [
@@ -1286,70 +1308,184 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         child: Stack(
                           children: [
-                            // Live Interactive/Rendered OpenStreetMap with route polyline
-                            Positioned.fill(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(18),
-                                child: AbsorbPointer(
-                                  child: fmap.FlutterMap(
-                                    options: fmap.MapOptions(
-                                      initialCenter: mapCenter,
-                                      initialZoom: 12.5,
-                                      interactionOptions:
-                                          const fmap.InteractionOptions(
-                                        flags: fmap.InteractiveFlag.none,
-                                      ),
-                                    ),
-                                    children: [
-                                      fmap.TileLayer(
-                                        urlTemplate:
-                                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                        userAgentPackageName:
-                                            'ae.kbi.kbiTechnicianApp',
-                                        maxZoom: 19,
-                                      ),
-                                      fmap.PolylineLayer(
-                                        polylines: [
-                                          fmap.Polyline(
-                                            points: [techPoint, jobPoint],
-                                            color: const Color(0xFF2563EB),
-                                            strokeWidth: 4.0,
+                            if (!hasDestination)
+                              Positioned.fill(
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF0F172A),
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
+                                  child: Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(14),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(
+                                            CupertinoIcons.location_slash,
+                                            color: Color(0xFF38BDF8),
+                                            size: 28,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            isAr
+                                                ? 'بانتظار تثبيت الموقع'
+                                                : 'Location pin pending',
+                                            textAlign: TextAlign.center,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w700,
+                                            ),
                                           ),
                                         ],
                                       ),
-                                      fmap.MarkerLayer(
-                                        markers: [
-                                          // Tech Origin Marker
-                                          fmap.Marker(
-                                            point: techPoint,
-                                            width: 22,
-                                            height: 22,
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFF2563EB),
-                                                shape: BoxShape.circle,
-                                                border: Border.all(
-                                                    color: Colors.white,
-                                                    width: 2.5),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.black
-                                                        .withValues(alpha: 0.2),
-                                                    blurRadius: 4,
-                                                  ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            // Live Interactive/Rendered OpenStreetMap with route polyline
+                            if (hasDestination)
+                              Positioned.fill(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(18),
+                                  child: AbsorbPointer(
+                                    child: fmap.FlutterMap(
+                                      options: fmap.MapOptions(
+                                        initialCenter: mapCenter,
+                                        initialZoom: 14,
+                                        initialCameraFit: techPoint == null
+                                            ? null
+                                            : fmap.CameraFit.coordinates(
+                                                coordinates: [
+                                                  techPoint,
+                                                  jobPoint,
                                                 ],
+                                                padding:
+                                                    const EdgeInsets.all(34),
+                                                maxZoom: 15,
+                                              ),
+                                        interactionOptions:
+                                            const fmap.InteractionOptions(
+                                          flags: fmap.InteractiveFlag.none,
+                                        ),
+                                      ),
+                                      children: [
+                                        fmap.TileLayer(
+                                          urlTemplate:
+                                              'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
+                                          subdomains: const [
+                                            'a',
+                                            'b',
+                                            'c',
+                                            'd'
+                                          ],
+                                          userAgentPackageName:
+                                              'ae.kbi.kbiTechnicianApp',
+                                          maxZoom: 19,
+                                        ),
+                                        if (techPoint != null)
+                                          fmap.PolylineLayer(
+                                            polylines: [
+                                              fmap.Polyline(
+                                                points: [techPoint, jobPoint],
+                                                color: const Color(0xFF38BDF8),
+                                                strokeWidth: 4.0,
+                                                borderColor:
+                                                    const Color(0xFF0F172A),
+                                                borderStrokeWidth: 1.5,
+                                              ),
+                                            ],
+                                          ),
+                                        fmap.MarkerLayer(
+                                          markers: [
+                                            // Tech Origin Marker
+                                            if (techPoint != null)
+                                              fmap.Marker(
+                                                point: techPoint,
+                                                width: 24,
+                                                height: 24,
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    color:
+                                                        const Color(0xFF38BDF8),
+                                                    shape: BoxShape.circle,
+                                                    border: Border.all(
+                                                        color: Colors.white,
+                                                        width: 3),
+                                                    boxShadow: const [
+                                                      BoxShadow(
+                                                        color: Colors.black45,
+                                                        blurRadius: 6,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            // Customer Destination Pin
+                                            fmap.Marker(
+                                              point: jobPoint,
+                                              width: 28,
+                                              height: 28,
+                                              child: const Icon(
+                                                CupertinoIcons.location_solid,
+                                                color: Color(0xFFDC2626),
+                                                size: 26,
                                               ),
                                             ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                            // Floating Pill 1: Real Distance
+                            if (hasDestination && techPoint != null)
+                              Positioned(
+                                top: 8,
+                                left: isAr ? null : 8,
+                                right: isAr ? 8 : null,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 7, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.95),
+                                    borderRadius: BorderRadius.circular(10),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black
+                                            .withValues(alpha: 0.08),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(CupertinoIcons.location_solid,
+                                          size: 11, color: Color(0xFF2563EB)),
+                                      const SizedBox(width: 4),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            distanceDisplay,
+                                            style: const TextStyle(
+                                              color: Color(0xFF0F172A),
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w800,
+                                            ),
                                           ),
-                                          // Customer Destination Pin
-                                          fmap.Marker(
-                                            point: jobPoint,
-                                            width: 28,
-                                            height: 28,
-                                            child: const Icon(
-                                              CupertinoIcons.location_solid,
-                                              color: Color(0xFFDC2626),
-                                              size: 26,
+                                          Text(
+                                            isAr ? 'المسافة' : 'Distance',
+                                            style: const TextStyle(
+                                              color: Color(0xFF64748B),
+                                              fontSize: 8,
+                                              fontWeight: FontWeight.w600,
                                             ),
                                           ),
                                         ],
@@ -1358,113 +1494,60 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                 ),
                               ),
-                            ),
-
-                            // Floating Pill 1: Real Distance
-                            Positioned(
-                              top: 8,
-                              left: isAr ? null : 8,
-                              right: isAr ? 8 : null,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 7, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.95),
-                                  borderRadius: BorderRadius.circular(10),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color:
-                                          Colors.black.withValues(alpha: 0.08),
-                                      blurRadius: 6,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(CupertinoIcons.location_solid,
-                                        size: 11, color: Color(0xFF2563EB)),
-                                    const SizedBox(width: 4),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          distanceDisplay,
-                                          style: const TextStyle(
-                                            color: Color(0xFF0F172A),
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                        ),
-                                        Text(
-                                          isAr ? 'المسافة' : 'Distance',
-                                          style: const TextStyle(
-                                            color: Color(0xFF64748B),
-                                            fontSize: 8,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
 
                             // Floating Pill 2: Real ETA
-                            Positioned(
-                              bottom: 8,
-                              left: isAr ? null : 8,
-                              right: isAr ? 8 : null,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 7, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.95),
-                                  borderRadius: BorderRadius.circular(10),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color:
-                                          Colors.black.withValues(alpha: 0.08),
-                                      blurRadius: 6,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(CupertinoIcons.time,
-                                        size: 11, color: Color(0xFF2563EB)),
-                                    const SizedBox(width: 4),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          etaDisplay,
-                                          style: const TextStyle(
-                                            color: Color(0xFF0F172A),
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w800,
+                            if (hasDestination && techPoint != null)
+                              Positioned(
+                                bottom: 8,
+                                left: isAr ? null : 8,
+                                right: isAr ? 8 : null,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 7, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.95),
+                                    borderRadius: BorderRadius.circular(10),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black
+                                            .withValues(alpha: 0.08),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(CupertinoIcons.time,
+                                          size: 11, color: Color(0xFF2563EB)),
+                                      const SizedBox(width: 4),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            etaDisplay,
+                                            style: const TextStyle(
+                                              color: Color(0xFF0F172A),
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w800,
+                                            ),
                                           ),
-                                        ),
-                                        Text(
-                                          isAr ? 'الوقت' : 'ETA',
-                                          style: const TextStyle(
-                                            color: Color(0xFF64748B),
-                                            fontSize: 8,
-                                            fontWeight: FontWeight.w600,
+                                          Text(
+                                            isAr ? 'الوقت' : 'ETA',
+                                            style: const TextStyle(
+                                              color: Color(0xFF64748B),
+                                              fontSize: 8,
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
                           ],
                         ),
                       ),

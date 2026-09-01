@@ -60,6 +60,28 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
 
   String? _preferredNavigationApp;
 
+  bool get _isArabic =>
+      Localizations.localeOf(context).languageCode.toLowerCase() == 'ar';
+
+  String _text(String english, String arabic) => _isArabic ? arabic : english;
+
+  String _localizedChecklistItem(String item) {
+    if (!_isArabic) return item;
+    return const {
+          'Screen Touch & Multi-Touch Response':
+              'استجابة الشاشة واللمس المتعدد',
+          'Face ID / Touch ID Biometrics': 'بصمة الوجه أو الإصبع',
+          'Front & Rear Cameras + Flash': 'الكاميرات الأمامية والخلفية والفلاش',
+          'Charging Port & Power Draw': 'منفذ الشحن واستهلاك الطاقة',
+          'Microphone, Earpiece & Speakers':
+              'الميكروفون وسماعة الأذن ومكبرات الصوت',
+          'Physical Buttons & Haptic Engine': 'الأزرار والاهتزاز',
+          'Wi-Fi, Bluetooth & Cellular Signal':
+              'الواي فاي والبلوتوث وشبكة الهاتف',
+        }[item] ??
+        item;
+  }
+
   String get _orderReference => compactOrderReference(
         {'orderId': _job.orderId},
         documentId: _job.id,
@@ -471,7 +493,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
         'google' => 'Google Maps',
         'apple' => 'Apple Maps',
         'waze' => 'Waze',
-        _ => 'Choose map app',
+        _ => _text('Choose map app', 'اختر تطبيق الخرائط'),
       };
 
   Future<void> _startNavigation(
@@ -542,7 +564,12 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not open $_preferredNavigationLabel.')),
+        SnackBar(
+          content: Text(_text(
+            'Could not open $_preferredNavigationLabel.',
+            'تعذر فتح $_preferredNavigationLabel.',
+          )),
+        ),
       );
     }
   }
@@ -580,14 +607,15 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.directions_rounded,
+                    const Icon(Icons.directions_rounded,
                         color: Color(0xFF0284C7), size: 22),
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
                     Text(
-                      'Turn-by-Turn GPS Navigation',
-                      style: TextStyle(
+                      _text(
+                          'Turn-by-Turn GPS Navigation', 'الملاحة خطوة بخطوة'),
+                      style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                           color: Color(0xFF0F172A)),
@@ -610,8 +638,10 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
                 _buildNavOptionTile(
                   icon: Icons.map_rounded,
                   color: const Color(0xFF4285F4),
-                  title: 'Google Maps (Driving Traffic)',
-                  subtitle: 'Live traffic & turn-by-turn routing',
+                  title: _text('Google Maps (Driving Traffic)',
+                      'خرائط Google (حركة المرور)'),
+                  subtitle: _text('Live traffic & turn-by-turn routing',
+                      'حركة مرور مباشرة وإرشادات خطوة بخطوة'),
                   onTap: () async {
                     Navigator.pop(ctx);
                     await _launchNavigation('google', lat, lng,
@@ -623,8 +653,9 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
                 _buildNavOptionTile(
                   icon: Icons.explore_rounded,
                   color: const Color(0xFF0F172A),
-                  title: 'Apple Maps (iOS Native)',
-                  subtitle: 'Turn-by-turn guidance with Siri audio',
+                  title: _text('Apple Maps (iOS Native)', 'خرائط Apple'),
+                  subtitle: _text('Turn-by-turn guidance with Siri audio',
+                      'إرشادات صوتية خطوة بخطوة'),
                   onTap: () async {
                     Navigator.pop(ctx);
                     await _launchNavigation('apple', lat, lng,
@@ -636,8 +667,9 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
                 _buildNavOptionTile(
                   icon: Icons.navigation_rounded,
                   color: const Color(0xFF33CCFF),
-                  title: 'Waze Navigation',
-                  subtitle: 'Community speed traps & live hazard alerts',
+                  title: _text('Waze Navigation', 'الملاحة عبر Waze'),
+                  subtitle: _text('Community speed traps & live hazard alerts',
+                      'تنبيهات مباشرة للطريق والمخاطر'),
                   onTap: () async {
                     Navigator.pop(ctx);
                     await _launchNavigation('waze', lat, lng,
@@ -649,7 +681,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
                 _buildNavOptionTile(
                   icon: Icons.copy_rounded,
                   color: const Color(0xFF64748B),
-                  title: 'Copy Address to Clipboard',
+                  title: _text('Copy Address to Clipboard', 'نسخ العنوان'),
                   subtitle: targetAddress,
                   onTap: () {
                     Navigator.pop(ctx);
@@ -725,10 +757,13 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
     Clipboard.setData(ClipboardData(text: address.trim()));
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: Color(0xFF10B981),
-          content: Text('Address copied to clipboard!'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          backgroundColor: const Color(0xFF10B981),
+          content: Text(_text(
+            'Address copied to clipboard!',
+            'تم نسخ العنوان.',
+          )),
+          duration: const Duration(seconds: 2),
         ),
       );
     }
@@ -1115,7 +1150,7 @@ Thank you for choosing KBI Services!
   Widget _buildOverviewTab(int currentStep, ll.LatLng point, bool hasCoords) {
     final addressText = _job.address?.trim().isNotEmpty == true
         ? _job.address!
-        : 'Abu Dhabi, United Arab Emirates';
+        : _text('Address not provided', 'العنوان غير متوفر');
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -1152,7 +1187,7 @@ Thank you for choosing KBI Services!
                               ? _job.deviceName!
                               : (_job.type.isNotEmpty
                                   ? _job.type
-                                  : 'Device Repair'),
+                                  : _text('Device Repair', 'صيانة جهاز')),
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
@@ -1164,7 +1199,10 @@ Thank you for choosing KBI Services!
                             _job.serviceName!.isNotEmpty) ...[
                           const SizedBox(height: 4),
                           Text(
-                            _job.serviceName!,
+                            localizedJobContentLabel(
+                              _job.serviceName!,
+                              isArabic: _isArabic,
+                            ),
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -1190,9 +1228,9 @@ Thank you for choosing KBI Services!
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text(
-                          'ORDER PRICE',
-                          style: TextStyle(
+                        Text(
+                          _text('ORDER PRICE', 'قيمة الطلب'),
+                          style: const TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.w800,
                             color: Color(0xFF0284C7),
@@ -1235,6 +1273,7 @@ Thank you for choosing KBI Services!
   // Dedicated Customer Location Card with Map and Navigation
   Widget _buildCustomerLocationCard(
       ll.LatLng point, String addressText, bool hasCoords) {
+    final isAr = _isArabic;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1255,14 +1294,14 @@ Thank you for choosing KBI Services!
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.location_on_rounded,
+                  const Icon(Icons.location_on_rounded,
                       color: Color(0xFF0284C7), size: 20),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Text(
-                    'Customer Location',
-                    style: TextStyle(
+                    isAr ? 'موقع العميل' : 'Customer Location',
+                    style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF0F172A),
@@ -1277,7 +1316,9 @@ Thank you for choosing KBI Services!
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  hasCoords ? '📍 GPS PINNED' : '📍 ADDRESS ONLY',
+                  hasCoords
+                      ? (isAr ? '📍 موقع مثبت' : '📍 GPS PINNED')
+                      : (isAr ? '📍 العنوان فقط' : '📍 ADDRESS ONLY'),
                   style: const TextStyle(
                     color: Color(0xFF0284C7),
                     fontSize: 10,
@@ -1314,7 +1355,7 @@ Thank you for choosing KBI Services!
                   icon: const Icon(Icons.copy_rounded,
                       size: 18, color: Color(0xFF64748B)),
                   onPressed: () => _copyAddressToClipboard(addressText),
-                  tooltip: 'Copy Address',
+                  tooltip: isAr ? 'نسخ العنوان' : 'Copy Address',
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 ),
@@ -1335,150 +1376,188 @@ Thank you for choosing KBI Services!
               ),
               child: Stack(
                 children: [
-                  fmap.FlutterMap(
-                    mapController: _mapController,
-                    options: fmap.MapOptions(
-                      initialCenter: point,
-                      initialZoom: 15.0,
-                      interactionOptions: const fmap.InteractionOptions(
-                        flags: fmap.InteractiveFlag.all,
+                  if (hasCoords)
+                    fmap.FlutterMap(
+                      mapController: _mapController,
+                      options: fmap.MapOptions(
+                        initialCenter: point,
+                        initialZoom: 15.5,
+                        interactionOptions: const fmap.InteractionOptions(
+                          flags: fmap.InteractiveFlag.all,
+                        ),
                       ),
-                    ),
-                    children: [
-                      fmap.TileLayer(
-                        urlTemplate: _isSatelliteMode
-                            ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-                            : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                        userAgentPackageName: 'ae.kbi.kbiTechnicianApp',
-                        maxZoom: 19,
-                      ),
-                      fmap.MarkerLayer(
-                        markers: [
-                          fmap.Marker(
-                            point: point,
-                            width: 130,
-                            height: 75,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF0F172A),
-                                    borderRadius: BorderRadius.circular(8),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                          color: Colors.black38,
-                                          blurRadius: 6,
-                                          offset: Offset(0, 2)),
-                                    ],
-                                  ),
-                                  child: Text(
-                                    _job.customerName?.split(' ').first ??
-                                        'Customer',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
+                      children: [
+                        fmap.TileLayer(
+                          urlTemplate: _isSatelliteMode
+                              ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+                              : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
+                          subdomains: _isSatelliteMode
+                              ? const []
+                              : const ['a', 'b', 'c', 'd'],
+                          userAgentPackageName: 'ae.kbi.kbiTechnicianApp',
+                          maxZoom: 19,
+                        ),
+                        fmap.MarkerLayer(
+                          markers: [
+                            fmap.Marker(
+                              point: point,
+                              width: 140,
+                              height: 82,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 5),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF0F172A)
+                                          .withValues(alpha: 0.94),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                          color: const Color(0xFF38BDF8)
+                                              .withValues(alpha: 0.6)),
+                                      boxShadow: const [
+                                        BoxShadow(
+                                            color: Colors.black45,
+                                            blurRadius: 8,
+                                            offset: Offset(0, 3)),
+                                      ],
+                                    ),
+                                    child: Text(
+                                      _job.customerName?.split(' ').first ??
+                                          (isAr ? 'العميل' : 'Customer'),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(height: 2),
-                                Container(
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                          color: Colors.redAccent,
-                                          blurRadius: 10,
-                                          spreadRadius: 2),
+                                  const SizedBox(height: 2),
+                                  const Icon(
+                                    Icons.location_on_rounded,
+                                    color: Color(0xFFFF453A),
+                                    size: 40,
+                                    shadows: [
+                                      Shadow(
+                                          color: Colors.black54, blurRadius: 8),
                                     ],
                                   ),
-                                  child: const Icon(
-                                    Icons.location_on_rounded,
-                                    color: Colors.redAccent,
-                                    size: 38,
-                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    )
+                  else
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [Color(0xFF0F172A), Color(0xFF172554)],
+                          ),
+                        ),
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(CupertinoIcons.location_slash,
+                                  color: Color(0xFF38BDF8), size: 34),
+                              const SizedBox(height: 10),
+                              Text(
+                                isAr
+                                    ? 'لم يثبّت العميل موقعه على الخريطة'
+                                    : 'Customer map pin is not available',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
                                 ),
-                              ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  // Satellite / Street Mode Toggle + Recenter in top right
+                  if (hasCoords)
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          InkWell(
+                            onTap: () => setState(
+                                () => _isSatelliteMode = !_isSatelliteMode),
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0F172A)
+                                    .withValues(alpha: 0.85),
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: const [
+                                  BoxShadow(
+                                      color: Colors.black26,
+                                      blurRadius: 4,
+                                      offset: Offset(0, 2)),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _isSatelliteMode
+                                        ? Icons.map_rounded
+                                        : Icons.satellite_alt_rounded,
+                                    color: Colors.white,
+                                    size: 14,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    _isSatelliteMode
+                                        ? (isAr ? 'الخريطة' : 'Street')
+                                        : (isAr
+                                            ? 'القمر الصناعي'
+                                            : 'Satellite'),
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          InkWell(
+                            onTap: () => _mapController.move(point, 16.0),
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0F172A)
+                                    .withValues(alpha: 0.85),
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: const [
+                                  BoxShadow(
+                                      color: Colors.black26,
+                                      blurRadius: 4,
+                                      offset: Offset(0, 2)),
+                                ],
+                              ),
+                              child: const Icon(Icons.my_location_rounded,
+                                  color: Colors.white, size: 16),
                             ),
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                  // Satellite / Street Mode Toggle + Recenter in top right
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        InkWell(
-                          onTap: () => setState(
-                              () => _isSatelliteMode = !_isSatelliteMode),
-                          borderRadius: BorderRadius.circular(8),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF0F172A)
-                                  .withValues(alpha: 0.85),
-                              borderRadius: BorderRadius.circular(8),
-                              boxShadow: const [
-                                BoxShadow(
-                                    color: Colors.black26,
-                                    blurRadius: 4,
-                                    offset: Offset(0, 2)),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  _isSatelliteMode
-                                      ? Icons.map_rounded
-                                      : Icons.satellite_alt_rounded,
-                                  color: Colors.white,
-                                  size: 14,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  _isSatelliteMode ? 'Street' : 'Satellite',
-                                  style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        InkWell(
-                          onTap: () => _mapController.move(point, 16.0),
-                          borderRadius: BorderRadius.circular(8),
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF0F172A)
-                                  .withValues(alpha: 0.85),
-                              borderRadius: BorderRadius.circular(8),
-                              boxShadow: const [
-                                BoxShadow(
-                                    color: Colors.black26,
-                                    blurRadius: 4,
-                                    offset: Offset(0, 2)),
-                              ],
-                            ),
-                            child: const Icon(Icons.my_location_rounded,
-                                color: Colors.white, size: 16),
-                          ),
-                        ),
-                      ],
                     ),
-                  ),
                 ],
               ),
             ),
@@ -1491,7 +1570,7 @@ Thank you for choosing KBI Services!
                 _startNavigation(_job.lat, _job.lng, address: addressText),
             icon: const Icon(Icons.navigation_rounded, size: 18),
             label: Text(
-              'Start navigation • $_preferredNavigationLabel',
+              '${isAr ? 'بدء الملاحة' : 'Start navigation'} • $_preferredNavigationLabel',
               style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
             ),
             style: FilledButton.styleFrom(
@@ -1509,8 +1588,9 @@ Thank you for choosing KBI Services!
 
   // Quick Customer Contact Card
   Widget _buildCustomerContactCard(ll.LatLng point) {
-    final customerName = _job.customerName ?? 'Customer';
-    final customerPhone = _job.customerPhone ?? '+971 50 249 1034';
+    final customerName = _job.customerName ?? _text('Customer', 'العميل');
+    final customerPhone =
+        _job.customerPhone ?? _text('Phone not provided', 'الرقم غير متوفر');
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1568,7 +1648,7 @@ Thank you for choosing KBI Services!
               Expanded(
                 child: _buildContactActionButton(
                   icon: Icons.phone_rounded,
-                  label: 'Call',
+                  label: _text('Call', 'اتصال'),
                   color: const Color(0xFF10B981),
                   onTap: () => _makePhoneCall(customerPhone),
                 ),
@@ -1577,7 +1657,7 @@ Thank you for choosing KBI Services!
               Expanded(
                 child: _buildContactActionButton(
                   icon: Icons.chat_rounded,
-                  label: 'WhatsApp',
+                  label: _text('WhatsApp', 'واتساب'),
                   color: const Color(0xFF25D366),
                   onTap: () => _showWhatsAppTemplatesSheet(context),
                 ),
@@ -1586,7 +1666,7 @@ Thank you for choosing KBI Services!
               Expanded(
                 child: _buildContactActionButton(
                   icon: Icons.directions_rounded,
-                  label: 'Navigate',
+                  label: _text('Navigate', 'الملاحة'),
                   color: kbiBlue,
                   onTap: () => _startNavigation(_job.lat, _job.lng,
                       address: _job.address),
@@ -1646,14 +1726,15 @@ Thank you for choosing KBI Services!
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.checklist_rtl_rounded,
+                  const Icon(Icons.checklist_rtl_rounded,
                       color: Color(0xFF0284C7), size: 20),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Text(
-                    'Multi-Point Quality Assurance',
-                    style: TextStyle(
+                    _text('Multi-Point Quality Assurance',
+                        'فحص الجودة متعدد النقاط'),
+                    style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
                         color: Color(0xFF0F172A)),
@@ -1661,9 +1742,12 @@ Thank you for choosing KBI Services!
                 ],
               ),
               const SizedBox(height: 4),
-              const Text(
-                'Verify device components before opening and after reassembly.',
-                style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
+              Text(
+                _text(
+                  'Verify device components before opening and after reassembly.',
+                  'تحقق من مكونات الجهاز قبل الفتح وبعد إعادة التجميع.',
+                ),
+                style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
               ),
               const SizedBox(height: 14),
               const Divider(height: 1, color: Color(0xFFF1F5F9)),
@@ -1676,7 +1760,7 @@ Thank you for choosing KBI Services!
                     children: [
                       Expanded(
                         child: Text(
-                          key,
+                          _localizedChecklistItem(key),
                           style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -1688,13 +1772,13 @@ Thank you for choosing KBI Services!
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          _buildQaChip(key, 'PASS', 'Pass',
+                          _buildQaChip(key, 'PASS', _text('Pass', 'سليم'),
                               const Color(0xFF10B981), status == 'PASS'),
                           const SizedBox(width: 4),
-                          _buildQaChip(key, 'FAIL', 'Fail',
+                          _buildQaChip(key, 'FAIL', _text('Fail', 'عطل'),
                               const Color(0xFFEF4444), status == 'FAIL'),
                           const SizedBox(width: 4),
-                          _buildQaChip(key, 'NA', 'N/A',
+                          _buildQaChip(key, 'NA', _text('N/A', 'لا ينطبق'),
                               const Color(0xFF94A3B8), status == 'NA'),
                         ],
                       ),
@@ -1713,7 +1797,8 @@ Thank you for choosing KBI Services!
 
         // Before Repair Photos Card
         _buildPhotoSection(
-          title: '📷 Before-Repair Photos (Inspection)',
+          title: _text('📷 Before-Repair Photos (Inspection)',
+              '📷 صور ما قبل الصيانة (الفحص)'),
           photos: _beforePhotos,
           onAdd: () => _pickPhoto(true),
           onDelete: (index) => setState(() => _beforePhotos.removeAt(index)),
@@ -1722,7 +1807,8 @@ Thank you for choosing KBI Services!
 
         // After Repair Photos Card
         _buildPhotoSection(
-          title: '✨ After-Repair Photos (Quality Proof)',
+          title: _text('✨ After-Repair Photos (Quality Proof)',
+              '✨ صور ما بعد الصيانة (إثبات الجودة)'),
           photos: _afterPhotos,
           onAdd: () => _pickPhoto(false),
           onDelete: (index) => setState(() => _afterPhotos.removeAt(index)),
@@ -1755,14 +1841,14 @@ Thank you for choosing KBI Services!
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(CupertinoIcons.cube_box_fill,
+                      const Icon(CupertinoIcons.cube_box_fill,
                           color: kbiOrange, size: 20),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Text(
-                        'Replacement Parts Used',
-                        style: TextStyle(
+                        _text('Replacement Parts Used', 'قطع الغيار المستخدمة'),
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
                           color: Color(0xFF0F172A),
@@ -1775,7 +1861,7 @@ Thank you for choosing KBI Services!
                       Navigator.of(context).push(
                         CupertinoPageRoute<void>(
                           builder: (_) => PartsInventoryScreen(
-                            locale: const Locale('en'),
+                            locale: Localizations.localeOf(context),
                             activeJob: _job,
                           ),
                         ),
@@ -1783,9 +1869,9 @@ Thank you for choosing KBI Services!
                     },
                     icon: const Icon(Icons.add_circle_outline_rounded,
                         size: 16, color: kbiBlue),
-                    label: const Text(
-                      'Use Part',
-                      style: TextStyle(
+                    label: Text(
+                      _text('Use Part', 'استخدام قطعة'),
+                      style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: kbiBlue,
@@ -1800,9 +1886,12 @@ Thank you for choosing KBI Services!
                 ],
               ),
               const SizedBox(height: 4),
-              const Text(
-                'Select spare parts from inventory to deduct stock and attach to this order.',
-                style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
+              Text(
+                _text(
+                  'Select spare parts from inventory to deduct stock and attach to this order.',
+                  'اختر قطع الغيار من المخزون لإضافتها إلى الطلب وخصم الكمية.',
+                ),
+                style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
               ),
               const SizedBox(height: 12),
               if (usedParts.isEmpty)
@@ -1814,23 +1903,26 @@ Thank you for choosing KBI Services!
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
-                  child: const Column(
+                  child: Column(
                     children: [
-                      Icon(CupertinoIcons.cube_box,
+                      const Icon(CupertinoIcons.cube_box,
                           color: Color(0xFF94A3B8), size: 28),
-                      SizedBox(height: 6),
+                      const SizedBox(height: 6),
                       Text(
-                        'No parts allocated yet',
-                        style: TextStyle(
+                        _text('No parts allocated yet', 'لم تُضف قطع غيار بعد'),
+                        style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF64748B),
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
-                        'Tap "Use Part" above to choose from live inventory',
-                        style: TextStyle(
+                        _text(
+                          'Tap "Use Part" above to choose from live inventory',
+                          'اضغط «استخدام قطعة» للاختيار من المخزون',
+                        ),
+                        style: const TextStyle(
                           fontSize: 11,
                           color: Color(0xFF94A3B8),
                         ),
@@ -1844,7 +1936,8 @@ Thank you for choosing KBI Services!
                     final partMap = p is Map<String, dynamic>
                         ? p
                         : Map<String, dynamic>.from(p as Map);
-                    final name = partMap['name'] ?? 'Spare Part';
+                    final name =
+                        partMap['name'] ?? _text('Spare Part', 'قطعة غيار');
                     final sku = partMap['sku'] ?? '';
                     final price = (partMap['price'] as num?)?.toDouble() ?? 0.0;
 
@@ -2018,7 +2111,8 @@ Thank you for choosing KBI Services!
                       color: Color(0xFF0F172A))),
               IconButton(
                 onPressed: onAdd,
-                tooltip: 'Add Photo (Camera / Gallery)',
+                tooltip: _text('Add Photo (Camera / Gallery)',
+                    'إضافة صورة (الكاميرا أو المعرض)'),
                 icon: const Icon(Icons.add_a_photo_outlined,
                     color: Color(0xFF0284C7), size: 20),
               ),
@@ -2038,22 +2132,25 @@ Thank you for choosing KBI Services!
                   border: Border.all(
                       color: const Color(0xFFCBD5E1), style: BorderStyle.solid),
                 ),
-                child: const Column(
+                child: Column(
                   children: [
-                    Icon(Icons.add_photo_alternate_rounded,
+                    const Icon(Icons.add_photo_alternate_rounded,
                         color: Color(0xFF0284C7), size: 32),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
-                      'Take Photo or Upload Image',
-                      style: TextStyle(
+                      _text(
+                          'Take Photo or Upload Image', 'التقط صورة أو ارفعها'),
+                      style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF0284C7)),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
-                      'Tap to choose Camera or Photo Gallery',
-                      style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                      _text('Tap to choose Camera or Photo Gallery',
+                          'اضغط لاختيار الكاميرا أو معرض الصور'),
+                      style: const TextStyle(
+                          fontSize: 11, color: Color(0xFF64748B)),
                     ),
                   ],
                 ),
@@ -2121,15 +2218,15 @@ Thank you for choosing KBI Services!
                       border: Border.all(
                           color: const Color(0xFF0284C7), width: 1.2),
                     ),
-                    child: const Column(
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.add_a_photo_rounded,
+                        const Icon(Icons.add_a_photo_rounded,
                             color: Color(0xFF0284C7), size: 22),
-                        SizedBox(height: 4),
+                        const SizedBox(height: 4),
                         Text(
-                          'Add More',
-                          style: TextStyle(
+                          _text('Add More', 'إضافة المزيد'),
+                          style: const TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF0284C7)),
@@ -2165,13 +2262,13 @@ Thank you for choosing KBI Services!
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.receipt_long_rounded,
+                      const Icon(Icons.receipt_long_rounded,
                           color: Color(0xFF00C7BE), size: 20),
-                      SizedBox(width: 8),
-                      Text('Work Order Invoice',
-                          style: TextStyle(
+                      const SizedBox(width: 8),
+                      Text(_text('Work Order Invoice', 'فاتورة أمر العمل'),
+                          style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 15,
                               color: Color(0xFF0F172A))),
@@ -2183,16 +2280,16 @@ Thank you for choosing KBI Services!
                         CupertinoPageRoute<void>(
                           builder: (_) => InvoiceFormScreen(
                             job: _job,
-                            locale: const Locale('en'),
+                            locale: Localizations.localeOf(context),
                           ),
                         ),
                       );
                     },
                     icon: const Icon(Icons.description_outlined,
                         size: 16, color: Color(0xFF00C7BE)),
-                    label: const Text(
-                      'Official Form',
-                      style: TextStyle(
+                    label: Text(
+                      _text('Official Form', 'النموذج الرسمي'),
+                      style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
                         color: Color(0xFF00C7BE),
@@ -2202,14 +2299,17 @@ Thank you for choosing KBI Services!
                 ],
               ),
               const SizedBox(height: 14),
-              _buildInvoiceRow('Diagnostic & Service Labor',
+              _buildInvoiceRow(
+                  _text('Diagnostic & Service Labor', 'الفحص وأجرة الصيانة'),
                   'AED ${(amount * 0.4).toStringAsFixed(2)}'),
               const SizedBox(height: 8),
-              _buildInvoiceRow('OEM Replacement Parts',
+              _buildInvoiceRow(
+                  _text('OEM Replacement Parts', 'قطع الغيار الأصلية'),
                   'AED ${(amount * 0.6).toStringAsFixed(2)}'),
               const Divider(height: 20, color: Color(0xFFF1F5F9)),
               _buildInvoiceRow(
-                  'Total Amount Due', 'AED ${amount.toStringAsFixed(2)}',
+                  _text('Total Amount Due', 'إجمالي المبلغ المستحق'),
+                  'AED ${amount.toStringAsFixed(2)}',
                   isBold: true),
             ],
           ),
@@ -2227,8 +2327,8 @@ Thank you for choosing KBI Services!
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Payment Settlement Method',
-                  style: TextStyle(
+              Text(_text('Payment Settlement Method', 'طريقة تحصيل المبلغ'),
+                  style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                       color: Color(0xFF0F172A))),
@@ -2237,12 +2337,12 @@ Thank you for choosing KBI Services!
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _buildPaymentChip(
-                      'Cash Received', Icons.payments_outlined, 'Cash on Hand'),
+                  _buildPaymentChip('Cash Received', Icons.payments_outlined,
+                      _text('Cash on Hand', 'نقدًا')),
                   _buildPaymentChip('POS Terminal', Icons.credit_card_outlined,
-                      'Card / POS Machine'),
+                      _text('Card / POS Machine', 'بطاقة / جهاز الدفع')),
                   _buildPaymentChip('Paid Online', Icons.phone_iphone_rounded,
-                      'Apple Pay / Online'),
+                      _text('Apple Pay / Online', 'دفع إلكتروني')),
                 ],
               ),
             ],
@@ -2264,18 +2364,18 @@ Thank you for choosing KBI Services!
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.draw_outlined,
+                        const Icon(Icons.draw_outlined,
                             color: Color(0xFF0284C7), size: 18),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Flexible(
                           child: Text(
-                            'Digital Sign-Off',
+                            _text('Digital Sign-Off', 'التوقيع الرقمي'),
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                            style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13.5,
                                 color: Color(0xFF0F172A)),
@@ -2290,8 +2390,8 @@ Thank you for choosing KBI Services!
                       TextButton.icon(
                         onPressed: () => _openFullscreenSignaturePad(),
                         icon: const Icon(Icons.fullscreen_rounded, size: 16),
-                        label: const Text('Expand',
-                            style: TextStyle(fontSize: 11)),
+                        label: Text(_text('Expand', 'تكبير'),
+                            style: const TextStyle(fontSize: 11)),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
@@ -2311,8 +2411,8 @@ Thank you for choosing KBI Services!
                                 horizontal: 6, vertical: 2),
                             minimumSize: const Size(0, 32),
                           ),
-                          child: const Text('Clear',
-                              style: TextStyle(
+                          child: Text(_text('Clear', 'مسح'),
+                              style: const TextStyle(
                                   color: Colors.redAccent, fontSize: 11)),
                         ),
                     ],
@@ -2362,16 +2462,17 @@ Thank you for choosing KBI Services!
                         ),
                       ),
                       if (_signaturePoints.isEmpty)
-                        const Center(
+                        Center(
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.edit_outlined,
+                              const Icon(Icons.edit_outlined,
                                   color: Color(0xFF94A3B8), size: 18),
-                              SizedBox(width: 6),
+                              const SizedBox(width: 6),
                               Text(
-                                'Sign with finger above',
-                                style: TextStyle(
+                                _text('Sign with finger above',
+                                    'وقّع بإصبعك في المساحة أعلاه'),
+                                style: const TextStyle(
                                   color: Color(0xFF94A3B8),
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
@@ -2387,8 +2488,11 @@ Thank you for choosing KBI Services!
               const SizedBox(height: 8),
               Text(
                 _signatureCaptured
-                    ? '✓ Customer Signature Recorded (6-Month Warranty Activated)'
-                    : 'Please ask customer to sign with finger above',
+                    ? _text(
+                        '✓ Customer Signature Recorded (6-Month Warranty Activated)',
+                        '✓ تم تسجيل توقيع العميل وتفعيل ضمان ٦ أشهر')
+                    : _text('Please ask customer to sign with finger above',
+                        'يرجى مطالبة العميل بالتوقيع أعلاه'),
                 style: TextStyle(
                   color: _signatureCaptured
                       ? const Color(0xFF10B981)
@@ -2413,14 +2517,15 @@ Thank you for choosing KBI Services!
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.qr_code_2_rounded,
+                  const Icon(Icons.qr_code_2_rounded,
                       color: Color(0xFFF59E0B), size: 20),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Text(
-                    'Customer 5-Star Rating QR Code',
-                    style: TextStyle(
+                    _text('Customer 5-Star Rating QR Code',
+                        'رمز تقييم العميل بخمس نجوم'),
+                    style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                         color: Color(0xFF0F172A)),
@@ -2428,17 +2533,21 @@ Thank you for choosing KBI Services!
                 ],
               ),
               const SizedBox(height: 6),
-              const Text(
-                'Show your personal QR code on-site so customer can rate your service and tip.',
-                style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
+              Text(
+                _text(
+                  'Show your personal QR code on-site so customer can rate your service and tip.',
+                  'اعرض رمزك للعميل ليقيّم الخدمة بعد إنجازها.',
+                ),
+                style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
               ),
               const SizedBox(height: 12),
               FilledButton.icon(
                 onPressed: () => _showRatingQrModal(context),
                 icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
-                label: const Text(
-                  'Display Rating QR Code',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                label: Text(
+                  _text('Display Rating QR Code', 'عرض رمز التقييم'),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 13),
                 ),
                 style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFFF59E0B),
@@ -2458,9 +2567,10 @@ Thank you for choosing KBI Services!
           onPressed: _sendWhatsAppWarrantyReceipt,
           icon: const Icon(Icons.share_rounded,
               color: Color(0xFF25D366), size: 18),
-          label: const Text(
-            'Send Official WhatsApp Warranty Receipt',
-            style: TextStyle(
+          label: Text(
+            _text('Send Official WhatsApp Warranty Receipt',
+                'إرسال إيصال الضمان عبر واتساب'),
+            style: const TextStyle(
                 color: Color(0xFF0F172A),
                 fontWeight: FontWeight.bold,
                 fontSize: 13),
@@ -2547,21 +2657,25 @@ Thank you for choosing KBI Services!
       final confirmed = await showCupertinoDialog<bool>(
         context: context,
         builder: (dialogContext) => CupertinoAlertDialog(
-          title: const Text('Complete this job?'),
+          title: Text(_text('Complete this job?', 'إنهاء هذا الطلب؟')),
           content: Text(
             failedChecks > 0
-                ? '$failedChecks diagnostic checks are marked FAIL. The closeout record will be saved.'
-                : 'Diagnostics, photos, payment selection, and signature status will be saved to the order.',
+                ? _text(
+                    '$failedChecks diagnostic checks are marked FAIL. The closeout record will be saved.',
+                    'تم تحديد $failedChecks من عناصر الفحص كعطل. سيتم حفظ سجل الإنهاء.')
+                : _text(
+                    'Diagnostics, photos, payment selection, and signature status will be saved to the order.',
+                    'سيتم حفظ الفحص والصور وطريقة الدفع والتوقيع في الطلب.'),
           ),
           actions: [
             CupertinoDialogAction(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Review'),
+              child: Text(_text('Review', 'مراجعة')),
             ),
             CupertinoDialogAction(
               isDefaultAction: true,
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Complete'),
+              child: Text(_text('Complete', 'إنهاء')),
             ),
           ],
         ),
@@ -2596,7 +2710,9 @@ Thank you for choosing KBI Services!
                     )
                   : const Icon(CupertinoIcons.arrow_right_circle_fill,
                       size: 19),
-              label: Text(_isUpdating ? 'Saving' : 'Continue'),
+              label: Text(
+                _isUpdating ? _text('Saving', 'جارٍ الحفظ') : actionTitle,
+              ),
             ),
           ),
         ),
@@ -2606,7 +2722,9 @@ Thank you for choosing KBI Services!
 
   // --- PROGRESS STEPPER ---
   Widget _buildStatusStepper(int currentStep) {
-    const steps = ['Accepted', 'En Route', 'Arrived', 'Working'];
+    final steps = _isArabic
+        ? const ['مقبول', 'في الطريق', 'تم الوصول', 'جارٍ العمل']
+        : const ['Accepted', 'En Route', 'Arrived', 'Working'];
     final flowStep = currentStep - 1;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),

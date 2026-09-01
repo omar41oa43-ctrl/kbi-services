@@ -911,14 +911,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 }
                 final responseTime = responseDurations.isEmpty
                     ? '—'
-                    : '${(responseDurations.fold<int>(0, (totalMinutes, value) => totalMinutes + value.inMinutes) / responseDurations.length).round()} min';
+                    : '${(responseDurations.fold<int>(0, (totalMinutes, value) => totalMinutes + value.inMinutes) / responseDurations.length).round()} ${isAr ? 'دقيقة' : 'min'}';
                 final levelText = completedJobs > 200
-                    ? 'Platinum Technician'
+                    ? (isAr ? 'فني بلاتيني' : 'Platinum Technician')
                     : completedJobs > 50
-                        ? 'Gold Technician'
+                        ? (isAr ? 'فني ذهبي' : 'Gold Technician')
                         : completedJobs > 10
-                            ? 'Silver Technician'
-                            : 'Bronze Technician';
+                            ? (isAr ? 'فني فضي' : 'Silver Technician')
+                            : (isAr ? 'فني برونزي' : 'Bronze Technician');
 
                 return Scaffold(
                   backgroundColor: Colors.transparent,
@@ -1121,12 +1121,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         techData?['online'] == true ||
         techData?['isOnline'] == true;
     final bool isApproved = techData?['isApproved'] != false;
-    final String specialization = (techData?['specialization'] ??
+    final String rawSpecialization = (techData?['specialization'] ??
             techData?['experience_main_skill'] ??
             (isAr
                 ? 'أخصائي صيانة ميدانية معتمد'
                 : 'Certified Field Repair Specialist'))
         .toString();
+    final String specialization =
+        isAr && rawSpecialization.toLowerCase() == 'all'
+            ? 'جميع خدمات الصيانة'
+            : rawSpecialization;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),

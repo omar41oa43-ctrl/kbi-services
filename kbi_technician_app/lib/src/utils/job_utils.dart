@@ -54,6 +54,72 @@ String jobIdentityKey(
   return reference.isEmpty ? documentId.toLowerCase() : reference;
 }
 
+String _normalizeJobIdentity(Object? value) => (value ?? '')
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replaceAll(RegExp(r'[^a-z0-9]'), '');
+
+/// Every persisted alias that can identify the same job across legacy
+/// `bookings` and current `orders` documents. Some mirrored records share the
+/// Firestore document ID while only the order-side copy has a KBI number, so a
+/// single preferred reference is not sufficient for deduplication.
+Set<String> jobIdentityAliases(
+  Map<String, dynamic> data, {
+  required String documentId,
+}) {
+  final aliases = <String>{};
+  for (final value in [
+    documentId,
+    data['orderNumber'],
+    data['trackingCode'],
+    data['orderId'],
+    data['bookingId'],
+    data['reference'],
+    data['requestId'],
+  ]) {
+    final normalized = _normalizeJobIdentity(value);
+    if (normalized.isNotEmpty) aliases.add(normalized);
+  }
+  return aliases;
+}
+
+bool jobIdentityAliasesOverlap(
+  Map<String, dynamic> first, {
+  required String firstDocumentId,
+  required Map<String, dynamic> second,
+  required String secondDocumentId,
+}) {
+  final firstAliases = jobIdentityAliases(first, documentId: firstDocumentId);
+  final secondAliases =
+      jobIdentityAliases(second, documentId: secondDocumentId);
+  return firstAliases.any(secondAliases.contains);
+}
+
+/// Translates common service labels stored by the English booking website.
+/// Brand names, model names, customer text, and addresses are intentionally
+/// preserved because automatically translating those can make a job unsafe.
+String localizedJobContentLabel(Object? value, {required bool isArabic}) {
+  final original = (value ?? '').toString().trim();
+  if (!isArabic || original.isEmpty) return original;
+  return switch (original.toLowerCase()) {
+    'battery replacement' => 'استبدال البطارية',
+    'screen replacement' => 'استبدال الشاشة',
+    'device repair' => 'صيانة جهاز',
+    'service repair' || 'repair service' => 'خدمة صيانة',
+    'repair completed' => 'تم إنجاز الصيانة',
+    'diagnostics' || 'diagnostic service' => 'فحص وتشخيص',
+    'mobile phone' || 'mobile phone repair' => 'صيانة هاتف محمول',
+    'laptop' || 'laptop repair' => 'صيانة لابتوب',
+    'printer repair' => 'صيانة طابعة',
+    'tv repair' || 'television repair' => 'صيانة تلفزيون',
+    'playstation / xbox' || 'gaming console repair' => 'صيانة أجهزة الألعاب',
+    'cctv installation' => 'تركيب كاميرات مراقبة',
+    'it support' || 'business it support' => 'دعم تقنية المعلومات',
+    _ => original,
+  };
+}
+
 /// The single source of truth for how a job status is shown to a technician.
 String jobStatusLabel(Object? value) {
   final s = normalizeJobStatus(value);
