@@ -40,7 +40,7 @@ jobs:
         run: |
           printf '%s' "$FIREBASE_ANDROID_CONFIG" | base64 --decode > android/app/google-services.json
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/kbi-release.jks
-          printf 'storeFile=kbi-release.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+          printf 'storeFile=../kbi-release.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
             "$ANDROID_KEYSTORE_PASSWORD" \
             "$ANDROID_KEY_ALIAS" \
             "$ANDROID_KEY_PASSWORD" > android/key.properties
