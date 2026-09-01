@@ -78,7 +78,7 @@ export default function RootLayout({
         suppressHydrationWarning
         className={cn("min-h-screen font-sans antialiased selection:bg-cyan-500/20", cairo.variable)}
       >
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem={true}>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} storageKey="kbi-theme">
           <LanguageProvider>
             {children}
           </LanguageProvider>

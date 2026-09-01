@@ -505,7 +505,6 @@ export default async function CorporatePage() {
           animationSteps={8}
           showControls
         />
-        <p className="mt-4 text-sm text-muted-foreground"><T k="Brand names identify devices we service and do not imply manufacturer authorization or endorsement." /></p>
       </section>
 
       {/* CTA & Contact Information Section */}

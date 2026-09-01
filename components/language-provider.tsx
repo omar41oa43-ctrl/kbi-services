@@ -156,7 +156,6 @@ const DICTIONARY: Record<string, string> = {
   "Critical industries description": "بنية إصلاح ميدانية متخصصة للقطاعات التي لا تحتمل التوقف.",
   "The entities we deal with": "الجهات التي نتعامل معها",
   "Brands and platforms we support": "العلامات التجارية والمنصات التي ندعمها",
-  "Brand names identify devices we service and do not imply manufacturer authorization or endorsement.": "توضح أسماء العلامات التجارية الأجهزة التي نقوم بصيانتها ولا تعني أي تفويض رسمي أو اعتماد من الشركة المصنّعة.",
   "Displays & Signage": "الشاشات واللافتات",
   "Priority Support": "دعم أولوية",
   "Ready to Upgrade Your Corporate Maintenance?": "هل أنت مستعد لترقية صيانة شركتك؟",
