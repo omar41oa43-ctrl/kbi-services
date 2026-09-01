@@ -32,6 +32,7 @@ import {
   Landmark,
   Coins,
   Briefcase,
+  School,
 } from "lucide-react"
 import { CorporateContractsSection } from "@/components/corporate-contracts"
 import { T } from "@/components/i18n-text"
@@ -218,36 +219,33 @@ export default async function CorporatePage() {
         </div>
       </section>
 
-      {/* Logos Marquee */}
-      <section className="container mx-auto px-6 py-12">
+      {/* Organizations we support */}
+      <section className="container mx-auto px-6 py-12 md:py-16">
         <FadeIn>
-          <h2 className="text-2xl md:text-3xl font-bold mb-6 text-foreground">
+          <h2 className="text-2xl md:text-3xl font-bold mb-8 text-foreground">
             <span><T k="The entities we deal with" /></span>
           </h2>
         </FadeIn>
-        <SlidingLogoMarquee
-          items={[
-            { id: "government", label: "Government", content: <span className="text-foreground font-semibold"><T k="Government" /></span> },
-            { id: "hospitals", label: "Hospitals", content: <span className="text-foreground font-semibold"><T k="Hospitals" /></span> },
-            { id: "universities", label: "Universities", content: <span className="text-foreground font-semibold"><T k="Universities" /></span> },
-            { id: "banks", label: "Banks", content: <span className="text-foreground font-semibold"><T k="Banks" /></span> },
-            { id: "schools", label: "Schools", content: <span className="text-foreground font-semibold"><T k="Schools" /></span> },
-          ]}
-          speed={40}
-          pauseOnHover
-          enableBlur={false}
-          blurIntensity={1}
-          height="110px"
-          width="100%"
-          gap="1rem"
-          scale={1}
-          direction="horizontal"
-          autoPlay
-          showGridBackground
-          enableSpillEffect={false}
-          animationSteps={3}
-          showControls
-        />
+        <StaggerContainer className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
+          {[
+            { icon: Landmark, label: "Government", color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10" },
+            { icon: Stethoscope, label: "Hospitals", color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-500/10" },
+            { icon: GraduationCap, label: "Universities", color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10" },
+            { icon: Coins, label: "Banks", color: "text-cyan-600 dark:text-cyan-400", bg: "bg-cyan-500/10" },
+            { icon: School, label: "Schools", color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-500/10" },
+          ].map((entity) => (
+            <StaggerItem key={entity.label} className="h-full sm:last:col-span-2 md:last:col-span-1">
+              <div className="group flex min-h-28 h-full items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-cyan-500/40 hover:shadow-md sm:min-h-32 sm:flex-col sm:justify-center sm:text-center">
+                <div className={`flex size-11 shrink-0 items-center justify-center rounded-xl ring-1 ring-border ${entity.bg} ${entity.color}`}>
+                  <entity.icon className="size-5" aria-hidden="true" />
+                </div>
+                <h3 className="min-w-0 text-base font-semibold leading-snug text-foreground sm:text-lg">
+                  <T k={entity.label} />
+                </h3>
+              </div>
+            </StaggerItem>
+          ))}
+        </StaggerContainer>
       </section>
 
       {/* Comprehensive Device Support */}
