@@ -18,11 +18,10 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function TrackPage({ searchParams }: { searchParams: Promise<{ orderId?: string }> }) {
-  const { orderId = "" } = await searchParams
+export default function TrackPage() {
   return (
     <main className="min-h-screen bg-background text-foreground selection:bg-cyan-500/30 pb-16 lg:pb-0">
-      <OrderTracker initialOrderId={orderId} />
+      <OrderTracker />
     </main>
   )
 }

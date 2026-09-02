@@ -70,6 +70,7 @@ export function OrderTracker({ initialOrderId = "" }: { initialOrderId?: string 
 
   const contact = useSiteContact()
   const [orderId, setOrderId] = useState(initialOrderId)
+  const [resolvedInitialOrderId, setResolvedInitialOrderId] = useState(initialOrderId)
   const [phone, setPhone] = useState("")
   const [isSearching, setIsSearching] = useState(false)
   const [orderData, setOrderData] = useState<any | null>(null)
@@ -81,9 +82,17 @@ export function OrderTracker({ initialOrderId = "" }: { initialOrderId?: string 
   const cleanPhone = phone.replace(/\D/g, "")
   const canSearch = cleanOrderId.length >= 3 || cleanPhone.length >= 4
 
+  useEffect(() => {
+    if (initialOrderId) return
+    const queryOrderId = new URLSearchParams(window.location.search).get("orderId") || ""
+    if (!queryOrderId) return
+    setOrderId(queryOrderId)
+    setResolvedInitialOrderId(queryOrderId)
+  }, [initialOrderId])
+
   // Auto-search if initialOrderId is provided in URL
   useEffect(() => {
-    if (initialOrderId && initialOrderId.trim().length >= 3) {
+    if (resolvedInitialOrderId && resolvedInitialOrderId.trim().length >= 3) {
       const executeInitialSearch = async () => {
         setIsSearching(true)
         setNotFound(false)
@@ -92,7 +101,7 @@ export function OrderTracker({ initialOrderId = "" }: { initialOrderId?: string 
         setOrdersList([])
         try {
           const params = new URLSearchParams()
-          params.set("orderId", initialOrderId.trim())
+          params.set("orderId", resolvedInitialOrderId.trim())
           const res = await fetch(`/api/track?${params.toString()}`)
           const data = await res.json()
           if (data.error) {
@@ -116,7 +125,7 @@ export function OrderTracker({ initialOrderId = "" }: { initialOrderId?: string 
       }
       executeInitialSearch()
     }
-  }, [initialOrderId, isAr])
+  }, [resolvedInitialOrderId, isAr])
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
