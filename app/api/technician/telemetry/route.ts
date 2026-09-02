@@ -26,6 +26,7 @@ export async function POST(req: Request) {
       currentJob,
       currentOrder,
       accuracy,
+      isMocked,
       ipAddress,
     } = body;
     const lat = Number(latitude);
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
     const gpsSpeed = Number(speed);
     const gpsHeading = Number(heading);
 
-    if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180 || (lat === 0 && lng === 0)) {
+    if (isMocked === true || !Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180 || (lat === 0 && lng === 0)) {
       return NextResponse.json({ error: "Valid latitude and longitude are required" }, { status: 400 });
     }
 

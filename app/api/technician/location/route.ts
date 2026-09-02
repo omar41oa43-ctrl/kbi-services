@@ -10,13 +10,13 @@ export async function POST(request: Request) {
     if (!technician) return NextResponse.json({ success: false, error: 'Technician profile not found' }, { status: 404 })
 
     const body = await request.json();
-    const { latitude, longitude, accuracy, speed, heading, deviceModel, osVersion, platform } = body;
+    const { latitude, longitude, accuracy, speed, heading, isMocked, deviceModel, osVersion, platform } = body;
     const lat = Number(latitude);
     const lng = Number(longitude);
     const gpsAccuracy = Number(accuracy);
     const gpsSpeed = Number(speed);
     const gpsHeading = Number(heading);
-    if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180 || (lat === 0 && lng === 0)) {
+    if (isMocked === true || !Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180 || (lat === 0 && lng === 0)) {
       return NextResponse.json({ success: false, error: 'Invalid coordinates' }, { status: 400 });
     }
 
