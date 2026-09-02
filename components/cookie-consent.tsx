@@ -17,15 +17,15 @@ export function CookieConsent({ onDecision }: { onDecision: (_decision: CookieDe
   }
 
   return (
-    <aside aria-label={isAr ? "اختيارات ملفات تعريف الارتباط" : "Cookie choices"} className="fixed inset-x-4 bottom-20 z-[100] mx-auto max-w-2xl rounded-2xl border border-border bg-background/98 p-5 text-foreground shadow-2xl backdrop-blur-xl lg:bottom-6" dir={isAr ? "rtl" : "ltr"}>
-      <p className="font-bold">{isAr ? "خصوصيتك وخيارات التحليلات" : "Your privacy and analytics choices"}</p>
-      <p className="mt-2 text-sm leading-6 text-muted-foreground">
-        {isAr ? "نستخدم التخزين الضروري لتشغيل الموقع. ولن نفعّل أدوات التحليلات الاختيارية إلا إذا وافقت." : "We use essential storage to operate the site. Optional analytics will only load if you accept."}{" "}
+    <aside aria-label={isAr ? "اختيارات ملفات تعريف الارتباط" : "Cookie choices"} className="fixed inset-x-4 bottom-20 z-[100] mx-auto max-w-xl rounded-2xl border border-border bg-background/98 p-4 text-foreground shadow-xl backdrop-blur-xl lg:bottom-6" dir={isAr ? "rtl" : "ltr"}>
+      <p className="text-sm font-bold">{isAr ? "الخصوصية والتحليلات" : "Privacy and analytics"}</p>
+      <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
+        {isAr ? "نستخدم التخزين الضروري فقط. ولا تعمل التحليلات دون موافقتك." : "We use essential storage only. Analytics stays off without your consent."}{" "}
         <Link href="/privacy" className="font-semibold text-cyan-700 underline dark:text-cyan-300">{isAr ? "سياسة الخصوصية" : "Privacy policy"}</Link>
       </p>
-      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
-        <button type="button" onClick={() => choose("denied")} className="rounded-xl border border-border px-5 py-2.5 font-semibold hover:bg-muted">{isAr ? "رفض التحليلات" : "Decline analytics"}</button>
-        <button type="button" onClick={() => choose("granted")} className="rounded-xl bg-cyan-500 px-5 py-2.5 font-bold text-black hover:bg-cyan-400">{isAr ? "السماح بالتحليلات" : "Allow analytics"}</button>
+      <div className="mt-3 flex gap-2 justify-end">
+        <button type="button" onClick={() => choose("denied")} className="min-h-10 rounded-xl border border-border px-4 py-2 text-xs font-semibold hover:bg-muted">{isAr ? "رفض" : "Decline"}</button>
+        <button type="button" onClick={() => choose("granted")} className="min-h-10 rounded-xl bg-cyan-500 px-4 py-2 text-xs font-bold text-black hover:bg-cyan-400">{isAr ? "سماح" : "Allow"}</button>
       </div>
     </aside>
   )
