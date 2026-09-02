@@ -1144,9 +1144,21 @@ export default function AdminTechniciansPage() {
     return requests.filter((request) => request.status !== "approved" && request.status !== "rejected")
   }, [requests])
 
+  const rejectedRequestUserIds = useMemo(() => {
+    return new Set(
+      requests
+        .filter((request) => request.status === "rejected")
+        .map((request) => request.userId)
+        .filter(Boolean),
+    )
+  }, [requests])
+
   const unapprovedTechs = useMemo(() => {
-    return technicians.filter((technician) => !technician.isApproved)
-  }, [technicians])
+    return technicians.filter(
+      (technician) =>
+        !technician.isApproved && !rejectedRequestUserIds.has(technician.id),
+    )
+  }, [rejectedRequestUserIds, technicians])
 
   const pending = useMemo(() => {
     return [...pendingRequests, ...unapprovedTechs]
@@ -1159,13 +1171,8 @@ export default function AdminTechniciansPage() {
         list.push(tech)
       }
     })
-    requests.forEach((req) => {
-      if (!list.some((p) => p.id === req.id)) {
-        list.push(req)
-      }
-    })
     return list
-  }, [pendingRequests, unapprovedTechs, requests])
+  }, [pendingRequests, unapprovedTechs])
 
   const active = useMemo(() => technicians.filter((technician) => technician.isApproved && technician.isActive), [technicians])
   const available = useMemo(() => active.filter((technician) => technician.online && technician.available && !technician.currentJob), [active])
@@ -1573,7 +1580,7 @@ export default function AdminTechniciansPage() {
             <CardContent className="min-w-0 overflow-hidden px-0">
               {requestsLoading ? (
                 <div className="space-y-2 p-4">{Array.from({ length: 4 }).map((_, index) => <Skeleton key={index} className="h-11 w-full" />)}</div>
-              ) : requests.length === 0 ? (
+              ) : applicationsList.length === 0 ? (
                 <Empty className="min-h-52 border-0"><EmptyHeader><EmptyMedia variant="icon"><UserCheck /></EmptyMedia><EmptyTitle>No applications</EmptyTitle><EmptyDescription>Technician applications will appear here automatically.</EmptyDescription></EmptyHeader></Empty>
               ) : (
                 <Table>
