@@ -12,12 +12,6 @@ const cairo = Cairo({
   display: "optional",
 })
 
-// Always render the latest deployed page and opt every server-side request out
-// of the Next.js data cache. Hashed static assets remain safely cacheable.
-export const dynamic = "force-dynamic"
-export const fetchCache = "force-no-store"
-export const revalidate = 0
-
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: {

@@ -110,12 +110,6 @@ const nextConfig = {
       {
         source: '/:path*',
         headers: [
-          { key: 'Cache-Control', value: noStore },
-          { key: 'CDN-Cache-Control', value: noStore },
-          { key: 'Vercel-CDN-Cache-Control', value: noStore },
-          { key: 'Pragma', value: 'no-cache' },
-          { key: 'Expires', value: '0' },
-          { key: 'Surrogate-Control', value: 'no-store' },
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
