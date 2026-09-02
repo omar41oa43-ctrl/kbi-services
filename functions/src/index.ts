@@ -177,6 +177,166 @@ export const technicianUpdateFcmToken = onCall(async (request) => {
   return { ok: true }
 })
 
+/**
+ * Persist a technician's work-order decision on the server. Legacy admin
+ * flows mirror one order into three collections, so update every existing
+ * mirror atomically and create one deterministic admin notification.
+ */
+export const technicianUpdateJob = onCall(async (request) => {
+  const uid = request.auth?.uid
+  if (!uid) throw new HttpsError("unauthenticated", "Login required")
+
+  const bookingId = String((request.data as any)?.bookingId || "").trim()
+  const requestedStatus = String((request.data as any)?.status || "").trim()
+  const notes = String((request.data as any)?.notes || "").trim().slice(0, 500)
+  if (!bookingId || !requestedStatus) {
+    throw new HttpsError("invalid-argument", "bookingId and status are required")
+  }
+
+  const normalizedStatus = requestedStatus.toLowerCase().replaceAll("_", " ")
+  const canonicalStatuses: Record<string, string> = {
+    accepted: "Accepted",
+    rejected: "Rejected",
+    "on the way": "on_the_way",
+    arrived: "arrived",
+    "in progress": "in_progress",
+    working: "in_progress",
+    completed: "Completed",
+    cancelled: "Cancelled",
+  }
+  const status = canonicalStatuses[normalizedStatus]
+  if (!status) throw new HttpsError("invalid-argument", "Unsupported job status")
+
+  const db = getFirestore()
+  const refs = ["bookings", "orders", "service_requests"].map((collection) =>
+    db.collection(collection).doc(bookingId),
+  )
+  const [techSnap, userSnap] = await Promise.all([
+    db.collection("technicians").doc(uid).get(),
+    db.collection("users").doc(uid).get(),
+  ])
+  const tech = techSnap.data() as any
+  const user = userSnap.data() as any
+  const technicianName = String(
+    tech?.full_name || tech?.name || user?.full_name || user?.name || user?.displayName || "Technician",
+  ).trim()
+
+  let orderReference = bookingId
+  let decisionAlreadySaved = false
+  await db.runTransaction(async (transaction) => {
+    const snapshots = await Promise.all(refs.map((ref) => transaction.get(ref)))
+    const existing = snapshots.filter((snapshot) => snapshot.exists)
+    if (existing.length === 0) throw new HttpsError("not-found", "Work order not found")
+
+    const isAssignedToTechnician = existing.some((snapshot) => {
+      const data = snapshot.data() as any
+      const singleIds = [data?.assignedTechnician, data?.assignedTechnicianId, data?.technicianId, data?.techId]
+        .map((value) => String(value || ""))
+      const listIds = [data?.assignedTechnicians, data?.technicianIds]
+        .flatMap((value) => Array.isArray(value) ? value : [])
+        .map((value) => String(value || ""))
+      return singleIds.includes(uid) || listIds.includes(uid)
+    })
+    if (!isAssignedToTechnician) {
+      throw new HttpsError("permission-denied", "This work order is not assigned to you")
+    }
+
+    const representative = existing[0].data() as any
+    orderReference = String(
+      representative?.orderNumber || representative?.trackingCode || representative?.orderId || bookingId,
+    )
+    const existingStatus = String(representative?.status || "").toLowerCase().replaceAll("_", " ")
+    if (existingStatus === normalizedStatus) {
+      decisionAlreadySaved = true
+      return
+    }
+
+    if (["accepted", "rejected"].includes(normalizedStatus)) {
+      const offerStatuses = new Set(["assigned", "pending", "pending acceptance", "offered", "awaiting acceptance"])
+      if (!offerStatuses.has(existingStatus)) {
+        throw new HttpsError("failed-precondition", "This assignment has already been answered")
+      }
+    }
+
+    const now = Timestamp.now()
+    const payload: Record<string, unknown> = {
+      status,
+      technicianNotes: notes || null,
+      updatedAt: now,
+    }
+    if (["accepted", "rejected"].includes(normalizedStatus)) {
+      payload.technicianDecision = normalizedStatus
+      payload.technicianDecisionAt = now
+    }
+    if (normalizedStatus === "accepted") payload.acceptedAt = now
+    if (normalizedStatus === "rejected") payload.rejectedAt = now
+    if (["completed", "cancelled"].includes(normalizedStatus)) payload.completedAt = now
+
+    snapshots.forEach((snapshot, index) => {
+      if (snapshot.exists) transaction.set(refs[index], payload, { merge: true })
+    })
+
+    const jobFinished = ["rejected", "completed", "cancelled"].includes(normalizedStatus)
+    transaction.set(
+      db.collection("technicians").doc(uid),
+      {
+        currentJob: jobFinished ? null : bookingId,
+        currentOrder: jobFinished ? null : bookingId,
+        status: jobFinished ? "AVAILABLE" : "ON_JOB",
+        available: jobFinished,
+        updatedAt: now,
+      },
+      { merge: true },
+    )
+
+    if (["accepted", "rejected"].includes(normalizedStatus)) {
+      const accepted = normalizedStatus === "accepted"
+      const notificationId = `job_decision_${bookingId}_${uid}_${normalizedStatus}`
+      transaction.set(db.collection("notifications").doc(notificationId), {
+        type: accepted ? "job_accepted" : "job_rejected",
+        title: accepted ? "تم قبول الطلب" : "تم رفض الطلب",
+        message: accepted
+          ? `${technicianName} قبل الطلب ${orderReference}`
+          : `${technicianName} رفض الطلب ${orderReference}${notes ? ` — ${notes}` : ""}`,
+        role: "admin",
+        technicianId: uid,
+        technicianName,
+        workOrderId: bookingId,
+        orderId: orderReference,
+        status: normalizedStatus,
+        link: "/admin/orders",
+        read: false,
+        createdAt: now,
+      }, { merge: false })
+    }
+  })
+
+  if (!decisionAlreadySaved && ["accepted", "rejected"].includes(normalizedStatus)) {
+    const accepted = normalizedStatus === "accepted"
+    await Promise.allSettled([
+      writeAuditLog({
+        actorUid: uid,
+        actorRole: "technician",
+        action: accepted ? "work_order_accepted" : "work_order_rejected",
+        targetCollection: "orders",
+        targetId: bookingId,
+        orderId: bookingId,
+        details: { technicianName, orderReference, notes: notes || null },
+      }),
+      sendToTopic({
+        topic: "admins",
+        title: accepted ? "Job accepted" : "Job rejected",
+        body: accepted
+          ? `${technicianName} accepted ${orderReference}.`
+          : `${technicianName} rejected ${orderReference}.`,
+        data: { requestId: bookingId, technicianId: uid, status: normalizedStatus },
+      }),
+    ])
+  }
+
+  return { ok: true, status: normalizedStatus, alreadySaved: decisionAlreadySaved }
+})
+
 export const technicianRespondToOffer = onCall(async (request) => {
   const uid = request.auth?.uid
   if (!uid) throw new HttpsError("unauthenticated", "Login required")
@@ -189,6 +349,7 @@ export const technicianRespondToOffer = onCall(async (request) => {
   const db = getFirestore()
   const techSnap = await db.collection("technicians").doc(uid).get()
   const tech = techSnap.data() as any
+  const technicianName = String(tech?.full_name || tech?.name || "Technician").trim()
   if (!techSnap.exists || tech?.isApproved !== true || tech?.isActive !== true || tech?.subscriptionStatus !== "active") {
     throw new HttpsError("permission-denied", "Not eligible")
   }
@@ -225,12 +386,27 @@ export const technicianRespondToOffer = onCall(async (request) => {
       targetId: requestId,
       requestId,
     })
-    await sendToTopic({
-      topic: "admins",
-      title: "Job accepted",
-      body: "A technician accepted a service request.",
-      data: { requestId, technicianId: uid, status: "accepted" },
+    await db.collection("notifications").doc(`service_decision_${requestId}_${uid}_accepted`).set({
+      type: "job_accepted",
+      title: "تم قبول الطلب",
+      message: `${technicianName} قبل الطلب ${requestId}`,
+      role: "admin",
+      technicianId: uid,
+      technicianName,
+      workOrderId: requestId,
+      status: "accepted",
+      link: "/admin/orders",
+      read: false,
+      createdAt: now,
     })
+    await Promise.allSettled([
+      sendToTopic({
+        topic: "admins",
+        title: "Job accepted",
+        body: `${technicianName} accepted ${requestId}.`,
+        data: { requestId, technicianId: uid, status: "accepted" },
+      }),
+    ])
     return { ok: true, status: "accepted" }
   }
 
@@ -256,6 +432,28 @@ export const technicianRespondToOffer = onCall(async (request) => {
     targetId: requestId,
     requestId,
   })
+
+  await db.collection("notifications").doc(`service_decision_${requestId}_${uid}_rejected`).set({
+    type: "job_rejected",
+    title: "تم رفض الطلب",
+    message: `${technicianName} رفض الطلب ${requestId}`,
+    role: "admin",
+    technicianId: uid,
+    technicianName,
+    workOrderId: requestId,
+    status: "rejected",
+    link: "/admin/orders",
+    read: false,
+    createdAt: now,
+  })
+  await Promise.allSettled([
+    sendToTopic({
+      topic: "admins",
+      title: "Job rejected",
+      body: `${technicianName} rejected ${requestId}.`,
+      data: { requestId, technicianId: uid, status: "rejected" },
+    }),
+  ])
 
   await assignServiceRequest(requestId)
   return { ok: true, status: "rejected" }

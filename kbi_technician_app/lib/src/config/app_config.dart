@@ -11,6 +11,11 @@ abstract final class AppConfig {
 
   static const webVapidKey = String.fromEnvironment('FIREBASE_WEB_VAPID_KEY');
 
+  static const apiBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://kbi.services',
+  );
+
   static const supportWhatsApp = String.fromEnvironment(
     'SUPPORT_WHATSAPP',
     defaultValue: '971502491034',

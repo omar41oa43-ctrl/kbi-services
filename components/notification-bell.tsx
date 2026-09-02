@@ -32,11 +32,11 @@ export function NotificationBell({ role = "admin" }: NotificationBellProps) {
         return () => { isMounted.current = false }
     }, [])
 
-    const fetchNotifications = useCallback(async () => {
+    const fetchNotifications = useCallback(async (forceRefresh = false) => {
         try {
             const token = await auth.currentUser?.getIdToken()
             if (!token) return
-            const { notifications: data } = await getNotificationsAction(role, token)
+            const { notifications: data } = await getNotificationsAction(role, token, forceRefresh)
             if (!isMounted.current) return
             if (data) {
                 setNotifications(data)
@@ -52,6 +52,21 @@ export function NotificationBell({ role = "admin" }: NotificationBellProps) {
     useEffect(() => {
         fetchNotifications()
     }, [fetchNotifications])
+
+    // Admin decisions should surface without requiring a page reload. Poll
+    // only while the tab is visible and bypass the short server cache.
+    useEffect(() => {
+        if (role !== "admin") return
+        const refreshWhenVisible = () => {
+            if (document.visibilityState === "visible") void fetchNotifications(true)
+        }
+        const interval = window.setInterval(refreshWhenVisible, 15000)
+        document.addEventListener("visibilitychange", refreshWhenVisible)
+        return () => {
+            window.clearInterval(interval)
+            document.removeEventListener("visibilitychange", refreshWhenVisible)
+        }
+    }, [fetchNotifications, role])
 
     const handleNotificationClick = async (notification: NotificationType) => {
         if (!notification.read) {
@@ -103,6 +118,8 @@ export function NotificationBell({ role = "admin" }: NotificationBellProps) {
             case "order_created": return "🛒"
             case "status_update": return "📝"
             case "assignment": return "👤"
+            case "job_accepted": return "✅"
+            case "job_rejected": return "❌"
             case "low_stock": return "⚠️"
             default: return "🔔"
         }
@@ -159,7 +176,7 @@ export function NotificationBell({ role = "admin" }: NotificationBellProps) {
                             aria-label="Refresh notifications"
                             onClick={(e) => {
                                 e.stopPropagation()
-                                fetchNotifications()
+                                fetchNotifications(true)
                             }}
                         >
                             <RefreshCw className="h-3 w-3 text-white/50" />

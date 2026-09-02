@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 
 export default function DownloadAppPage() {
   const [copied, setCopied] = useState(false);
-  const apkDownloadUrl = 'https://github.com/omar41oa43-ctrl/kbi-services/releases/download/v1.4.1/kbi-technician.apk';
+  const apkDownloadUrl = 'https://github.com/omar41oa43-ctrl/kbi-services/releases/download/v1.4.2/kbi-technician.apk';
 
   const copyToClipboard = (url: string) => {
     navigator.clipboard.writeText(url);
@@ -31,7 +31,7 @@ export default function DownloadAppPage() {
             </div>
           </div>
           <span className="px-3 py-1 bg-teal-500/10 border border-teal-500/20 text-teal-400 text-xs font-semibold rounded-full uppercase tracking-wider mb-2">
-            Technician Portal App • v1.4.1
+            Technician Portal App • v1.4.2
           </span>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-2">
             Download KBI Technician App
@@ -90,12 +90,12 @@ export default function DownloadAppPage() {
         </div>
 
         <div className="mt-6 rounded-2xl border border-blue-500/20 bg-blue-500/10 p-4">
-          <h2 className="text-sm font-bold text-blue-200">What&apos;s new in v1.4.1</h2>
+          <h2 className="text-sm font-bold text-blue-200">What&apos;s new in v1.4.2</h2>
           <ul className="mt-2 space-y-1 text-xs text-slate-300 list-disc list-inside">
-            <li>New map-first order details designed for field technicians</li>
-            <li>Clear light map with customer pin, route, and satellite mode</li>
-            <li>Redesigned assignment card with price, status, and wide map</li>
-            <li>Improved Arabic labels for order and navigation actions</li>
+            <li>Accept or reject every new assignment from the order screen</li>
+            <li>Confirmation required before accepting or rejecting an order</li>
+            <li>Automatic admin notification with technician and order details</li>
+            <li>Reliable synchronized decisions across every order view</li>
           </ul>
         </div>
 

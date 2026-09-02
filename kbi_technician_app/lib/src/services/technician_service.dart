@@ -1,9 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 
+import '../config/app_config.dart';
 import '../utils/job_utils.dart';
 
 class TechnicianService {
@@ -57,17 +60,35 @@ class TechnicianService {
     required String status,
     String? notes,
   }) async {
-    if (uid == null) throw Exception("User not logged in");
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception("User not logged in");
+    final normalizedStatus = status.toLowerCase().replaceAll('_', ' ');
     try {
-      await FirebaseFunctions.instance
-          .httpsCallable('technicianUpdateJob')
-          .call({
-        'bookingId': requestId,
-        'status': status,
-        'notes': notes,
-      });
+      final token = await user.getIdToken();
+      final response = await http
+          .post(
+            Uri.parse(
+                '${AppConfig.apiBaseUrl}/api/technician/jobs/${Uri.encodeComponent(requestId)}/decision'),
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({'status': status, 'notes': notes}),
+          )
+          .timeout(const Duration(seconds: 15));
+      final responseBody = response.body.isNotEmpty
+          ? jsonDecode(response.body) as Map<String, dynamic>
+          : const <String, dynamic>{};
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw Exception(responseBody['error'] ?? 'Unable to update order');
+      }
     } catch (e) {
-      debugPrint('Cloud function notice: $e. Using direct Firestore update.');
+      if (normalizedStatus == 'accepted' || normalizedStatus == 'rejected') {
+        // Decisions must go through the authenticated API so authorization,
+        // mirrored updates and the admin notification succeed together.
+        rethrow;
+      }
+      debugPrint('Order API notice: $e. Using direct Firestore update.');
       final isAccepted = status.toLowerCase() == 'accepted';
       final isDone = status.toLowerCase() == 'completed' ||
           status.toLowerCase() == 'cancelled';

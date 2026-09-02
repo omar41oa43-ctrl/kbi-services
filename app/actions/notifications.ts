@@ -18,7 +18,7 @@ async function authenticateNotificationUser(role: "admin" | "technician", idToke
     return role === "admin" ? verifyAdmin(idToken) : verifyTechnician(idToken)
 }
 
-export async function getNotificationsAction(role: "admin" | "technician", idToken: string): Promise<{ notifications: Notification[], error?: string }> {
+export async function getNotificationsAction(role: "admin" | "technician", idToken: string, forceRefresh = false): Promise<{ notifications: Notification[], error?: string }> {
     try {
         const actor = await authenticateNotificationUser(role, idToken)
         if (!actor) return { notifications: [], error: "Unauthorized" }
@@ -30,7 +30,7 @@ export async function getNotificationsAction(role: "admin" | "technician", idTok
         if (cached?.failedTs && now - cached.failedTs < backoffMs) {
             return { notifications: cached.value || [], error: "Temporarily unavailable" }
         }
-        if (cached && now - cached.ts < ttlMs) return { notifications: cached.value }
+        if (!forceRefresh && cached && now - cached.ts < ttlMs) return { notifications: cached.value }
 
         let notificationQuery = adminDb.collection("notifications").where("role", "==", role)
         if (role === "technician") notificationQuery = notificationQuery.where("userId", "==", actor.uid)

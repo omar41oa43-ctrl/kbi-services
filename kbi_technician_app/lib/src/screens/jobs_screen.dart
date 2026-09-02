@@ -2146,14 +2146,26 @@ class _JobsScreenState extends State<JobsScreen> {
   }
 
   Future<void> _rejectJob(String docId, String reason) async {
+    final isAr = widget.locale.languageCode == 'ar';
     try {
       await TechnicianService.instance.updateJobStatus(
         requestId: docId,
         status: 'Rejected',
         notes: reason,
       );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: const Color(0xFFDC2626),
+            content: Text(isAr
+                ? 'تم رفض الطلب وإشعار الإدارة.'
+                : 'Order rejected. The admin has been notified.'),
+          ),
+        );
+      }
     } catch (error) {
-      _showMessage('Unable to reject job: $error');
+      _showMessage(
+          isAr ? 'تعذر رفض الطلب: $error' : 'Unable to reject job: $error');
     }
   }
 

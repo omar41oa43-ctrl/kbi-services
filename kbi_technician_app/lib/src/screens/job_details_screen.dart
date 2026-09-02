@@ -126,7 +126,16 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
         updatePayload['completedAt'] = FieldValue.serverTimestamp();
       }
 
-      // 1. Update in the primary collection
+      // Save the workflow state through the authenticated server function so
+      // every mirrored order stays in sync and the admin receives the
+      // technician's accept/reject decision exactly once.
+      await TechnicianService.instance.updateJobStatus(
+        requestId: docId,
+        status: nextStatus,
+        notes: isAccepted ? 'Job accepted by technician.' : null,
+      );
+
+      // Save screen-specific closeout fields to the primary mirror.
       try {
         await FirebaseFirestore.instance.collection(coll).doc(docId).set(
               updatePayload,
@@ -2675,7 +2684,33 @@ Thank you for choosing KBI Services!
   }
 
   Future<void> _confirmPrimaryAction(String actionTitle, String nextKey) async {
-    if (normalizeJobStatus(nextKey) == 'completed') {
+    final normalizedNext = normalizeJobStatus(nextKey);
+    if (normalizedNext == 'accepted') {
+      final confirmed = await showCupertinoDialog<bool>(
+        context: context,
+        builder: (dialogContext) => CupertinoAlertDialog(
+          title: Text(_text('Accept this order?', 'قبول هذا الطلب؟')),
+          content: Text(_text(
+            'The admin will be notified that you accepted this assignment.',
+            'سيتم إشعار الإدارة بأنك وافقت على تنفيذ هذا الطلب.',
+          )),
+          actions: [
+            CupertinoDialogAction(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(_text('Cancel', 'إلغاء')),
+            ),
+            CupertinoDialogAction(
+              isDefaultAction: true,
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(_text('Accept', 'قبول')),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
+    if (!mounted) return;
+    if (normalizedNext == 'completed') {
       final failedChecks =
           _checklist.values.where((value) => value == 'FAIL').length;
       final confirmed = await showCupertinoDialog<bool>(
@@ -2709,37 +2744,136 @@ Thank you for choosing KBI Services!
     await _updateJobStatus(nextKey);
   }
 
+  Future<void> _confirmRejectAssignment() async {
+    final confirmed = await showCupertinoDialog<bool>(
+      context: context,
+      builder: (dialogContext) => CupertinoAlertDialog(
+        title: Text(_text('Reject this order?', 'رفض هذا الطلب؟')),
+        content: Text(_text(
+          'This action will notify the admin and remove the assignment from your active work.',
+          'سيتم إشعار الإدارة وإزالة الطلب من قائمة أعمالك النشطة.',
+        )),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(_text('Keep order', 'الاحتفاظ بالطلب')),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(_text('Confirm reject', 'تأكيد الرفض')),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isUpdating = true);
+    try {
+      await TechnicianService.instance.updateJobStatus(
+        requestId: _job.id,
+        status: 'Rejected',
+        notes: 'Job declined by technician.',
+      );
+      if (!mounted) return;
+      HapticFeedback.mediumImpact();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFFDC2626),
+          content: Text(_text(
+            'Order rejected. The admin has been notified.',
+            'تم رفض الطلب وإشعار الإدارة.',
+          )),
+        ),
+      );
+      Navigator.of(context).pop();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.redAccent,
+          content: Text(_text(
+            'Unable to reject order: $error',
+            'تعذر رفض الطلب: $error',
+          )),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isUpdating = false);
+    }
+  }
+
   Widget _buildPrimaryActionBar(String actionTitle, String nextKey) {
+    final isOffer = normalizeJobStatus(nextKey) == 'accepted';
     return SafeArea(
       minimum: const EdgeInsets.fromLTRB(12, 0, 12, 10),
       child: LiquidGlassSurface(
         borderRadius: BorderRadius.circular(22),
         padding: const EdgeInsets.all(10),
-        child: Semantics(
-          button: true,
-          label: actionTitle,
-          child: SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: _isUpdating
-                  ? null
-                  : () => _confirmPrimaryAction(actionTitle, nextKey),
-              icon: _isUpdating
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
+        child: isOffer
+            ? Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _isUpdating ? null : _confirmRejectAssignment,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFDC2626),
+                        side: const BorderSide(color: Color(0xFFFCA5A5)),
+                        padding: const EdgeInsets.symmetric(vertical: 13),
                       ),
-                    )
-                  : const Icon(CupertinoIcons.arrow_right_circle_fill,
-                      size: 19),
-              label: Text(
-                _isUpdating ? _text('Saving', 'جارٍ الحفظ') : actionTitle,
+                      icon: const Icon(CupertinoIcons.xmark_circle, size: 18),
+                      label: Text(_text('Reject', 'رفض')),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    flex: 2,
+                    child: FilledButton.icon(
+                      onPressed: _isUpdating
+                          ? null
+                          : () => _confirmPrimaryAction(actionTitle, nextKey),
+                      icon: _isUpdating
+                          ? const SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Icon(CupertinoIcons.checkmark_circle_fill,
+                              size: 19),
+                      label: Text(_isUpdating
+                          ? _text('Saving', 'جارٍ الحفظ')
+                          : _text('Accept order', 'قبول الطلب')),
+                    ),
+                  ),
+                ],
+              )
+            : Semantics(
+                button: true,
+                label: actionTitle,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: _isUpdating
+                        ? null
+                        : () => _confirmPrimaryAction(actionTitle, nextKey),
+                    icon: _isUpdating
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Icon(CupertinoIcons.arrow_right_circle_fill,
+                            size: 19),
+                    label: Text(
+                      _isUpdating ? _text('Saving', 'جارٍ الحفظ') : actionTitle,
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-        ),
       ),
     );
   }
