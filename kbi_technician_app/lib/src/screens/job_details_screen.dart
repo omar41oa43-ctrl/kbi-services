@@ -999,6 +999,7 @@ Thank you for choosing KBI Services!
   }
 
   void _showJobActions() {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     showCupertinoModalPopup<void>(
       context: context,
       builder: (sheetContext) => CupertinoActionSheet(
@@ -1024,7 +1025,8 @@ Thank you for choosing KBI Services!
                 address: _job.address,
               );
             },
-            child: const Text('Choose navigation app'),
+            child:
+                Text(isAr ? 'اختيار تطبيق الملاحة' : 'Choose navigation app'),
           ),
           if (_job.address?.trim().isNotEmpty == true)
             CupertinoActionSheetAction(
@@ -1032,7 +1034,7 @@ Thank you for choosing KBI Services!
                 Navigator.pop(sheetContext);
                 _copyAddressToClipboard(_job.address!);
               },
-              child: const Text('Copy address'),
+              child: Text(isAr ? 'نسخ العنوان' : 'Copy address'),
             ),
           if (_job.customerPhone?.trim().isNotEmpty == true)
             CupertinoActionSheetAction(
@@ -1040,12 +1042,12 @@ Thank you for choosing KBI Services!
                 Navigator.pop(sheetContext);
                 _makePhoneCall(_job.customerPhone!);
               },
-              child: const Text('Call customer'),
+              child: Text(isAr ? 'الاتصال بالعميل' : 'Call customer'),
             ),
         ],
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(sheetContext),
-          child: const Text('Cancel'),
+          child: Text(isAr ? 'إلغاء' : 'Cancel'),
         ),
       ),
     );
@@ -1159,6 +1161,10 @@ Thank you for choosing KBI Services!
         _buildStatusStepper(currentStep),
         const SizedBox(height: 16),
 
+        // Map-first layout, matching a field-service workflow.
+        _buildCustomerLocationCard(point, addressText, hasCoords),
+        const SizedBox(height: 16),
+
         // Quick Customer Action Strip
         _buildCustomerContactCard(point),
         const SizedBox(height: 16),
@@ -1262,10 +1268,6 @@ Thank you for choosing KBI Services!
             ],
           ),
         ),
-        const SizedBox(height: 16),
-
-        // Dedicated Customer Location & Navigation Card
-        _buildCustomerLocationCard(point, addressText, hasCoords),
       ],
     );
   }
@@ -1277,17 +1279,17 @@ Thank you for choosing KBI Services!
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1315,15 +1317,28 @@ Thank you for choosing KBI Services!
                   color: const Color(0xFF0284C7).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Text(
-                  hasCoords
-                      ? (isAr ? '📍 موقع مثبت' : '📍 GPS PINNED')
-                      : (isAr ? '📍 العنوان فقط' : '📍 ADDRESS ONLY'),
-                  style: const TextStyle(
-                    color: Color(0xFF0284C7),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      hasCoords
+                          ? Icons.gps_fixed_rounded
+                          : Icons.location_searching_rounded,
+                      color: const Color(0xFF0284C7),
+                      size: 11,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      hasCoords
+                          ? (isAr ? 'موقع مؤكد' : 'GPS confirmed')
+                          : (isAr ? 'العنوان فقط' : 'Address only'),
+                      style: const TextStyle(
+                        color: Color(0xFF0284C7),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -1366,13 +1381,13 @@ Thank you for choosing KBI Services!
 
           // Embedded Interactive OpenStreetMap with Satellite Toggle
           ClipRRect(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(18),
             child: Container(
-              height: 230,
+              height: 210,
               width: double.infinity,
               decoration: BoxDecoration(
                 border: Border.all(color: const Color(0xFFCBD5E1)),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(18),
               ),
               child: Stack(
                 children: [
@@ -1390,7 +1405,7 @@ Thank you for choosing KBI Services!
                         fmap.TileLayer(
                           urlTemplate: _isSatelliteMode
                               ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-                              : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
+                              : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
                           subdomains: _isSatelliteMode
                               ? const []
                               : const ['a', 'b', 'c', 'd'],
@@ -1401,8 +1416,8 @@ Thank you for choosing KBI Services!
                           markers: [
                             fmap.Marker(
                               point: point,
-                              width: 140,
-                              height: 82,
+                              width: 130,
+                              height: 78,
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -1410,38 +1425,49 @@ Thank you for choosing KBI Services!
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 10, vertical: 5),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF0F172A)
-                                          .withValues(alpha: 0.94),
-                                      borderRadius: BorderRadius.circular(10),
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                          color: const Color(0xFF38BDF8)
-                                              .withValues(alpha: 0.6)),
+                                          color: const Color(0xFFBFDBFE)),
                                       boxShadow: const [
                                         BoxShadow(
-                                            color: Colors.black45,
-                                            blurRadius: 8,
-                                            offset: Offset(0, 3)),
+                                            color: Color(0x260F172A),
+                                            blurRadius: 12,
+                                            offset: Offset(0, 4)),
                                       ],
                                     ),
                                     child: Text(
                                       _job.customerName?.split(' ').first ??
                                           (isAr ? 'العميل' : 'Customer'),
                                       style: const TextStyle(
-                                        color: Colors.white,
+                                        color: Color(0xFF0F172A),
                                         fontSize: 10,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ),
                                   const SizedBox(height: 2),
-                                  const Icon(
-                                    Icons.location_on_rounded,
-                                    color: Color(0xFFFF453A),
-                                    size: 40,
-                                    shadows: [
-                                      Shadow(
-                                          color: Colors.black54, blurRadius: 8),
-                                    ],
+                                  Container(
+                                    width: 38,
+                                    height: 38,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF2563EB),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                          color: Colors.white, width: 3),
+                                      boxShadow: const [
+                                        BoxShadow(
+                                          color: Color(0x400F172A),
+                                          blurRadius: 10,
+                                          offset: Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.home_rounded,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -1498,9 +1524,8 @@ Thank you for choosing KBI Services!
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF0F172A)
-                                    .withValues(alpha: 0.85),
-                                borderRadius: BorderRadius.circular(8),
+                                color: Colors.white.withValues(alpha: 0.96),
+                                borderRadius: BorderRadius.circular(12),
                                 boxShadow: const [
                                   BoxShadow(
                                       color: Colors.black26,
@@ -1515,7 +1540,7 @@ Thank you for choosing KBI Services!
                                     _isSatelliteMode
                                         ? Icons.map_rounded
                                         : Icons.satellite_alt_rounded,
-                                    color: Colors.white,
+                                    color: const Color(0xFF2563EB),
                                     size: 14,
                                   ),
                                   const SizedBox(width: 4),
@@ -1526,7 +1551,7 @@ Thank you for choosing KBI Services!
                                             ? 'القمر الصناعي'
                                             : 'Satellite'),
                                     style: const TextStyle(
-                                        color: Colors.white,
+                                        color: Color(0xFF0F172A),
                                         fontSize: 11,
                                         fontWeight: FontWeight.bold),
                                   ),
@@ -1541,9 +1566,8 @@ Thank you for choosing KBI Services!
                             child: Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF0F172A)
-                                    .withValues(alpha: 0.85),
-                                borderRadius: BorderRadius.circular(8),
+                                color: Colors.white.withValues(alpha: 0.96),
+                                borderRadius: BorderRadius.circular(12),
                                 boxShadow: const [
                                   BoxShadow(
                                       color: Colors.black26,
@@ -1552,7 +1576,7 @@ Thank you for choosing KBI Services!
                                 ],
                               ),
                               child: const Icon(Icons.my_location_rounded,
-                                  color: Colors.white, size: 16),
+                                  color: Color(0xFF2563EB), size: 16),
                             ),
                           ),
                         ],

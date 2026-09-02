@@ -862,6 +862,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ? (isAr ? 'طلب جديد' : 'New Assignment')
         : localizedJobStatusLabel(rawStatus, isArabic: isAr);
     final Color statusColor = jobStatusColor(rawStatus);
+    final rawAmount = data['assignedPrice'] ??
+        data['totalAmount'] ??
+        data['price'] ??
+        data['cost'];
+    final amount = rawAmount is num
+        ? rawAmount.toDouble()
+        : double.tryParse(rawAmount?.toString() ?? '');
 
     // -------------------------------------------------------------
     // Extract Real Destination Location and Calculate Live Distance & ETA
@@ -983,42 +990,215 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Upper Row: Info (Left) + Interactive Live Map Graphic (Right)
+                // Clear order identity and price, followed by a wide map.
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Left Column: Status Badge, Order Number, Device, Issue, Address, Time
-                    Expanded(
-                      flex: 11,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: statusColor.withValues(alpha: 0.24),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Status Badge (Blue Pill with Navigation Icon)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 9, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: statusColor.withValues(alpha: 0.10),
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(
-                                color: statusColor.withValues(alpha: 0.25),
-                              ),
+                          Icon(
+                            isNewAssignment
+                                ? CupertinoIcons.bell_fill
+                                : CupertinoIcons.location_north_fill,
+                            size: 12,
+                            color: statusColor,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            statusPillLabel,
+                            style: TextStyle(
+                              color: statusColor,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
                             ),
-                            child: Row(
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Spacer(),
+                    if (amount != null && amount > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEFF6FF),
+                          borderRadius: BorderRadius.circular(11),
+                        ),
+                        child: Text(
+                          'AED ${amount.toStringAsFixed(0)}',
+                          textDirection: TextDirection.ltr,
+                          style: const TextStyle(
+                            color: Color(0xFF2563EB),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  orderNum,
+                  textDirection: TextDirection.ltr,
+                  style: const TextStyle(
+                    color: Color(0xFF0F172A),
+                    fontSize: 21,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  device,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF334155),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                Text(
+                  service,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF64748B),
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  height: 150,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (hasDestination)
+                          AbsorbPointer(
+                            child: fmap.FlutterMap(
+                              options: fmap.MapOptions(
+                                initialCenter: mapCenter,
+                                initialZoom: 14.5,
+                                initialCameraFit: techPoint == null
+                                    ? null
+                                    : fmap.CameraFit.coordinates(
+                                        coordinates: [techPoint, jobPoint],
+                                        padding: const EdgeInsets.fromLTRB(
+                                            44, 28, 44, 48),
+                                        maxZoom: 15,
+                                      ),
+                                interactionOptions:
+                                    const fmap.InteractionOptions(
+                                  flags: fmap.InteractiveFlag.none,
+                                ),
+                              ),
+                              children: [
+                                fmap.TileLayer(
+                                  urlTemplate:
+                                      'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
+                                  subdomains: const ['a', 'b', 'c', 'd'],
+                                  userAgentPackageName:
+                                      'ae.kbi.kbiTechnicianApp',
+                                  maxZoom: 19,
+                                ),
+                                if (techPoint != null)
+                                  fmap.PolylineLayer(
+                                    polylines: [
+                                      fmap.Polyline(
+                                        points: [techPoint, jobPoint],
+                                        color: const Color(0xFF2563EB),
+                                        strokeWidth: 4,
+                                        borderColor: Colors.white,
+                                        borderStrokeWidth: 2,
+                                      ),
+                                    ],
+                                  ),
+                                fmap.MarkerLayer(
+                                  markers: [
+                                    if (techPoint != null)
+                                      fmap.Marker(
+                                        point: techPoint,
+                                        width: 28,
+                                        height: 28,
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF2563EB),
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                                color: Colors.white, width: 4),
+                                            boxShadow: const [
+                                              BoxShadow(
+                                                  color: Colors.black26,
+                                                  blurRadius: 8),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    fmap.Marker(
+                                      point: jobPoint,
+                                      width: 42,
+                                      height: 42,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF0F172A),
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                              color: Colors.white, width: 3),
+                                          boxShadow: const [
+                                            BoxShadow(
+                                              color: Colors.black26,
+                                              blurRadius: 10,
+                                              offset: Offset(0, 4),
+                                            ),
+                                          ],
+                                        ),
+                                        child: const Icon(
+                                          CupertinoIcons.house_fill,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          )
+                        else
+                          Container(
+                            color: const Color(0xFFF1F5F9),
+                            alignment: Alignment.center,
+                            child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
-                                  isNewAssignment
-                                      ? CupertinoIcons.bell_fill
-                                      : CupertinoIcons.location_north_fill,
-                                  size: 11,
-                                  color: statusColor,
-                                ),
-                                const SizedBox(width: 4),
+                                const Icon(CupertinoIcons.location_slash,
+                                    color: Color(0xFF64748B), size: 28),
+                                const SizedBox(height: 7),
                                 Text(
-                                  statusPillLabel,
-                                  style: TextStyle(
-                                    color: statusColor,
+                                  isAr
+                                      ? 'بانتظار تثبيت موقع العميل'
+                                      : 'Waiting for customer location',
+                                  style: const TextStyle(
+                                    color: Color(0xFF475569),
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -1026,339 +1206,78 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ],
                             ),
                           ),
-                          const SizedBox(height: 10),
-
-                          // Order ID
-                          Text(
-                            orderNum,
-                            style: const TextStyle(
-                              color: Color(0xFF0F172A),
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-
-                          // Device & Issue
-                          Text(
-                            device,
-                            style: const TextStyle(
-                              color: Color(0xFF334155),
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          Text(
-                            service,
-                            style: const TextStyle(
-                              color: Color(0xFF64748B),
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-
-                          // Address Row
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Icon(CupertinoIcons.location,
-                                  size: 13, color: Color(0xFF94A3B8)),
-                              const SizedBox(width: 5),
-                              Expanded(
-                                child: Text(
-                                  address,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: Color(0xFF64748B),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                        Positioned(
+                          left: 10,
+                          right: 10,
+                          bottom: 9,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.94),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x1A0F172A),
+                                  blurRadius: 12,
+                                  offset: Offset(0, 4),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-
-                          // Time Row
-                          Row(
-                            children: [
-                              const Icon(CupertinoIcons.clock,
-                                  size: 13, color: Color(0xFF94A3B8)),
-                              const SizedBox(width: 5),
-                              Text(
-                                timeSlot,
-                                style: const TextStyle(
-                                  color: Color(0xFF64748B),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-
-                    // Right Column: Real Live Mini Map with Real Distance & ETA Pills
-                    Expanded(
-                      flex: 9,
-                      child: Container(
-                        height: 145,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: Stack(
-                          children: [
-                            if (!hasDestination)
-                              Positioned.fill(
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF0F172A),
-                                    borderRadius: BorderRadius.circular(18),
-                                  ),
-                                  child: Center(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(14),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(
-                                            CupertinoIcons.location_slash,
-                                            color: Color(0xFF38BDF8),
-                                            size: 28,
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            isAr
-                                                ? 'بانتظار تثبيت الموقع'
-                                                : 'Location pin pending',
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(CupertinoIcons.location_solid,
+                                    size: 14, color: Color(0xFF2563EB)),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    address,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Color(0xFF334155),
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w700,
                                     ),
                                   ),
                                 ),
-                              ),
-                            // Live Interactive/Rendered OpenStreetMap with route polyline
-                            if (hasDestination)
-                              Positioned.fill(
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(18),
-                                  child: AbsorbPointer(
-                                    child: fmap.FlutterMap(
-                                      options: fmap.MapOptions(
-                                        initialCenter: mapCenter,
-                                        initialZoom: 14,
-                                        initialCameraFit: techPoint == null
-                                            ? null
-                                            : fmap.CameraFit.coordinates(
-                                                coordinates: [
-                                                  techPoint,
-                                                  jobPoint,
-                                                ],
-                                                padding:
-                                                    const EdgeInsets.all(34),
-                                                maxZoom: 15,
-                                              ),
-                                        interactionOptions:
-                                            const fmap.InteractionOptions(
-                                          flags: fmap.InteractiveFlag.none,
-                                        ),
-                                      ),
-                                      children: [
-                                        fmap.TileLayer(
-                                          urlTemplate:
-                                              'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-                                          subdomains: const [
-                                            'a',
-                                            'b',
-                                            'c',
-                                            'd'
-                                          ],
-                                          userAgentPackageName:
-                                              'ae.kbi.kbiTechnicianApp',
-                                          maxZoom: 19,
-                                        ),
-                                        if (techPoint != null)
-                                          fmap.PolylineLayer(
-                                            polylines: [
-                                              fmap.Polyline(
-                                                points: [techPoint, jobPoint],
-                                                color: const Color(0xFF38BDF8),
-                                                strokeWidth: 4.0,
-                                                borderColor:
-                                                    const Color(0xFF0F172A),
-                                                borderStrokeWidth: 1.5,
-                                              ),
-                                            ],
-                                          ),
-                                        fmap.MarkerLayer(
-                                          markers: [
-                                            // Tech Origin Marker
-                                            if (techPoint != null)
-                                              fmap.Marker(
-                                                point: techPoint,
-                                                width: 24,
-                                                height: 24,
-                                                child: Container(
-                                                  decoration: BoxDecoration(
-                                                    color:
-                                                        const Color(0xFF38BDF8),
-                                                    shape: BoxShape.circle,
-                                                    border: Border.all(
-                                                        color: Colors.white,
-                                                        width: 3),
-                                                    boxShadow: const [
-                                                      BoxShadow(
-                                                        color: Colors.black45,
-                                                        blurRadius: 6,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            // Customer Destination Pin
-                                            fmap.Marker(
-                                              point: jobPoint,
-                                              width: 28,
-                                              height: 28,
-                                              child: const Icon(
-                                                CupertinoIcons.location_solid,
-                                                color: Color(0xFFDC2626),
-                                                size: 26,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
+                                if (techPoint != null) ...[
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '$distanceDisplay • $etaDisplay',
+                                    textDirection: TextDirection.ltr,
+                                    style: const TextStyle(
+                                      color: Color(0xFF2563EB),
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w800,
                                     ),
                                   ),
-                                ),
-                              ),
-
-                            // Floating Pill 1: Real Distance
-                            if (hasDestination && techPoint != null)
-                              Positioned(
-                                top: 8,
-                                left: isAr ? null : 8,
-                                right: isAr ? 8 : null,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 7, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.95),
-                                    borderRadius: BorderRadius.circular(10),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black
-                                            .withValues(alpha: 0.08),
-                                        blurRadius: 6,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(CupertinoIcons.location_solid,
-                                          size: 11, color: Color(0xFF2563EB)),
-                                      const SizedBox(width: 4),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            distanceDisplay,
-                                            style: const TextStyle(
-                                              color: Color(0xFF0F172A),
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w800,
-                                            ),
-                                          ),
-                                          Text(
-                                            isAr ? 'المسافة' : 'Distance',
-                                            style: const TextStyle(
-                                              color: Color(0xFF64748B),
-                                              fontSize: 8,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-
-                            // Floating Pill 2: Real ETA
-                            if (hasDestination && techPoint != null)
-                              Positioned(
-                                bottom: 8,
-                                left: isAr ? null : 8,
-                                right: isAr ? 8 : null,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 7, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.95),
-                                    borderRadius: BorderRadius.circular(10),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black
-                                            .withValues(alpha: 0.08),
-                                        blurRadius: 6,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(CupertinoIcons.time,
-                                          size: 11, color: Color(0xFF2563EB)),
-                                      const SizedBox(width: 4),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            etaDisplay,
-                                            style: const TextStyle(
-                                              color: Color(0xFF0F172A),
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w800,
-                                            ),
-                                          ),
-                                          Text(
-                                            isAr ? 'الوقت' : 'ETA',
-                                            style: const TextStyle(
-                                              color: Color(0xFF64748B),
-                                              fontSize: 8,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                          ],
+                                ],
+                              ],
+                            ),
+                          ),
                         ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 11),
+                Row(
+                  children: [
+                    const Icon(CupertinoIcons.clock,
+                        size: 14, color: Color(0xFF94A3B8)),
+                    const SizedBox(width: 6),
+                    Text(
+                      timeSlot,
+                      style: const TextStyle(
+                        color: Color(0xFF64748B),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
+                    const Spacer(),
+                    const Icon(CupertinoIcons.chevron_forward,
+                        size: 15, color: Color(0xFF94A3B8)),
                   ],
                 ),
                 const SizedBox(height: 18),
