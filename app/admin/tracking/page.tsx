@@ -70,6 +70,8 @@ interface TechMarker {
   accuracy?: number;
   ipAddress?: string;
   lastLocationTime?: string;
+  locationAgeMs?: number;
+  hasFreshLocation: boolean;
   vehicle?: string;
   rating?: number;
   jobsCompleted?: number;
@@ -115,6 +117,43 @@ function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   return Math.round(R * c * 10) / 10;
 }
 
+const LIVE_LOCATION_MAX_AGE_MS = 2 * 60 * 1000;
+
+function firestoreDate(value: unknown): Date | undefined {
+  if (!value) return undefined;
+  if (value instanceof Date) return value;
+  if (typeof value === "object" && value !== null && "toDate" in value) {
+    const toDate = (value as { toDate?: () => Date }).toDate;
+    if (typeof toDate === "function") return toDate.call(value);
+  }
+  if (typeof value === "string" || typeof value === "number") {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) return parsed;
+  }
+  return undefined;
+}
+
+function validCoordinates(lat: number, lng: number) {
+  return Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180 &&
+    !(lat === 0 && lng === 0);
+}
+
+function locationAgeLabel(locationTime: Date | undefined, now: number) {
+  if (!locationTime) return "GPS timestamp unavailable";
+  const seconds = Math.max(0, Math.round((now - locationTime.getTime()) / 1000));
+  if (seconds < 10) return "Updated just now";
+  if (seconds < 60) return `Updated ${seconds}s ago`;
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `Updated ${minutes}m ago`;
+  const hours = Math.round(minutes / 60);
+  return `Updated ${hours}h ago`;
+}
+
 export default function LiveTrackingPage() {
   const [technicians, setTechnicians] = useState<TechMarker[]>([]);
   const [bookings, setBookings] = useState<PendingBooking[]>([]);
@@ -127,6 +166,12 @@ export default function LiveTrackingPage() {
   const [emirateFilter, setEmirateFilter] = useState<"ALL" | "abu-dhabi" | "dubai" | "sharjah" | "ajman">("ALL");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ONLINE" | "AVAILABLE" | "ON_JOB" | "OFFLINE">("ALL");
   const [rightTab, setRightTab] = useState<"INSPECTOR" | "SMART_DISPATCH">("INSPECTOR");
+  const [trackingNow, setTrackingNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setTrackingNow(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   // Bookings Real-time Listener
   useEffect(() => {
@@ -170,8 +215,16 @@ export default function LiveTrackingPage() {
           .filter((d) => isTechnicianProfile(d.data()))
           .map((d) => {
             const raw = d.data();
-            const lat = Number(raw.latitude ?? raw.lat ?? raw.location?.lat ?? raw.lastKnownLatitude);
-            const lng = Number(raw.longitude ?? raw.lng ?? raw.location?.lng ?? raw.lastKnownLongitude);
+            const lat = Number(raw.location?.lat ?? raw.latitude ?? raw.lat ?? raw.lastKnownLatitude);
+            const lng = Number(raw.location?.lng ?? raw.longitude ?? raw.lng ?? raw.lastKnownLongitude);
+            const hasCoordinates = validCoordinates(lat, lng);
+            const locationTime = firestoreDate(raw.locationUpdatedAt ?? raw.location?.updatedAt);
+            const locationAgeMs = locationTime
+              ? Math.max(0, trackingNow - locationTime.getTime())
+              : undefined;
+            const hasFreshLocation = hasCoordinates &&
+              locationAgeMs !== undefined &&
+              locationAgeMs <= LIVE_LOCATION_MAX_AGE_MS;
             const cleanAvailability = String(raw.availability ?? "").toLowerCase().trim();
             const cleanStatus = String(raw.status ?? "").toUpperCase().trim();
             const isExplicitlyOffline = cleanAvailability === "offline" || cleanStatus === "OFFLINE" || raw.online === false || raw.isOnline === false;
@@ -215,8 +268,8 @@ export default function LiveTrackingPage() {
               email: raw.email || raw.userEmail || "",
               avatar: avatar || undefined,
               role: raw.role || "TECHNICIAN",
-              latitude: Number.isFinite(lat) ? lat : undefined,
-              longitude: Number.isFinite(lng) ? lng : undefined,
+              latitude: hasCoordinates ? lat : undefined,
+              longitude: hasCoordinates ? lng : undefined,
               batteryLevel: Number(raw.batteryLevel ?? (isOnline ? 100 : 0)),
               isCharging,
               networkStatus: raw.networkStatus || (isOnline ? "Active" : "Offline"),
@@ -230,9 +283,13 @@ export default function LiveTrackingPage() {
               deviceModel,
               osVersion,
               appVersion,
-              accuracy,
+              accuracy: Number.isFinite(accuracy) ? accuracy : undefined,
               ipAddress: raw.ipAddress || (isOnline ? "Connected" : "—"),
-              lastLocationTime: raw.updatedAt ? (typeof raw.updatedAt.toDate === "function" ? raw.updatedAt.toDate().toLocaleTimeString() : String(raw.updatedAt)) : new Date().toLocaleTimeString(),
+              lastLocationTime: hasCoordinates
+                ? locationAgeLabel(locationTime, trackingNow)
+                : "No GPS fix received",
+              locationAgeMs,
+              hasFreshLocation,
               vehicle,
               rating,
               jobsCompleted,
@@ -251,7 +308,7 @@ export default function LiveTrackingPage() {
     );
 
     return () => unsub();
-  }, []);
+  }, [trackingNow]);
 
   const unassignedBookings = bookings.filter(
     (b) => !b.assignedTechnician || b.status.toLowerCase() === "pending" || b.status.toLowerCase() === "unassigned"
@@ -280,7 +337,7 @@ export default function LiveTrackingPage() {
     let destLng = activeBooking?.longitude;
     let destAddress = activeBooking?.address;
 
-    if (tech.latitude !== undefined && tech.longitude !== undefined && activeBooking?.latitude !== undefined && activeBooking?.longitude !== undefined) {
+    if (tech.hasFreshLocation && tech.latitude !== undefined && tech.longitude !== undefined && activeBooking?.latitude !== undefined && activeBooking?.longitude !== undefined) {
       const distKm = getDistanceKm(tech.latitude, tech.longitude, activeBooking.latitude, activeBooking.longitude);
       // Assuming avg urban speed in UAE of 30 km/h (2 min per km + 3 min buffer)
       const minutes = Math.max(1, Math.round(distKm * 2 + 3));
@@ -719,9 +776,11 @@ export default function LiveTrackingPage() {
                           <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide ${
                             selectedEnrichedTech.status === "ON_JOB"
                               ? "bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-800"
-                              : "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800"
+                              : selectedEnrichedTech.isOnline
+                                ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800"
+                                : "bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700"
                           }`}>
-                            {selectedEnrichedTech.status === "ON_JOB" ? "BUSY" : "AVAILABLE"}
+                            {selectedEnrichedTech.status === "ON_JOB" ? "BUSY" : selectedEnrichedTech.isOnline ? "AVAILABLE" : "OFFLINE"}
                           </span>
                         </div>
 
@@ -761,7 +820,7 @@ export default function LiveTrackingPage() {
                         <div className="min-w-0 flex-1">
                           <span className="text-[10px] text-muted-foreground block font-medium">ETA to Destination</span>
                           <p className="font-bold text-foreground truncate">{selectedEnrichedTech.etaText || "Standby"}</p>
-                          <span className="text-[10px] text-muted-foreground truncate block">{selectedEnrichedTech.etaDistance || (selectedEnrichedTech.isOnline ? "GPS Connected" : "Offline")}</span>
+                          <span className="text-[10px] text-muted-foreground truncate block">{selectedEnrichedTech.etaDistance || (selectedEnrichedTech.hasFreshLocation ? "Live GPS connected" : selectedEnrichedTech.lastLocationTime)}</span>
                         </div>
                       </div>
 
@@ -814,10 +873,16 @@ export default function LiveTrackingPage() {
                   <div className="lg:col-span-5 space-y-3">
                     <div className="p-3.5 bg-muted/20 border border-border rounded-2xl space-y-2">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold text-foreground">Live Location Radar</span>
-                        <span className="text-emerald-500 font-bold flex items-center gap-1">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Live
+                        <span className="font-bold text-foreground">Technician GPS Location</span>
+                        <span className={`${selectedEnrichedTech.hasFreshLocation ? "text-emerald-500" : selectedEnrichedTech.latitude !== undefined ? "text-amber-500" : "text-slate-500"} font-bold flex items-center gap-1`}>
+                          <span className={`w-2 h-2 rounded-full ${selectedEnrichedTech.hasFreshLocation ? "bg-emerald-500 animate-pulse" : selectedEnrichedTech.latitude !== undefined ? "bg-amber-500" : "bg-slate-400"}`} />
+                          {selectedEnrichedTech.hasFreshLocation ? "Live GPS" : selectedEnrichedTech.latitude !== undefined ? "Last known" : "No GPS"}
                         </span>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-3 text-[10px] text-muted-foreground">
+                        <span>{selectedEnrichedTech.lastLocationTime}</span>
+                        <span>{selectedEnrichedTech.accuracy !== undefined ? `Accuracy ±${Math.round(selectedEnrichedTech.accuracy)}m` : "Accuracy unavailable"}</span>
                       </div>
 
                       {/* Real Interactive Mini Route Map */}

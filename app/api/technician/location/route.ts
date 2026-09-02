@@ -10,10 +10,13 @@ export async function POST(request: Request) {
     if (!technician) return NextResponse.json({ success: false, error: 'Technician profile not found' }, { status: 404 })
 
     const body = await request.json();
-    const { latitude, longitude, deviceModel, osVersion, platform } = body;
+    const { latitude, longitude, accuracy, speed, heading, deviceModel, osVersion, platform } = body;
     const lat = Number(latitude);
     const lng = Number(longitude);
-    if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+    const gpsAccuracy = Number(accuracy);
+    const gpsSpeed = Number(speed);
+    const gpsHeading = Number(heading);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180 || (lat === 0 && lng === 0)) {
       return NextResponse.json({ success: false, error: 'Invalid coordinates' }, { status: 400 });
     }
 
@@ -70,9 +73,19 @@ export async function POST(request: Request) {
         lng,
         latitude: lat,
         longitude: lng,
+        location: {
+          lat,
+          lng,
+          ...(Number.isFinite(gpsAccuracy) && gpsAccuracy >= 0 ? { accuracy: gpsAccuracy } : {}),
+          ...(Number.isFinite(gpsSpeed) && gpsSpeed >= 0 ? { speed: gpsSpeed } : {}),
+          ...(Number.isFinite(gpsHeading) && gpsHeading >= 0 ? { heading: gpsHeading } : {}),
+        },
+        locationUpdatedAt: FieldValue.serverTimestamp(),
         lastActive: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
       };
+      if (Number.isFinite(gpsAccuracy) && gpsAccuracy >= 0) firestoreData.accuracy = gpsAccuracy;
+      if (Number.isFinite(gpsSpeed) && gpsSpeed >= 0) firestoreData.speed = gpsSpeed;
+      if (Number.isFinite(gpsHeading) && gpsHeading >= 0) firestoreData.heading = gpsHeading;
       if (detectedModel) firestoreData.deviceModel = detectedModel;
       if (detectedOs) firestoreData.osVersion = detectedOs;
       if (platform) firestoreData.platform = platform;

@@ -169,17 +169,43 @@ class TechnicianService {
     }
   }
 
-  Future<void> updateLocation(
-      {required double lat, required double lng}) async {
+  Future<void> updateLocation({
+    required double lat,
+    required double lng,
+    required double accuracy,
+    required double speed,
+    required double heading,
+  }) async {
     final u = uid;
-    if (u == null) return;
+    if (u == null ||
+        !lat.isFinite ||
+        !lng.isFinite ||
+        lat < -90 ||
+        lat > 90 ||
+        lng < -180 ||
+        lng > 180 ||
+        (lat == 0 && lng == 0)) {
+      return;
+    }
+    final safeAccuracy = accuracy.isFinite && accuracy >= 0 ? accuracy : 0.0;
+    final safeSpeed = speed.isFinite && speed >= 0 ? speed : 0.0;
+    final safeHeading = heading.isFinite && heading >= 0 ? heading : 0.0;
     try {
       await FirebaseFirestore.instance.collection('technicians').doc(u).set({
         'latitude': lat,
         'longitude': lng,
-        'location': {'lat': lat, 'lng': lng},
+        'location': {
+          'lat': lat,
+          'lng': lng,
+          'accuracy': safeAccuracy,
+          'speed': safeSpeed,
+          'heading': safeHeading,
+        },
+        'accuracy': safeAccuracy,
+        'speed': safeSpeed,
+        'heading': safeHeading,
         'locationUpdatedAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
+        'lastActive': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } catch (e) {
       debugPrint('Direct location update error: $e');

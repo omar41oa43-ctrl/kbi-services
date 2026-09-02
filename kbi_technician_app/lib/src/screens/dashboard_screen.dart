@@ -318,6 +318,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 final currentStatusMode = !_isOnline
                     ? 'offline'
                     : (rawStatus == 'busy' ? 'busy' : 'available');
+                final gpsPosition =
+                    LocationTrackingService.instance.lastPosition;
+                final hasFreshGps = gpsPosition != null &&
+                    !gpsPosition.isMocked &&
+                    DateTime.now().difference(gpsPosition.timestamp).abs() <=
+                        const Duration(minutes: 2);
 
                 return SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(
@@ -337,6 +343,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               photoUrl: photoUrl,
                               currentMode: currentStatusMode,
                               batteryLevel: batteryLevel,
+                              hasFreshGps: hasFreshGps,
                               isAr: isAr,
                             ),
                             const SizedBox(height: 22),
@@ -386,6 +393,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required String photoUrl,
     required String currentMode,
     required int batteryLevel,
+    required bool hasFreshGps,
     required bool isAr,
   }) {
     final statusColor = currentMode == 'available'
@@ -579,14 +587,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 _buildTelemetryItem(
                   icon: Icons.location_on_rounded,
-                  color: const Color(0xFF16A34A),
-                  label: isAr ? 'الموقع مباشر' : 'GPS live',
+                  color: hasFreshGps
+                      ? const Color(0xFF16A34A)
+                      : const Color(0xFFF59E0B),
+                  label: hasFreshGps
+                      ? (isAr ? 'الموقع مباشر' : 'GPS live')
+                      : (isAr ? 'بانتظار GPS' : 'Waiting for GPS'),
                 ),
                 const Spacer(),
                 _buildTelemetryItem(
                   icon: CupertinoIcons.arrow_2_circlepath,
-                  color: const Color(0xFF2563EB),
-                  label: isAr ? 'مزامن الآن' : 'Synced now',
+                  color: hasFreshGps
+                      ? const Color(0xFF2563EB)
+                      : const Color(0xFF94A3B8),
+                  label: hasFreshGps
+                      ? (isAr ? 'مزامن الآن' : 'Synced now')
+                      : (isAr ? 'غير مزامن' : 'Not synced'),
                 ),
                 const Spacer(),
                 _buildTelemetryItem(

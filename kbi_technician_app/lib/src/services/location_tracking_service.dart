@@ -59,22 +59,52 @@ class LocationTrackingService {
       );
     }
 
-    // 1. Try to get last known position immediately
+    // Keep a cached fix for local UI only. Never publish it as a fresh live
+    // location because the operating system may return a very old position.
     try {
       final lastKnown = await Geolocator.getLastKnownPosition();
       if (lastKnown != null) {
         _lastPosition = lastKnown;
-        await _send(lastKnown);
       }
     } catch (_) {}
 
-    // 2. Start continuous position stream
+    final LocationSettings streamSettings;
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      streamSettings = AndroidSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: 5,
+        intervalDuration: const Duration(seconds: 10),
+        foregroundNotificationConfig: const ForegroundNotificationConfig(
+          notificationTitle: 'KBI live tracking',
+          notificationText:
+              'Your live location is shared with KBI dispatch while you are online.',
+          notificationChannelName: 'KBI live location',
+          enableWakeLock: true,
+          setOngoing: true,
+        ),
+      );
+    } else if (defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS) {
+      streamSettings = AppleSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        activityType: ActivityType.automotiveNavigation,
+        distanceFilter: 5,
+        pauseLocationUpdatesAutomatically: false,
+        showBackgroundLocationIndicator: true,
+        allowBackgroundLocationUpdates: true,
+      );
+    } else {
+      streamSettings = const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 5,
+      );
+    }
+
+    // Start continuous GPS updates. Each accepted fix carries its real device
+    // accuracy, speed, heading and capture time to the dispatch map.
     try {
       _subscription = Geolocator.getPositionStream(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          distanceFilter: 10,
-        ),
+        locationSettings: streamSettings,
       ).listen(
         (pos) {
           _lastPosition = pos;
@@ -88,25 +118,37 @@ class LocationTrackingService {
       debugPrint('Error starting position stream: $e');
     }
 
-    // 3. Attempt current position fix if we don't have lastKnown
-    if (_lastPosition == null) {
-      try {
-        final current = await Geolocator.getCurrentPosition(
-          locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.medium,
-            timeLimit: Duration(seconds: 6),
-          ),
-        );
-        _lastPosition = current;
-        await _send(current);
-      } catch (e) {
-        debugPrint('Initial current position notice: $e');
-      }
+    // Always request a fresh first fix; a cached location is not proof of the
+    // technician's current position.
+    try {
+      final current = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 15),
+        ),
+      );
+      _lastPosition = current;
+      await _send(current);
+    } catch (e) {
+      debugPrint('Initial current position notice: $e');
     }
   }
 
-  Future<void> _send(Position position) => TechnicianService.instance
-      .updateLocation(lat: position.latitude, lng: position.longitude);
+  Future<void> _send(Position position) {
+    if (!position.latitude.isFinite ||
+        !position.longitude.isFinite ||
+        position.isMocked ||
+        (position.latitude == 0 && position.longitude == 0)) {
+      return Future<void>.value();
+    }
+    return TechnicianService.instance.updateLocation(
+      lat: position.latitude,
+      lng: position.longitude,
+      accuracy: position.accuracy,
+      speed: position.speed,
+      heading: position.heading,
+    );
+  }
 
   Future<void> stop() async {
     await _subscription?.cancel();

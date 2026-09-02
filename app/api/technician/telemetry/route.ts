@@ -30,8 +30,11 @@ export async function POST(req: Request) {
     } = body;
     const lat = Number(latitude);
     const lng = Number(longitude);
+    const gpsAccuracy = Number(accuracy);
+    const gpsSpeed = Number(speed);
+    const gpsHeading = Number(heading);
 
-    if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180 || (lat === 0 && lng === 0)) {
       return NextResponse.json({ error: "Valid latitude and longitude are required" }, { status: 400 });
     }
 
@@ -71,20 +74,28 @@ export async function POST(req: Request) {
       lng,
       latitude: lat,
       longitude: lng,
+      location: {
+        lat,
+        lng,
+        ...(Number.isFinite(gpsAccuracy) && gpsAccuracy >= 0 ? { accuracy: gpsAccuracy } : {}),
+        ...(Number.isFinite(gpsSpeed) && gpsSpeed >= 0 ? { speed: gpsSpeed } : {}),
+        ...(Number.isFinite(gpsHeading) && gpsHeading >= 0 ? { heading: gpsHeading } : {}),
+      },
+      locationUpdatedAt: FieldValue.serverTimestamp(),
       lastActive: FieldValue.serverTimestamp(),
       isOnline: true,
     };
 
     if (batteryLevel !== undefined) firestoreUpdate.batteryLevel = parseInt(batteryLevel);
     if (networkStatus) firestoreUpdate.networkStatus = networkStatus;
-    if (speed !== undefined) firestoreUpdate.speed = parseFloat(speed);
-    if (heading !== undefined) firestoreUpdate.heading = parseFloat(heading);
+    if (Number.isFinite(gpsSpeed) && gpsSpeed >= 0) firestoreUpdate.speed = gpsSpeed;
+    if (Number.isFinite(gpsHeading) && gpsHeading >= 0) firestoreUpdate.heading = gpsHeading;
     if (deviceModel) firestoreUpdate.deviceModel = deviceModel;
     if (osVersion) firestoreUpdate.osVersion = osVersion;
     if (appVersion) firestoreUpdate.appVersion = appVersion;
     if (vehicle) firestoreUpdate.vehicle = vehicle;
     if (currentJob || currentOrder) firestoreUpdate.currentJob = currentJob || currentOrder;
-    if (accuracy !== undefined) firestoreUpdate.accuracy = Number(accuracy);
+    if (Number.isFinite(gpsAccuracy) && gpsAccuracy >= 0) firestoreUpdate.accuracy = gpsAccuracy;
     if (ipAddress) firestoreUpdate.ipAddress = ipAddress;
 
     await db

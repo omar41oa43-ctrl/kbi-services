@@ -25,12 +25,15 @@ interface TechMarker {
   etaText?: string;
   currentJobTitle?: string;
   currentJobArea?: string;
+  accuracy?: number;
+  lastLocationTime?: string;
+  hasFreshLocation: boolean;
 }
 
 interface InteractiveMapProps {
   technicians: TechMarker[];
   selectedTechId?: string | null;
-  onSelectTech: (tech: TechMarker) => void;
+  onSelectTech: (_tech: TechMarker) => void;
 }
 
 export default function InteractiveMap({
@@ -128,28 +131,6 @@ export default function InteractiveMap({
       const pos: L.LatLngTuple = [tech.latitude, tech.longitude];
       validPositions.push(pos);
 
-      const statusColor = tech.isOnline
-        ? (tech.status === "ON_JOB" ? "#F59E0B" : "#10B981")
-        : "#64748B";
-
-      const statusBg = tech.isOnline
-        ? (tech.status === "ON_JOB" ? "rgba(245, 158, 11, 0.15)" : "rgba(16, 185, 129, 0.15)")
-        : "rgba(100, 116, 139, 0.15)";
-
-      const pulseHtml = tech.isOnline
-        ? `<span style="
-            position: absolute;
-            top: -4px;
-            left: -4px;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: ${statusColor};
-            opacity: 0.75;
-            animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
-          "></span>`
-        : "";
-
       const isBusy = tech.status === "ON_JOB" || Boolean(tech.currentOrder);
       const isOnline = tech.isOnline;
 
@@ -181,7 +162,17 @@ export default function InteractiveMap({
         }
       }
 
-      const pulseDotHtml = isOnline
+      if (!tech.hasFreshLocation) {
+        pinBorderColor = tech.latitude !== undefined ? "#F59E0B" : "#CBD5E1";
+        subtitleColor = tech.latitude !== undefined ? "#B45309" : "#64748B";
+        subtitleText = tech.latitude !== undefined
+          ? `Last GPS · ${tech.lastLocationTime || "stale"}`
+          : "No GPS fix received";
+      } else if (tech.accuracy !== undefined) {
+        subtitleText = `${subtitleText} · GPS ±${Math.round(tech.accuracy)}m`;
+      }
+
+      const pulseDotHtml = isOnline && tech.hasFreshLocation
         ? `<span style="
             position: absolute;
             top: 2px;
@@ -281,6 +272,8 @@ export default function InteractiveMap({
       if (markersRef.current[tech.id]) {
         markersRef.current[tech.id].setLatLng(pos);
         markersRef.current[tech.id].setIcon(customIcon);
+        markersRef.current[tech.id].off("click");
+        markersRef.current[tech.id].on("click", () => onSelectTech(tech));
       } else {
         const marker = L.marker(pos, { icon: customIcon }).addTo(map);
         marker.on("click", () => onSelectTech(tech));
@@ -320,7 +313,7 @@ export default function InteractiveMap({
     }
   };
 
-  const onlineCount = technicians.filter((t) => t.isOnline).length;
+  const liveGpsCount = technicians.filter((t) => t.hasFreshLocation).length;
   const onJobCount = technicians.filter((t) => t.status === "ON_JOB").length;
   const freeCount = technicians.filter((t) => t.isOnline && t.status !== "ON_JOB").length;
   const offlineCount = technicians.filter((t) => !t.isOnline).length;
@@ -334,8 +327,8 @@ export default function InteractiveMap({
         <div className="bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-700/80 px-3.5 py-1.5 rounded-xl shadow-md flex items-center gap-2.5 text-xs backdrop-blur-sm">
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-slate-900 dark:text-white font-bold">{onlineCount}</span>
-            <span className="text-slate-500 dark:text-slate-400">Online</span>
+            <span className="text-slate-900 dark:text-white font-bold">{liveGpsCount}</span>
+            <span className="text-slate-500 dark:text-slate-400">Live GPS</span>
           </div>
           <span className="text-slate-300 dark:text-slate-700">|</span>
           <div className="flex items-center gap-1.5">
