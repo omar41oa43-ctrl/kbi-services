@@ -92,11 +92,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final cleanMode = mode.toLowerCase().trim();
     if (cleanMode == 'available' && !_canGoOnline) {
       if (mounted) {
+        final isAr = widget.locale.languageCode == 'ar';
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-                'Account awaiting approval or suspended. Cannot go online.'),
-            backgroundColor: Color(0xFFEF4444),
+              isAr
+                  ? 'الحساب بانتظار الموافقة أو موقوف، ولا يمكن الاتصال الآن.'
+                  : 'Account awaiting approval or suspended. Cannot go online.',
+            ),
+            backgroundColor: const Color(0xFFEF4444),
           ),
         );
       }
@@ -326,30 +330,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // 1. Header: Avatar + Greetings + Tech Name + Tech ID + Copy + Notification & Calendar Buttons
+                            // 1. Technician header and compact availability control
                             _buildHeader(
                               name: techName,
                               techId: techId,
                               photoUrl: photoUrl,
-                              isOnline: _isOnline,
-                              isAr: isAr,
-                            ),
-                            const SizedBox(height: 16),
-
-                            // 2. Status Banner (You're online | GPS Live | Last sync | Battery)
-                            _buildOnlineStatusBanner(
-                              isOnline: _isOnline,
+                              currentMode: currentStatusMode,
                               batteryLevel: batteryLevel,
                               isAr: isAr,
                             ),
-                            const SizedBox(height: 12),
-
-                            // 3. Status Selector (Available | Busy | Offline)
-                            _buildStatusSelector(
-                              currentMode: currentStatusMode,
-                              isAr: isAr,
-                            ),
-                            const SizedBox(height: 18),
+                            const SizedBox(height: 22),
 
                             // 4. Next Job Section Header + Card
                             _buildNextJobSection(
@@ -394,212 +384,278 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required String name,
     required String techId,
     required String photoUrl,
-    required bool isOnline,
+    required String currentMode,
+    required int batteryLevel,
     required bool isAr,
   }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        // Avatar with Online Green Dot
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              width: 58,
-              height: 58,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFFE2E8F0),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
+    final statusColor = currentMode == 'available'
+        ? const Color(0xFF16A34A)
+        : currentMode == 'busy'
+            ? const Color(0xFFF59E0B)
+            : const Color(0xFF94A3B8);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE8EEF5)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.055),
+            blurRadius: 22,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color(0xFFE2E8F0),
+                    ),
+                    child: ClipOval(
+                      child: Image(
+                        image: _safeAvatarProvider(photoUrl),
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            _buildAvatarFallback(name),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: isAr ? null : 0,
+                    left: isAr ? 0 : null,
+                    bottom: 1,
+                    child: Container(
+                      width: 15,
+                      height: 15,
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 3),
+                      ),
+                    ),
                   ),
                 ],
               ),
-              child: ClipOval(
-                child: Image(
-                  image: _safeAvatarProvider(photoUrl),
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _buildAvatarFallback(name),
-                ),
-              ),
-            ),
-            Positioned(
-              right: isAr ? null : 0,
-              left: isAr ? 0 : null,
-              bottom: 0,
-              child: Container(
-                width: 14,
-                height: 14,
-                decoration: BoxDecoration(
-                  color: isOnline
-                      ? const Color(0xFF22C55E)
-                      : const Color(0xFF94A3B8),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2.5),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(width: 14),
-
-        // Greetings + Name + Tech ID
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                isAr ? 'صباح الخير،' : 'Good morning,',
-                style: const TextStyle(
-                  color: Color(0xFF64748B),
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 1),
-              Text(
-                name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Color(0xFF0F172A),
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 2),
-              GestureDetector(
-                onTap: () {
-                  Clipboard.setData(ClipboardData(text: techId));
-                  HapticFeedback.selectionClick();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(isAr
-                          ? 'تم نسخ المعرف: $techId'
-                          : 'Copied ID: $techId'),
-                      duration: const Duration(seconds: 1),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
-                    ),
-                  );
-                },
-                child: Row(
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      techId,
+                      isAr ? 'مرحباً بعودتك' : 'Welcome back',
                       style: const TextStyle(
                         color: Color(0xFF64748B),
-                        fontSize: 12,
+                        fontSize: 12.5,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    const Icon(
-                      Icons.copy_rounded,
-                      size: 13,
-                      color: Color(0xFF94A3B8),
+                    const SizedBox(height: 2),
+                    Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF0F172A),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    GestureDetector(
+                      onTap: () {
+                        Clipboard.setData(ClipboardData(text: techId));
+                        HapticFeedback.selectionClick();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(isAr
+                                ? 'تم نسخ المعرف: $techId'
+                                : 'Copied ID: $techId'),
+                            duration: const Duration(seconds: 1),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              techId,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Color(0xFF64748B),
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(Icons.copy_rounded,
+                              size: 12, color: Color(0xFF94A3B8)),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: IconButton(
+                  tooltip: isAr ? 'الإشعارات' : 'Notifications',
+                  icon: const Icon(CupertinoIcons.bell,
+                      size: 19, color: Color(0xFF334155)),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      CupertinoPageRoute(
+                          builder: (_) => const NotificationsScreen()),
+                    );
+                  },
+                ),
+              ),
             ],
           ),
-        ),
+          const SizedBox(height: 15),
+          SizedBox(
+            width: double.infinity,
+            child: CupertinoSlidingSegmentedControl<String>(
+              groupValue: currentMode,
+              backgroundColor: const Color(0xFFF1F5F9),
+              thumbColor: Colors.white,
+              padding: const EdgeInsets.all(4),
+              children: {
+                'available': _buildStatusSegment(
+                  title: isAr ? 'متصل' : 'Online',
+                  color: const Color(0xFF16A34A),
+                  selected: currentMode == 'available',
+                ),
+                'busy': _buildStatusSegment(
+                  title: isAr ? 'مشغول' : 'Busy',
+                  color: const Color(0xFFF59E0B),
+                  selected: currentMode == 'busy',
+                ),
+                'offline': _buildStatusSegment(
+                  title: isAr ? 'خارج' : 'Offline',
+                  color: const Color(0xFF94A3B8),
+                  selected: currentMode == 'offline',
+                ),
+              },
+              onValueChanged: (value) {
+                if (value == null || value == currentMode) return;
+                HapticFeedback.selectionClick();
+                _setAvailabilityMode(value);
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                _buildTelemetryItem(
+                  icon: Icons.location_on_rounded,
+                  color: const Color(0xFF16A34A),
+                  label: isAr ? 'الموقع مباشر' : 'GPS live',
+                ),
+                const Spacer(),
+                _buildTelemetryItem(
+                  icon: CupertinoIcons.arrow_2_circlepath,
+                  color: const Color(0xFF2563EB),
+                  label: isAr ? 'مزامن الآن' : 'Synced now',
+                ),
+                const Spacer(),
+                _buildTelemetryItem(
+                  icon: CupertinoIcons.battery_75_percent,
+                  color: batteryLevel <= 20
+                      ? const Color(0xFFEF4444)
+                      : const Color(0xFF16A34A),
+                  label: '$batteryLevel%',
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-        // Action Buttons: Notification Bell with Badge & Calendar
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Bell Button
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.02),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  IconButton(
-                    icon: const Icon(CupertinoIcons.bell,
-                        size: 20, color: Color(0xFF334155)),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        CupertinoPageRoute(
-                            builder: (_) => const NotificationsScreen()),
-                      );
-                    },
-                  ),
-                  Positioned(
-                    top: 6,
-                    right: isAr ? null : 6,
-                    left: isAr ? 6 : null,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 4, vertical: 1),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF2563EB),
-                        shape: BoxShape.circle,
-                      ),
-                      constraints:
-                          const BoxConstraints(minWidth: 16, minHeight: 16),
-                      child: const Center(
-                        child: Text(
-                          '3',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+  Widget _buildStatusSegment({
+    required String title,
+    required Color color,
+    required bool selected,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 5),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: selected
+                    ? const Color(0xFF0F172A)
+                    : const Color(0xFF64748B),
+                fontSize: 12,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
               ),
             ),
-            const SizedBox(width: 8),
+          ),
+        ],
+      ),
+    );
+  }
 
-            // Calendar Button
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.02),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: IconButton(
-                icon: const Icon(CupertinoIcons.calendar,
-                    size: 20, color: Color(0xFF334155)),
-                onPressed: () => widget.onNavigate?.call(1),
-              ),
-            ),
-          ],
+  Widget _buildTelemetryItem({
+    required IconData icon,
+    required Color color,
+    required String label,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFF64748B),
+            fontSize: 10.5,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ],
     );
@@ -615,297 +671,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           color: Color(0xFF0F172A),
           fontSize: 22,
           fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-  }
-
-  // ==========================================
-  // 2. ONLINE STATUS BANNER
-  // ==========================================
-  Widget _buildOnlineStatusBanner({
-    required bool isOnline,
-    required int batteryLevel,
-    required bool isAr,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Green Radar Dot + Title & Subtitle
-          Container(
-            width: 18,
-            height: 18,
-            decoration: BoxDecoration(
-              color:
-                  (isOnline ? const Color(0xFF22C55E) : const Color(0xFF94A3B8))
-                      .withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Container(
-                width: 9,
-                height: 9,
-                decoration: BoxDecoration(
-                  color: isOnline
-                      ? const Color(0xFF22C55E)
-                      : const Color(0xFF94A3B8),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isOnline
-                      ? (isAr ? 'أنت متصل' : "You’re online")
-                      : (isAr ? 'أنت غير متصل' : "You’re offline"),
-                  style: const TextStyle(
-                    color: Color(0xFF0F172A),
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  isOnline
-                      ? (isAr
-                          ? 'متاح للطلبات الجديدة'
-                          : 'Available for new orders')
-                      : (isAr
-                          ? 'لا تستقبل طلبات جديدة'
-                          : 'Not receiving orders'),
-                  style: const TextStyle(
-                    color: Color(0xFF94A3B8),
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Telemetry Pills: GPS Live | Last sync 10s ago | Battery 88%
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // GPS
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.location_on_rounded,
-                      size: 14, color: Color(0xFF22C55E)),
-                  const SizedBox(width: 3),
-                  Text(
-                    isAr ? 'مباشر' : 'GPS Live',
-                    style: const TextStyle(
-                      color: Color(0xFF475569),
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 10),
-
-              // Last sync
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(CupertinoIcons.arrow_2_circlepath,
-                      size: 13, color: Color(0xFF3B82F6)),
-                  const SizedBox(width: 3),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isAr ? 'مزامنة' : 'Last sync',
-                        style: const TextStyle(
-                            color: Color(0xFF94A3B8), fontSize: 8.5),
-                      ),
-                      Text(
-                        isAr ? 'قبل ١٠ ثوانٍ' : '10s ago',
-                        style: const TextStyle(
-                          color: Color(0xFF475569),
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(width: 10),
-
-              // Battery
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(CupertinoIcons.battery_75_percent,
-                      size: 15, color: Color(0xFF22C55E)),
-                  const SizedBox(width: 3),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isAr ? 'البطارية' : 'Battery',
-                        style: const TextStyle(
-                            color: Color(0xFF94A3B8), fontSize: 8.5),
-                      ),
-                      Text(
-                        '$batteryLevel%',
-                        style: const TextStyle(
-                          color: Color(0xFF475569),
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ==========================================
-  // 3. STATUS SELECTOR (Available | Busy | Offline)
-  // ==========================================
-  Widget _buildStatusSelector({
-    required String currentMode,
-    required bool isAr,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildStatusCard(
-              mode: 'available',
-              title: isAr ? 'متاح' : 'Available',
-              subtitle: isAr ? 'استقبال الطلبات' : 'Take orders',
-              dotColor: const Color(0xFF22C55E),
-              isSelected: currentMode == 'available',
-              onTap: () => _setAvailabilityMode('available'),
-            ),
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: _buildStatusCard(
-              mode: 'busy',
-              title: isAr ? 'مشغول' : 'Busy',
-              subtitle: isAr ? 'في مهمة' : 'On a job',
-              dotColor: const Color(0xFFF59E0B),
-              isSelected: currentMode == 'busy',
-              onTap: () => _setAvailabilityMode('busy'),
-            ),
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: _buildStatusCard(
-              mode: 'offline',
-              title: isAr ? 'غير متصل' : 'Offline',
-              subtitle: isAr ? 'غير متاح' : 'Not available',
-              dotColor: const Color(0xFF94A3B8),
-              isSelected: currentMode == 'offline',
-              onTap: () => _setAvailabilityMode('offline'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusCard({
-    required String mode,
-    required String title,
-    required String subtitle,
-    required Color dotColor,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFF0FDF4) : Colors.transparent,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isSelected ? const Color(0xFF86EFAC) : Colors.transparent,
-            width: 1.2,
-          ),
-        ),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 7,
-                  height: 7,
-                  decoration: BoxDecoration(
-                    color: dotColor,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Color(0xFF0F172A),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Color(0xFF94A3B8),
-                fontSize: 10.5,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
         ),
       ),
     );
