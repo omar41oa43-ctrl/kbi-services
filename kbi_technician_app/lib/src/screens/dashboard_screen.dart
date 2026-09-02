@@ -66,6 +66,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   late final Stream<DocumentSnapshot<Map<String, dynamic>>> _techStream;
   late final Stream<List<DocumentSnapshot<Map<String, dynamic>>>> _jobsStream;
   bool _restoredLocationTracking = false;
+  String? _lastRemoteCommandId;
 
   @override
   void initState() {
@@ -86,6 +87,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } catch (error) {
       debugPrint('Could not restore location tracking: $error');
     }
+  }
+
+  void _handlePendingLocationRequest(Map<String, dynamic>? techData) {
+    final command = techData?['pendingRemoteCommand'];
+    if (command is! Map) return;
+    final action = command['action']?.toString();
+    final commandId = (command['cmdId'] ?? command['timestamp'])?.toString();
+    if (action != 'REQUEST_LOCATION' ||
+        commandId == null ||
+        commandId == _lastRemoteCommandId) {
+      return;
+    }
+
+    _lastRemoteCommandId = commandId;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await LocationTrackingService.instance.refreshNow(
+          requestPermission: false,
+        );
+      } catch (error) {
+        debugPrint('Admin location request notice: $error');
+      }
+    });
   }
 
   Future<void> _setAvailabilityMode(String mode) async {
@@ -189,6 +213,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           stream: _techStream,
           builder: (context, techSnap) {
             final techData = techSnap.data?.data();
+            _handlePendingLocationRequest(techData);
             final String techName = techData?['full_name'] ??
                 techData?['name'] ??
                 user?.displayName ??

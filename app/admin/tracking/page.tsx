@@ -167,6 +167,7 @@ export default function LiveTrackingPage() {
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ONLINE" | "AVAILABLE" | "ON_JOB" | "OFFLINE">("ALL");
   const [rightTab, setRightTab] = useState<"INSPECTOR" | "SMART_DISPATCH">("INSPECTOR");
   const [trackingNow, setTrackingNow] = useState(() => Date.now());
+  const [requestingLocation, setRequestingLocation] = useState(false);
 
   useEffect(() => {
     const timer = window.setInterval(() => setTrackingNow(Date.now()), 30_000);
@@ -375,7 +376,7 @@ export default function LiveTrackingPage() {
   const selectedEnrichedTech = enrichedTechnicians.find((t) => t.id === selectedTech?.id) || selectedTech;
 
   const sendRemoteAction = async (action: string, payload?: any) => {
-    if (!selectedTech) return;
+    if (!selectedTech) return false;
 
     try {
       const res = await authorizedFetch("/api/admin/remote-command", {
@@ -394,12 +395,23 @@ export default function LiveTrackingPage() {
         text: `Remote command [${action}] dispatched to ${selectedTech.name}.`,
       });
       if (action === "POPUP_ALERT" || action === "EMERGENCY_ALERT") setAlertMessage("");
+      return true;
     } catch (error: unknown) {
       setNotice({
         type: "error",
         text: error instanceof Error ? error.message : "Remote command failed.",
       });
+      return false;
     }
+  };
+
+  const requestCurrentLocation = async () => {
+    if (!selectedTech || requestingLocation) return;
+    setRequestingLocation(true);
+    await sendRemoteAction("REQUEST_LOCATION", {
+      message: "KBI Dispatch requested your current GPS location.",
+    });
+    setRequestingLocation(false);
   };
 
   const dispatchTechnicianToBooking = async (techId: string, techName: string, bookingId: string) => {
@@ -729,6 +741,84 @@ export default function LiveTrackingPage() {
           </div>
         </div>
 
+        {/* Every technician remains directly selectable, including technicians without GPS. */}
+        <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <div>
+              <h2 className="text-sm font-extrabold text-foreground">Technicians</h2>
+              <p className="text-[11px] text-muted-foreground">Select a technician to view or request their current location.</p>
+            </div>
+            <span className="text-[11px] font-bold text-muted-foreground bg-muted/50 border border-border rounded-full px-3 py-1">
+              {filteredTechnicians.length} shown
+            </span>
+          </div>
+
+          {filteredTechnicians.length > 0 ? (
+            <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-none">
+              {filteredTechnicians.map((tech) => {
+                const isSelected = selectedTech?.id === tech.id;
+                const locationState = tech.hasFreshLocation
+                  ? "Live GPS"
+                  : tech.latitude !== undefined
+                    ? "Last known"
+                    : "No GPS";
+                return (
+                  <button
+                    key={tech.id}
+                    type="button"
+                    onClick={() => setSelectedTech(tech)}
+                    aria-pressed={isSelected}
+                    title={`Open ${tech.name} — ${locationState}`}
+                    className={`group min-w-[190px] p-2.5 rounded-2xl border text-left transition-all flex items-center gap-3 ${
+                      isSelected
+                        ? "border-cyan-500 bg-cyan-500/10 ring-1 ring-cyan-500/40 shadow-sm"
+                        : "border-border bg-background hover:border-cyan-500/50 hover:bg-muted/40"
+                    }`}
+                  >
+                    <div className="relative shrink-0">
+                      {tech.avatar ? (
+                        <img
+                          src={tech.avatar}
+                          alt=""
+                          className="w-11 h-11 rounded-full object-cover border border-border"
+                        />
+                      ) : (
+                        <span className="w-11 h-11 rounded-full bg-[#0F2850] text-white flex items-center justify-center font-black text-sm">
+                          {tech.name.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                      <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-card ${
+                        tech.hasFreshLocation
+                          ? "bg-emerald-500"
+                          : tech.latitude !== undefined
+                            ? "bg-amber-500"
+                            : "bg-slate-400"
+                      }`} />
+                    </div>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-xs font-extrabold text-foreground truncate">{tech.name}</span>
+                      <span className={`mt-1 flex items-center gap-1 text-[10px] font-bold ${
+                        tech.hasFreshLocation
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : tech.latitude !== undefined
+                            ? "text-amber-600 dark:text-amber-400"
+                            : "text-muted-foreground"
+                      }`}>
+                        <MapPin className="w-3 h-3" /> {locationState}
+                      </span>
+                    </span>
+                    <ArrowRight className={`w-4 h-4 shrink-0 transition-transform ${isSelected ? "text-cyan-500 translate-x-0.5" : "text-muted-foreground group-hover:translate-x-0.5"}`} />
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-border py-5 text-center text-xs text-muted-foreground">
+              No technicians match the selected filters.
+            </div>
+          )}
+        </div>
+
         {/* Map View & Floating Bottom Technician Profile Sheet */}
         <div className="relative rounded-3xl overflow-hidden border border-border bg-card shadow-sm">
           {/* Radar Leaflet Map */}
@@ -884,6 +974,16 @@ export default function LiveTrackingPage() {
                         <span>{selectedEnrichedTech.lastLocationTime}</span>
                         <span>{selectedEnrichedTech.accuracy !== undefined ? `Accuracy ±${Math.round(selectedEnrichedTech.accuracy)}m` : "Accuracy unavailable"}</span>
                       </div>
+
+                      <button
+                        type="button"
+                        onClick={requestCurrentLocation}
+                        disabled={requestingLocation}
+                        className="w-full h-10 rounded-xl bg-cyan-500 hover:bg-cyan-400 disabled:opacity-60 disabled:cursor-wait text-slate-950 text-xs font-extrabold flex items-center justify-center gap-2 transition"
+                      >
+                        <RefreshCw className={`w-4 h-4 ${requestingLocation ? "animate-spin" : ""}`} />
+                        {requestingLocation ? "Requesting current location…" : "Request current location now"}
+                      </button>
 
                       {/* Real Interactive Mini Route Map */}
                       <MiniRouteMap

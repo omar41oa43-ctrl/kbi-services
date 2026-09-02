@@ -4,7 +4,7 @@ import { authenticateAdmin } from "@/lib/api-auth";
 
 const allowedActions = new Set([
   "NAVIGATE", "FORCE_LOGOUT", "LOCK_SCREEN", "POPUP_ALERT",
-  "EMERGENCY_ALERT", "FORCE_SYNC",
+  "EMERGENCY_ALERT", "FORCE_SYNC", "REQUEST_LOCATION",
 ]);
 
 export async function POST(req: Request) {

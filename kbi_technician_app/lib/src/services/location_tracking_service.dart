@@ -150,6 +150,42 @@ class LocationTrackingService {
     );
   }
 
+  /// Requests a new device GPS fix immediately and publishes it to dispatch.
+  /// This never falls back to the cached position, so the dashboard cannot
+  /// mistake an old coordinate for the technician's current location.
+  Future<void> refreshNow({bool requestPermission = true}) async {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      throw const LocationTrackingException(
+        LocationTrackingIssue.servicesDisabled,
+      );
+    }
+
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied && requestPermission) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.deniedForever) {
+      throw const LocationTrackingException(
+        LocationTrackingIssue.permissionPermanentlyDenied,
+      );
+    }
+    if (permission == LocationPermission.denied) {
+      throw const LocationTrackingException(
+        LocationTrackingIssue.permissionDenied,
+      );
+    }
+
+    final current = await Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        timeLimit: Duration(seconds: 20),
+      ),
+    );
+    _lastPosition = current;
+    await _send(current);
+  }
+
   Future<void> stop() async {
     await _subscription?.cancel();
     _subscription = null;

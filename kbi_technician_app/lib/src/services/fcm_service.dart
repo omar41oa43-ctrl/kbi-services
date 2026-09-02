@@ -10,10 +10,20 @@ import 'package:flutter/widgets.dart';
 
 import '../../firebase_options.dart';
 import '../config/app_config.dart';
+import 'location_tracking_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  if (message.data['action'] == 'REQUEST_LOCATION') {
+    try {
+      await LocationTrackingService.instance.refreshNow(
+        requestPermission: false,
+      );
+    } catch (error) {
+      debugPrint('Background location refresh notice: $error');
+    }
+  }
 }
 
 class FcmService {
@@ -35,13 +45,17 @@ class FcmService {
 
     _messageSubscription = FirebaseMessaging.onMessage.listen((message) {
       foregroundMessage.value = message;
+      unawaited(_handleRemoteAction(message));
     });
-    _openedSubscription = FirebaseMessaging.onMessageOpenedApp.listen((_) {
+    _openedSubscription =
+        FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      unawaited(_handleRemoteAction(message));
       onNotificationOpened?.call();
     });
 
     final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
     if (initialMessage != null) {
+      await _handleRemoteAction(initialMessage);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         onNotificationOpened?.call();
       });
@@ -67,6 +81,17 @@ class FcmService {
         debugPrint('Unable to restore notification registration: $error');
       }
     });
+  }
+
+  Future<void> _handleRemoteAction(RemoteMessage message) async {
+    if (message.data['action'] != 'REQUEST_LOCATION') return;
+    try {
+      await LocationTrackingService.instance.refreshNow(
+        requestPermission: false,
+      );
+    } catch (error) {
+      debugPrint('Requested location refresh notice: $error');
+    }
   }
 
   Future<bool> enableForCurrentUser({bool requestPermission = true}) async {
@@ -101,14 +126,16 @@ class FcmService {
       if (defaultTargetPlatform == TargetPlatform.iOS) {
         final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
         if (apnsToken == null) {
-          debugPrint('Notice: APNS token not yet available on this device/simulator. In-app notifications remain active.');
+          debugPrint(
+              'Notice: APNS token not yet available on this device/simulator. In-app notifications remain active.');
         }
       }
       token = await FirebaseMessaging.instance.getToken(
         vapidKey: kIsWeb ? AppConfig.webVapidKey : null,
       );
     } catch (tokenErr) {
-      debugPrint('FCM getToken handled notice (e.g. simulator without APNS): $tokenErr');
+      debugPrint(
+          'FCM getToken handled notice (e.g. simulator without APNS): $tokenErr');
     }
 
     if (token != null && token.isNotEmpty) {
@@ -129,10 +156,21 @@ class FcmService {
     await _tokenSubscription?.cancel();
     _tokenSubscription = null;
     try {
-      await FirebaseMessaging.instance.deleteToken();
       final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null && !kIsWeb) {
+        try {
+          await FirebaseMessaging.instance.unsubscribeFromTopic('tech_$uid');
+        } catch (topicError) {
+          debugPrint(
+              'Unable to leave technician notification topic: $topicError');
+        }
+      }
+      await FirebaseMessaging.instance.deleteToken();
       if (uid != null) {
-        await FirebaseFirestore.instance.collection('technicians').doc(uid).set({
+        await FirebaseFirestore.instance
+            .collection('technicians')
+            .doc(uid)
+            .set({
           'fcmToken': null,
           'notificationsEnabled': false,
           'updatedAt': FieldValue.serverTimestamp(),
@@ -149,8 +187,19 @@ class FcmService {
   Future<void> _saveToken(String token) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null) {
+      if (!kIsWeb) {
+        try {
+          await FirebaseMessaging.instance.subscribeToTopic('tech_$uid');
+        } catch (topicError) {
+          debugPrint(
+              'Unable to join technician notification topic: $topicError');
+        }
+      }
       try {
-        await FirebaseFirestore.instance.collection('technicians').doc(uid).set({
+        await FirebaseFirestore.instance
+            .collection('technicians')
+            .doc(uid)
+            .set({
           'fcmToken': token,
           'notificationsEnabled': true,
           'updatedAt': FieldValue.serverTimestamp(),

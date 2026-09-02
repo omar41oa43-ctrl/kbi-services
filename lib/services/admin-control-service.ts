@@ -5,7 +5,7 @@ import { getMessaging } from "firebase-admin/messaging";
 
 export interface RemoteCommandPayload {
   technicianId: string;
-  action: "NAVIGATE" | "FORCE_LOGOUT" | "LOCK_SCREEN" | "POPUP_ALERT" | "EMERGENCY_ALERT" | "FORCE_SYNC";
+  action: "NAVIGATE" | "FORCE_LOGOUT" | "LOCK_SCREEN" | "POPUP_ALERT" | "EMERGENCY_ALERT" | "FORCE_SYNC" | "REQUEST_LOCATION";
   payload?: Record<string, any>;
   adminUser?: string;
 }
@@ -47,15 +47,24 @@ export class AdminControlService {
     const db = getAdminDb();
 
     // 1. Record command in PostgreSQL
-    const dbCmd = await prisma.remoteCommand.create({
-      data: {
-        technicianId: command.technicianId,
-        action: command.action,
-        payload: command.payload || {},
-        createdBy: command.adminUser || "admin",
-        status: "PENDING",
-      },
-    });
+    let dbCmd: { id: string; [key: string]: any } = {
+      id: `firestore-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    };
+    try {
+      dbCmd = await prisma.remoteCommand.create({
+        data: {
+          technicianId: command.technicianId,
+          action: command.action,
+          payload: command.payload || {},
+          createdBy: command.adminUser || "admin",
+          status: "PENDING",
+        },
+      });
+    } catch (error) {
+      // Some approved profiles exist only in Firebase Authentication and
+      // Firestore. The command must still reach those active devices.
+      console.warn("[Remote Command] PostgreSQL audit record unavailable", error);
+    }
 
     // 2. Real-time broadcast to Firestore technician doc & remote_commands collection
     const cmdPayload = {
@@ -83,8 +92,15 @@ export class AdminControlService {
 
     // 3. Send High Priority Push Notification via FCM
     try {
+      const techSnapshot = await db
+        .collection("technicians")
+        .doc(command.technicianId)
+        .get();
+      const fcmToken = techSnapshot.data()?.fcmToken;
       await getMessaging().send({
-        topic: `tech_${command.technicianId}`,
+        ...(typeof fcmToken === "string" && fcmToken.trim()
+          ? { token: fcmToken.trim() }
+          : { topic: `tech_${command.technicianId}` }),
         notification: {
           title: command.action === "EMERGENCY_ALERT" ? "🚨 Emergency Alert" : "Admin Notice",
           body: command.payload?.message || `System Action: ${command.action}`,
