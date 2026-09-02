@@ -54,11 +54,11 @@ interface TechMarker {
   role?: string;
   latitude?: number;
   longitude?: number;
-  batteryLevel: number;
+  batteryLevel?: number;
   isCharging?: boolean;
-  networkStatus: string;
-  speed: number;
-  heading: number;
+  networkStatus?: string;
+  speed?: number;
+  heading?: number;
   status: string;
   currentOrder?: string;
   isOnline: boolean;
@@ -83,6 +83,7 @@ interface TechMarker {
   destLat?: number;
   destLng?: number;
   destAddress?: string;
+  emirateId?: string;
 }
 
 interface PendingBooking {
@@ -118,6 +119,8 @@ function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
 }
 
 const LIVE_LOCATION_MAX_AGE_MS = 2 * 60 * 1000;
+const ONLINE_PRESENCE_MAX_AGE_MS = 2 * 60 * 1000;
+const TERMINAL_BOOKING_STATUSES = new Set(["completed", "cancelled", "canceled", "rejected"]);
 
 function firestoreDate(value: unknown): Date | undefined {
   if (!value) return undefined;
@@ -154,6 +157,15 @@ function locationAgeLabel(locationTime: Date | undefined, now: number) {
   return `Updated ${hours}h ago`;
 }
 
+function optionalFiniteNumber(value: unknown, minimum?: number, maximum?: number) {
+  if (value === undefined || value === null || value === "") return undefined;
+  const numberValue = Number(value);
+  if (!Number.isFinite(numberValue)) return undefined;
+  if (minimum !== undefined && numberValue < minimum) return undefined;
+  if (maximum !== undefined && numberValue > maximum) return undefined;
+  return numberValue;
+}
+
 export default function LiveTrackingPage() {
   const [technicians, setTechnicians] = useState<TechMarker[]>([]);
   const [bookings, setBookings] = useState<PendingBooking[]>([]);
@@ -188,16 +200,21 @@ export default function LiveTrackingPage() {
           service: data.service || data.issue || "Diagnostic & Repair",
           customerName: data.customerName || data.clientName || "Customer",
           customerPhone: data.customerPhone || data.phone || "",
-          address: data.address || data.locationName || data.city || "Abu Dhabi, UAE",
-          country: data.country || "UAE",
-          emirateId: data.emirateId || (data.address?.toLowerCase().includes("dubai") ? "dubai" : data.address?.toLowerCase().includes("sharjah") ? "sharjah" : data.address?.toLowerCase().includes("ajman") ? "ajman" : "abu-dhabi"),
-          emirate: data.emirate || (data.emirateId === "dubai" ? "Dubai" : data.emirateId === "sharjah" ? "Sharjah" : data.emirateId === "ajman" ? "Ajman" : "Abu Dhabi"),
+          address: data.address || data.locationName || data.city || "Location not provided",
+          country: data.country || "",
+          emirateId: data.emirateId || "",
+          emirate: data.emirate || "",
           areaId: data.areaId || "",
           area: data.area || "",
-          latitude: Number.isFinite(lat) ? lat : undefined,
-          longitude: Number.isFinite(lng) ? lng : undefined,
-          status: data.status || "pending",
-          assignedTechnician: data.assignedTechnician || data.technicianId,
+          latitude: validCoordinates(lat, lng) ? lat : undefined,
+          longitude: validCoordinates(lat, lng) ? lng : undefined,
+          status: data.status || "unknown",
+          assignedTechnician:
+            data.assignedTechnician ||
+            data.assignedTechnicianId ||
+            data.technicianId ||
+            (Array.isArray(data.assignedTechnicians) ? data.assignedTechnicians[0] : undefined) ||
+            (Array.isArray(data.technicianIds) ? data.technicianIds[0] : undefined),
         };
       });
       setBookings(list);
@@ -220,6 +237,7 @@ export default function LiveTrackingPage() {
             const lng = Number(raw.location?.lng ?? raw.longitude ?? raw.lng ?? raw.lastKnownLongitude);
             const hasCoordinates = validCoordinates(lat, lng);
             const locationTime = firestoreDate(raw.locationUpdatedAt ?? raw.location?.updatedAt);
+            const activityTime = firestoreDate(raw.lastActive ?? raw.lastSeen ?? raw.updatedAt);
             const locationAgeMs = locationTime
               ? Math.max(0, trackingNow - locationTime.getTime())
               : undefined;
@@ -229,7 +247,10 @@ export default function LiveTrackingPage() {
             const cleanAvailability = String(raw.availability ?? "").toLowerCase().trim();
             const cleanStatus = String(raw.status ?? "").toUpperCase().trim();
             const isExplicitlyOffline = cleanAvailability === "offline" || cleanStatus === "OFFLINE" || raw.online === false || raw.isOnline === false;
-            const isOnline = !isExplicitlyOffline && (raw.online === true || raw.isOnline === true || cleanAvailability === "available" || cleanAvailability === "busy" || cleanStatus === "AVAILABLE" || cleanStatus === "BUSY");
+            const hasOnlineFlag = raw.online === true || raw.isOnline === true || cleanAvailability === "available" || cleanAvailability === "busy" || cleanStatus === "AVAILABLE" || cleanStatus === "BUSY" || cleanStatus === "ON_JOB";
+            const activityAgeMs = activityTime ? Math.max(0, trackingNow - activityTime.getTime()) : undefined;
+            const hasFreshPresence = hasFreshLocation || (activityAgeMs !== undefined && activityAgeMs <= ONLINE_PRESENCE_MAX_AGE_MS);
+            const isOnline = !isExplicitlyOffline && hasOnlineFlag && hasFreshPresence;
             
             const avatar = raw.profile_photo || raw.avatar || raw.photoURL || raw.photo || "";
             const deviceModel =
@@ -240,7 +261,7 @@ export default function LiveTrackingPage() {
               raw.hardware ||
               (raw.platform ? `${raw.platform} Device` : "") ||
               (raw.userAgent ? (raw.userAgent.includes("iPhone") ? "iPhone" : raw.userAgent.includes("Android") ? "Android" : "Mobile Client") : "") ||
-              (isOnline ? "Mobile App (Active)" : "Offline");
+              undefined;
 
             const osVersion =
               raw.osVersion ||
@@ -249,15 +270,15 @@ export default function LiveTrackingPage() {
               raw.device_os ||
               raw.platformVersion ||
               (raw.platform ? `Platform: ${raw.platform}` : "") ||
-              (isOnline ? "Connected" : "Disconnected");
+              undefined;
 
-            const appVersion = raw.appVersion || raw.deviceInfo?.appVersion || raw.version || "KBI Tech App";
-            const accuracy = raw.accuracy !== undefined ? Number(raw.accuracy) : (raw.location?.accuracy ? Number(raw.location.accuracy) : undefined);
+            const appVersion = raw.appVersion || raw.deviceInfo?.appVersion || raw.version || undefined;
+            const accuracy = optionalFiniteNumber(raw.accuracy ?? raw.location?.accuracy, 0);
             const isCharging = raw.isCharging === true || raw.batteryCharging === true;
-            const vehicle = raw.vehicle || raw.vehicleInfo || raw.car || raw.transport || "Field Vehicle";
-            const rating = Number(raw.rating ?? raw.averageRating ?? 4.8);
-            const jobsCompleted = Number(raw.jobsCompleted ?? raw.completedJobs ?? raw.totalJobs ?? 0);
-            const level = raw.level || raw.rank || (jobsCompleted > 50 ? "Gold" : jobsCompleted > 10 ? "Silver" : "Standard");
+            const vehicle = raw.vehicle || raw.vehicleInfo || raw.car || raw.transport || undefined;
+            const rating = optionalFiniteNumber(raw.rating ?? raw.averageRating, 0, 5);
+            const jobsCompleted = optionalFiniteNumber(raw.jobsCompleted ?? raw.completedJobs ?? raw.totalJobs, 0);
+            const level = raw.level || raw.rank || undefined;
 
             const activeJobId = raw.currentJob || raw.currentOrder || raw.activeBookingId;
             const isBusy = (cleanAvailability === "busy" || cleanStatus === "BUSY" || cleanStatus === "ON_JOB" || Boolean(activeJobId)) && cleanAvailability !== "available";
@@ -271,21 +292,21 @@ export default function LiveTrackingPage() {
               role: raw.role || "TECHNICIAN",
               latitude: hasCoordinates ? lat : undefined,
               longitude: hasCoordinates ? lng : undefined,
-              batteryLevel: Number(raw.batteryLevel ?? (isOnline ? 100 : 0)),
+              batteryLevel: optionalFiniteNumber(raw.batteryLevel, 0, 100),
               isCharging,
-              networkStatus: raw.networkStatus || (isOnline ? "Active" : "Offline"),
-              speed: Number(raw.speed ?? 0),
-              heading: Number(raw.heading ?? 0),
+              networkStatus: raw.networkStatus || undefined,
+              speed: optionalFiniteNumber(raw.speed ?? raw.location?.speed, 0),
+              heading: optionalFiniteNumber(raw.heading ?? raw.location?.heading, 0, 360),
               status: isOnline ? (isBusy ? "ON_JOB" : "AVAILABLE") : "OFFLINE",
               currentOrder: isBusy ? activeJobId : undefined,
               isOnline,
-              specialization: raw.specialization || raw.experience_main_skill || "Certified Technician",
-              lastActive: isOnline ? "Active Now (Realtime)" : (raw.lastSeen ? new Date(raw.lastSeen).toLocaleTimeString() : "Offline"),
+              specialization: raw.specialization || raw.experience_main_skill || undefined,
+              lastActive: activityTime ? locationAgeLabel(activityTime, trackingNow).replace("Updated", "Seen") : "Activity timestamp unavailable",
               deviceModel,
               osVersion,
               appVersion,
               accuracy: Number.isFinite(accuracy) ? accuracy : undefined,
-              ipAddress: raw.ipAddress || (isOnline ? "Connected" : "—"),
+              ipAddress: raw.ipAddress || undefined,
               lastLocationTime: hasCoordinates
                 ? locationAgeLabel(locationTime, trackingNow)
                 : "No GPS fix received",
@@ -295,6 +316,7 @@ export default function LiveTrackingPage() {
               rating,
               jobsCompleted,
               level,
+              emirateId: raw.emirateId || raw.emirate || raw.serviceEmirate || undefined,
             };
           });
         setTechnicians(liveList);
@@ -311,9 +333,10 @@ export default function LiveTrackingPage() {
     return () => unsub();
   }, [trackingNow]);
 
-  const unassignedBookings = bookings.filter(
-    (b) => !b.assignedTechnician || b.status.toLowerCase() === "pending" || b.status.toLowerCase() === "unassigned"
-  );
+  const unassignedBookings = bookings.filter((booking) => {
+    const status = booking.status.toLowerCase().trim();
+    return !booking.assignedTechnician && !TERMINAL_BOOKING_STATUSES.has(status);
+  });
 
   const onlineCount = technicians.filter((t) => t.isOnline).length;
   const availableCount = technicians.filter((t) => t.status === "AVAILABLE").length;
@@ -324,9 +347,8 @@ export default function LiveTrackingPage() {
   const enrichedTechnicians = technicians.map((tech) => {
     const activeBooking = bookings.find(
       (b) =>
-        b.assignedTechnician === tech.id ||
-        b.id === tech.currentOrder ||
-        (tech.currentOrder && b.id.startsWith(tech.currentOrder))
+        !TERMINAL_BOOKING_STATUSES.has(b.status.toLowerCase().trim()) &&
+        (b.assignedTechnician === tech.id || b.id === tech.currentOrder)
     );
 
     let etaText = tech.isOnline ? (tech.status === "ON_JOB" ? "On assigned job" : "Ready for dispatch") : "Offline";
@@ -340,9 +362,9 @@ export default function LiveTrackingPage() {
 
     if (tech.hasFreshLocation && tech.latitude !== undefined && tech.longitude !== undefined && activeBooking?.latitude !== undefined && activeBooking?.longitude !== undefined) {
       const distKm = getDistanceKm(tech.latitude, tech.longitude, activeBooking.latitude, activeBooking.longitude);
-      // Assuming avg urban speed in UAE of 30 km/h (2 min per km + 3 min buffer)
+      // This is clearly labelled as an approximation; it is not live traffic routing.
       const minutes = Math.max(1, Math.round(distKm * 2 + 3));
-      etaText = `ETA: ${minutes} min`;
+      etaText = `Approx. ETA: ${minutes} min`;
       etaDistance = `${distKm} km away`;
     }
 
@@ -370,7 +392,9 @@ export default function LiveTrackingPage() {
       (statusFilter === "AVAILABLE" && t.status === "AVAILABLE") ||
       (statusFilter === "ON_JOB" && t.status === "ON_JOB") ||
       (statusFilter === "OFFLINE" && !t.isOnline);
-    return matchesSearch && matchesStatus;
+    const normalizedEmirate = String(t.emirateId || "").toLowerCase().replace(/\s+/g, "-");
+    const matchesEmirate = emirateFilter === "ALL" || normalizedEmirate === emirateFilter;
+    return matchesSearch && matchesStatus && matchesEmirate;
   });
 
   const selectedEnrichedTech = enrichedTechnicians.find((t) => t.id === selectedTech?.id) || selectedTech;
@@ -875,13 +899,13 @@ export default function LiveTrackingPage() {
                         </div>
 
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <span className="text-amber-500 font-bold">★ {selectedEnrichedTech.rating || 4.8}</span>
-                          <span>({selectedEnrichedTech.jobsCompleted || 0} jobs)</span>
+                          <span className="text-amber-500 font-bold">★ {selectedEnrichedTech.rating !== undefined ? selectedEnrichedTech.rating.toFixed(1) : "Not rated"}</span>
+                          <span>({selectedEnrichedTech.jobsCompleted !== undefined ? `${selectedEnrichedTech.jobsCompleted} jobs` : "jobs not reported"})</span>
                         </div>
 
                         <div className="flex items-center gap-2 pt-1">
                           <span className="px-2.5 py-0.5 rounded-lg bg-muted text-[11px] font-semibold text-muted-foreground border border-border">
-                            Level: {selectedEnrichedTech.level || "Standard"}
+                            Level: {selectedEnrichedTech.level || "Not reported"}
                           </span>
                           <span className="px-2.5 py-0.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[11px] font-mono font-bold border border-blue-500/20">
                             ID: KBI-{selectedEnrichedTech.id.slice(0, 4).toUpperCase()}
@@ -920,8 +944,8 @@ export default function LiveTrackingPage() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <span className="text-[10px] text-muted-foreground block font-medium">Device & Hardware</span>
-                          <p className="font-bold text-foreground truncate">{selectedEnrichedTech.deviceModel || (selectedEnrichedTech.isOnline ? "Mobile App" : "Offline")}</p>
-                          <span className="text-[10px] text-muted-foreground truncate block">{selectedEnrichedTech.osVersion || "Connected"}</span>
+                          <p className="font-bold text-foreground truncate">{selectedEnrichedTech.deviceModel || "Device not reported"}</p>
+                          <span className="text-[10px] text-muted-foreground truncate block">{selectedEnrichedTech.osVersion || "OS not reported"}</span>
                         </div>
                       </div>
                     </div>

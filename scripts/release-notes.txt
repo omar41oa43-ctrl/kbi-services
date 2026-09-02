@@ -1,6 +1,8 @@
 KBI Technician App v1.0.0
 
-Initial internal release for field technicians.
+Verified device-GPS source and capture time for every live location update.
+Improved live presence accuracy in the admin dispatch dashboard.
+Clearly separates live GPS from the last known technician location.
 
 Included Features:
 - Technician authentication with biometric Face ID / Touch ID and remember-me support.

@@ -12,11 +12,11 @@ interface TechMarker {
   role?: string;
   latitude?: number;
   longitude?: number;
-  batteryLevel: number;
+  batteryLevel?: number;
   isCharging?: boolean;
-  networkStatus: string;
-  speed: number;
-  heading: number;
+  networkStatus?: string;
+  speed?: number;
+  heading?: number;
   status: string;
   currentOrder?: string;
   isOnline: boolean;

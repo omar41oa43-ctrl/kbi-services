@@ -221,12 +221,16 @@ class TechnicianService {
           'accuracy': safeAccuracy,
           'speed': safeSpeed,
           'heading': safeHeading,
+          'source': 'device_gps',
+          'capturedAt': FieldValue.serverTimestamp(),
         },
         'accuracy': safeAccuracy,
         'speed': safeSpeed,
         'heading': safeHeading,
         'locationUpdatedAt': FieldValue.serverTimestamp(),
         'lastActive': FieldValue.serverTimestamp(),
+        'locationSource': 'device_gps',
+        'isTrackingActive': true,
       }, SetOptions(merge: true));
     } catch (e) {
       debugPrint('Direct location update error: $e');
