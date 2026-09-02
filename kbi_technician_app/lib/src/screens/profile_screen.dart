@@ -6,6 +6,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../config/app_config.dart';
 import '../services/fcm_service.dart';
@@ -820,10 +821,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             final double rating = (techData?['rating'] is num)
                 ? (techData?['rating'] as num).toDouble()
                 : 0;
-            final String experience = (techData?['experienceYears'] ??
-                    techData?['experience'] ??
-                    'Not provided')
-                .toString();
             final rawAvailability = techData?['availability'];
             final String availability = rawAvailability is String
                 ? rawAvailability
@@ -986,7 +983,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             _buildPerformanceStats(
                               rating,
                               completedJobs,
-                              experience,
                               acceptanceRate,
                               responseTime,
                               isAr,
@@ -1336,9 +1332,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               icon: const Icon(Icons.copy_rounded,
                   size: 16, color: Color(0xFF0284C7)),
               onPressed: () {
+                Clipboard.setData(ClipboardData(text: value));
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Copied $value to clipboard'),
+                    content: Text(
+                      Localizations.localeOf(context).languageCode == 'ar'
+                          ? 'تم النسخ إلى الحافظة'
+                          : 'Copied to clipboard',
+                    ),
                     duration: const Duration(seconds: 1),
                   ),
                 );
@@ -1353,7 +1354,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildPerformanceStats(
     double rating,
     int completedJobs,
-    String experience,
     String acceptance,
     String response,
     bool isAr,
@@ -1367,8 +1367,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             _buildStatCard(
               isAr ? 'تقييم الأداء' : 'Rating Score',
-              rating > 0 ? rating.toStringAsFixed(2) : '5.00',
-              isAr ? '★ تقييم العملاء' : '★ Customer Review',
+              rating > 0 ? rating.toStringAsFixed(2) : '—',
+              rating > 0
+                  ? (isAr ? '★ تقييم العملاء' : '★ Customer Review')
+                  : (isAr ? 'لا توجد تقييمات بعد' : 'No reviews yet'),
               Icons.star_rounded,
               const Color(0xFFF59E0B),
               cardWidth,
@@ -1381,22 +1383,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const Color(0xFF10B981),
               cardWidth,
             ),
-            _buildStatCard(
-              isAr ? 'نسبة القبول' : 'Acceptance',
-              acceptance,
-              isAr ? 'مطابقة الطلبات' : 'Dispatch Match',
-              Icons.thumb_up_alt_outlined,
-              const Color(0xFF0284C7),
-              cardWidth,
-            ),
-            _buildStatCard(
-              isAr ? 'متوسط الاستجابة' : 'Avg Response',
-              response,
-              isAr ? 'سرعة الوصول' : 'Arrival Speed',
-              Icons.timer_outlined,
-              const Color(0xFF6366F1),
-              cardWidth,
-            ),
+            if (acceptance != '—')
+              _buildStatCard(
+                isAr ? 'نسبة القبول' : 'Acceptance',
+                acceptance,
+                isAr ? 'طلبات تم قبولها' : 'Accepted offers',
+                Icons.thumb_up_alt_outlined,
+                const Color(0xFF0284C7),
+                cardWidth,
+              ),
+            if (response != '—')
+              _buildStatCard(
+                isAr ? 'متوسط الاستجابة' : 'Avg Response',
+                response,
+                isAr ? 'من التعيين حتى القبول' : 'Assignment to acceptance',
+                Icons.timer_outlined,
+                const Color(0xFF6366F1),
+                cardWidth,
+              ),
           ],
         );
       },

@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
@@ -25,11 +28,25 @@ class _KbiTechnicianAppState extends State<KbiTechnicianApp> {
   Locale _locale = const Locale('en');
   bool _launchWelcomeSeen = true;
   bool _authShowLogin = true;
+  late final Stream<User?> _authStateStream;
 
   void _setLocale(Locale locale) {
     setState(() {
       _locale = locale;
     });
+    unawaited(_saveLocale(locale));
+  }
+
+  Future<void> _saveLocale(Locale locale) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString('app_language', locale.languageCode);
+  }
+
+  Future<void> _restoreLocale() async {
+    final preferences = await SharedPreferences.getInstance();
+    final languageCode = preferences.getString('app_language');
+    if (!mounted || (languageCode != 'ar' && languageCode != 'en')) return;
+    setState(() => _locale = Locale(languageCode!));
   }
 
   void _rememberAuthView(bool showLogin) {
@@ -39,6 +56,8 @@ class _KbiTechnicianAppState extends State<KbiTechnicianApp> {
   @override
   void initState() {
     super.initState();
+    _authStateStream = FirebaseAuth.instance.authStateChanges();
+    unawaited(_restoreLocale());
     FcmService.instance.onNotificationOpened = _openNotifications;
     FcmService.instance.foregroundMessage.addListener(_showForegroundMessage);
     FcmService.instance.init();
@@ -103,7 +122,7 @@ class _KbiTechnicianAppState extends State<KbiTechnicianApp> {
       ],
       builder: (context, child) => LiquidGlassBackdrop(child: child),
       home: StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
+        stream: _authStateStream,
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
             return const Scaffold(
@@ -136,7 +155,7 @@ class _KbiTechnicianAppState extends State<KbiTechnicianApp> {
   }
 }
 
-class _TechnicianGate extends StatelessWidget {
+class _TechnicianGate extends StatefulWidget {
   final String uid;
   final Locale locale;
   final void Function(Locale) onLocaleChanged;
@@ -148,17 +167,42 @@ class _TechnicianGate extends StatelessWidget {
   });
 
   @override
+  State<_TechnicianGate> createState() => _TechnicianGateState();
+}
+
+class _TechnicianGateState extends State<_TechnicianGate> {
+  late Stream<DocumentSnapshot<Map<String, dynamic>>> _technicianStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _technicianStream = FirebaseFirestore.instance
+        .collection('technicians')
+        .doc(widget.uid)
+        .snapshots();
+  }
+
+  @override
+  void didUpdateWidget(covariant _TechnicianGate oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.uid != widget.uid) {
+      _technicianStream = FirebaseFirestore.instance
+          .collection('technicians')
+          .doc(widget.uid)
+          .snapshots();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final techRef =
-        FirebaseFirestore.instance.collection('technicians').doc(uid);
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      stream: techRef.snapshots(),
+      stream: _technicianStream,
       builder: (context, snap) {
         if (snap.hasError) {
           // If profile doc is not yet provisioned in Firestore or awaiting initial approval
           return RequestReceivedScreen(
-            onLocaleChanged: onLocaleChanged,
-            locale: locale,
+            onLocaleChanged: widget.onLocaleChanged,
+            locale: widget.locale,
           );
         }
         if (snap.connectionState == ConnectionState.waiting && !snap.hasData) {
@@ -186,12 +230,15 @@ class _TechnicianGate extends StatelessWidget {
 
         if (data == null || !isApproved) {
           return RequestReceivedScreen(
-            onLocaleChanged: onLocaleChanged,
-            locale: locale,
+            onLocaleChanged: widget.onLocaleChanged,
+            locale: widget.locale,
           );
         }
 
-        return HomeScreen(onLocaleChanged: onLocaleChanged, locale: locale);
+        return HomeScreen(
+          onLocaleChanged: widget.onLocaleChanged,
+          locale: widget.locale,
+        );
       },
     );
   }

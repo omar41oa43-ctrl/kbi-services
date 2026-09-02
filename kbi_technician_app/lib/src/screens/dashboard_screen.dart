@@ -173,8 +173,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   String _extractGeneralArea(String? fullAddress) {
-    if (fullAddress == null || fullAddress.trim().isEmpty)
+    if (fullAddress == null || fullAddress.trim().isEmpty) {
       return 'UAE Service Area';
+    }
     final parts = fullAddress.split(',');
     if (parts.length >= 2) {
       return '${parts[0].trim()}, ${parts[1].trim()}';
@@ -1362,109 +1363,122 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 const SizedBox(height: 18),
 
-                // Bottom Action Buttons: Call | WhatsApp | Navigate
-                Row(
-                  children: [
-                    // Call Button
-                    Expanded(
-                      flex: 7,
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
-                          final uri = Uri.parse('tel:$phone');
-                          if (await canLaunchUrl(uri)) launchUrl(uri);
-                        },
-                        icon: const Icon(CupertinoIcons.phone,
-                            size: 15, color: Color(0xFF2563EB)),
-                        label: Text(
-                          isAr ? 'اتصال' : 'Call',
-                          style: const TextStyle(
-                            color: Color(0xFF0F172A),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
+                // Show only the actions that make sense for this job stage.
+                if (isNewAssignment)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => widget.onNavigate?.call(1),
+                          icon: const Icon(CupertinoIcons.doc_text, size: 16),
+                          label: Text(isAr ? 'الطلبات' : 'Orders'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 12),
+                            textStyle: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          side: const BorderSide(color: Color(0xFFE2E8F0)),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14)),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        flex: 2,
+                        child: FilledButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              CupertinoPageRoute(
+                                builder: (_) => JobDetailsScreen(
+                                  job: ServiceRequestModel.fromDoc(
+                                    activeJobDoc,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(CupertinoIcons.checkmark_alt,
+                              size: 17),
+                          label:
+                              Text(isAr ? 'مراجعة وقبول' : 'Review & accept'),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-
-                    // WhatsApp Button
-                    Expanded(
-                      flex: 9,
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
-                          final cleanPhone =
-                              phone.replaceAll(RegExp(r'[^0-9]'), '');
-                          final uri = Uri.parse('https://wa.me/$cleanPhone');
-                          if (await canLaunchUrl(uri))
-                            launchUrl(uri,
-                                mode: LaunchMode.externalApplication);
-                        },
-                        icon: const Icon(Icons.chat_bubble_outline_rounded,
-                            size: 15, color: Color(0xFF22C55E)),
-                        label: Text(
-                          isAr ? 'واتساب' : 'WhatsApp',
-                          style: const TextStyle(
-                            color: Color(0xFF0F172A),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
+                    ],
+                  )
+                else
+                  Column(
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: () {
+                            final lat = data['latitude'] ??
+                                (data['location'] is Map
+                                    ? (data['location'] as Map)['lat']
+                                    : null);
+                            final lng = data['longitude'] ??
+                                (data['location'] is Map
+                                    ? (data['location'] as Map)['lng']
+                                    : null);
+                            _openNavigation(
+                              lat != null ? (lat as num).toDouble() : null,
+                              lng != null ? (lng as num).toDouble() : null,
+                              address,
+                            );
+                          },
+                          icon: const Icon(CupertinoIcons.paperplane_fill,
+                              size: 16),
+                          label:
+                              Text(isAr ? 'ابدأ الملاحة' : 'Start navigation'),
+                        ),
+                      ),
+                      const SizedBox(height: 9),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: phone.trim().isEmpty
+                                  ? null
+                                  : () async {
+                                      final uri = Uri.parse('tel:$phone');
+                                      if (await canLaunchUrl(uri)) {
+                                        await launchUrl(uri);
+                                      }
+                                    },
+                              icon: const Icon(CupertinoIcons.phone, size: 16),
+                              label: Text(isAr ? 'اتصال' : 'Call'),
+                            ),
                           ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          side: const BorderSide(color: Color(0xFFE2E8F0)),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14)),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-
-                    // Navigate Button (Solid Royal Blue)
-                    Expanded(
-                      flex: 9,
-                      child: FilledButton.icon(
-                        onPressed: () {
-                          final lat = data['latitude'] ??
-                              (data['location'] is Map
-                                  ? (data['location'] as Map)['lat']
-                                  : null);
-                          final lng = data['longitude'] ??
-                              (data['location'] is Map
-                                  ? (data['location'] as Map)['lng']
-                                  : null);
-                          _openNavigation(
-                            lat != null ? (lat as num).toDouble() : null,
-                            lng != null ? (lng as num).toDouble() : null,
-                            address,
-                          );
-                        },
-                        icon: const Icon(CupertinoIcons.paperplane_fill,
-                            size: 14, color: Colors.white),
-                        label: Text(
-                          isAr ? 'توجيه' : 'Navigate',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 13,
-                            color: Colors.white,
+                          const SizedBox(width: 9),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: phone.trim().isEmpty
+                                  ? null
+                                  : () async {
+                                      final cleanPhone = phone.replaceAll(
+                                          RegExp(r'[^0-9]'), '');
+                                      final uri = Uri.parse(
+                                          'https://wa.me/$cleanPhone');
+                                      if (await canLaunchUrl(uri)) {
+                                        await launchUrl(
+                                          uri,
+                                          mode: LaunchMode.externalApplication,
+                                        );
+                                      }
+                                    },
+                              icon: const Icon(
+                                Icons.chat_bubble_outline_rounded,
+                                size: 16,
+                                color: Color(0xFF16A34A),
+                              ),
+                              label: Text(isAr ? 'واتساب' : 'WhatsApp'),
+                            ),
                           ),
-                        ),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF2563EB),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14)),
-                          elevation: 0,
-                        ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
               ],
             ),
           ),
@@ -1654,11 +1668,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            isAr ? '+12% اليوم' : '+12% Today',
+                            completedJobs > 0
+                                ? (isAr
+                                    ? 'من $completedJobs طلب مكتمل'
+                                    : 'From $completedJobs completed')
+                                : (isAr
+                                    ? 'لا توجد أرباح مسجلة'
+                                    : 'No earnings recorded'),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Color(0xFF22C55E),
+                            style: TextStyle(
+                              color: completedJobs > 0
+                                  ? const Color(0xFF22C55E)
+                                  : const Color(0xFF94A3B8),
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                             ),

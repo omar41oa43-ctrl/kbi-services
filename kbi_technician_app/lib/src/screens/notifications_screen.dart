@@ -295,13 +295,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         final d = filtered[index];
         final data = d.data();
         final isAr = _isArabic;
-        final title =
-            (data['title'] ?? (isAr ? 'إشعار' : 'Notification')).toString();
-        final body = (data['body'] ?? '').toString();
+        final title = _localizedNotificationTitle(
+          (data['title'] ?? (isAr ? 'إشعار' : 'Notification')).toString(),
+          isAr,
+        );
+        final body = _localizedNotificationBody(
+          (data['body'] ?? '').toString(),
+          isAr,
+        );
         final isRead = data['isRead'] == true;
         final timestamp = data['createdAt'] as Timestamp?;
         final String dateStr = timestamp != null
-            ? DateFormat('d MMM yyyy, HH:mm')
+            ? DateFormat(isAr ? 'yyyy/MM/dd، HH:mm' : 'd MMM yyyy, HH:mm')
                 .format(timestamp.toDate().toLocal())
             : (isAr ? 'الوقت غير متوفر' : 'Time not provided');
 
@@ -309,6 +314,35 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             title, body, isRead, dateStr, d.reference);
       },
     );
+  }
+
+  String _localizedNotificationTitle(String title, bool isAr) {
+    if (!isAr) return title;
+    return title
+        .replaceFirst(RegExp(r'^New Dispatch:\s*', caseSensitive: false),
+            'مهمة جديدة: ')
+        .replaceFirst(RegExp(r'^Job Update:\s*', caseSensitive: false),
+            'تحديث الطلب: ')
+        .replaceFirst(RegExp(r'^Payment Update:\s*', caseSensitive: false),
+            'تحديث الدفعة: ');
+  }
+
+  String _localizedNotificationBody(String body, bool isAr) {
+    if (!isAr || body.isEmpty) return body;
+    final assignment = RegExp(
+      r'^You have been assigned to (.+?) at (.+?)\.?$',
+      caseSensitive: false,
+    ).firstMatch(body.trim());
+    if (assignment != null) {
+      final service = assignment.group(1)!
+          .replaceAll('Customer', 'العميل')
+          .replaceAll('Device Repair', 'صيانة جهاز');
+      return 'تم تعيينك لخدمة $service في ${assignment.group(2)}.';
+    }
+    return body
+        .replaceAll('Job accepted', 'تم قبول الطلب')
+        .replaceAll('Job completed', 'تم إكمال الطلب')
+        .replaceAll('Payment received', 'تم استلام الدفعة');
   }
 
   Widget _buildNotificationItem(String title, String body, bool isRead,

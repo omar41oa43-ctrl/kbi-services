@@ -940,30 +940,33 @@ class _JobsScreenState extends State<JobsScreen> {
 
   // --- ACCEPT CONFIRMATION DIALOG ---
   void _showAcceptConfirmationDialog(String docId) {
+    final isAr = widget.locale.languageCode == 'ar';
     showDialog(
       context: context,
       builder: (c) => AlertDialog(
         backgroundColor: Colors.white,
         shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(24))),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.check_circle_rounded, color: Color(0xFF00C9A7)),
-            SizedBox(width: 8),
-            Text('Accept Job?',
-                style: TextStyle(
+            const Icon(Icons.check_circle_rounded, color: Color(0xFF00C9A7)),
+            const SizedBox(width: 8),
+            Text(isAr ? 'قبول الطلب؟' : 'Accept Job?',
+                style: const TextStyle(
                     color: Color(0xFF111827), fontWeight: FontWeight.bold)),
           ],
         ),
-        content: const Text(
-          'Do you want to accept this assigned service order? Once accepted, you will start the field service dispatch flow.',
-          style: TextStyle(color: Color(0xFF374151), fontSize: 13.5),
+        content: Text(
+          isAr
+              ? 'هل تريد قبول طلب الخدمة؟ بعد القبول ستظهر بيانات العميل ويمكنك بدء رحلة العمل.'
+              : 'Accept this service order? Customer details and the field workflow will unlock after acceptance.',
+          style: const TextStyle(color: Color(0xFF374151), fontSize: 13.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(c),
-            child: const Text('Cancel',
-                style: TextStyle(color: Color(0xFF6B7280))),
+            child: Text(isAr ? 'إلغاء' : 'Cancel',
+                style: const TextStyle(color: Color(0xFF6B7280))),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -978,15 +981,17 @@ class _JobsScreenState extends State<JobsScreen> {
                   docId, 'Accepted', 'Job accepted by technician.');
               if (mounted && updated) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Job accepted successfully.'),
-                    backgroundColor: Color(0xFF00897B),
+                  SnackBar(
+                    content: Text(isAr
+                        ? 'تم قبول الطلب بنجاح.'
+                        : 'Job accepted successfully.'),
+                    backgroundColor: const Color(0xFF00897B),
                   ),
                 );
               }
             },
-            child: const Text('Confirm Accept',
-                style: TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(isAr ? 'تأكيد القبول' : 'Confirm accept',
+                style: const TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -995,6 +1000,7 @@ class _JobsScreenState extends State<JobsScreen> {
 
   // --- REJECT REASON BOTTOM SHEET ---
   void _showRejectReasonBottomSheet(String docId) {
+    final isAr = widget.locale.languageCode == 'ar';
     String selectedReason = 'Currently Busy';
     final otherReasonController = TextEditingController();
 
@@ -1008,6 +1014,16 @@ class _JobsScreenState extends State<JobsScreen> {
       'Already Working',
       'Other',
     ];
+    final arabicReasons = <String, String>{
+      'Currently Busy': 'مشغول حاليًا',
+      'Too Far Away': 'الموقع بعيد جدًا',
+      'Outside Working Hours': 'خارج ساعات العمل',
+      'No Required Parts': 'قطع الغيار غير متوفرة',
+      'Vehicle Problem': 'مشكلة في المركبة',
+      'Personal Emergency': 'ظرف شخصي طارئ',
+      'Already Working': 'أعمل على طلب آخر',
+      'Other': 'سبب آخر',
+    };
 
     showModalBottomSheet(
       context: context,
@@ -1023,15 +1039,18 @@ class _JobsScreenState extends State<JobsScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Decline Order',
-                  style: TextStyle(
+              Text(isAr ? 'رفض الطلب' : 'Decline order',
+                  style: const TextStyle(
                       color: Color(0xFFDC2626),
                       fontSize: 18,
                       fontWeight: FontWeight.bold)),
               const SizedBox(height: 6),
-              const Text(
-                  'Please choose a reason for declining this assignment:',
-                  style: TextStyle(color: Color(0xFF4B5563), fontSize: 13)),
+              Text(
+                  isAr
+                      ? 'يرجى اختيار سبب رفض هذا الطلب:'
+                      : 'Please choose a reason for declining this assignment:',
+                  style:
+                      const TextStyle(color: Color(0xFF4B5563), fontSize: 13)),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 initialValue: selectedReason,
@@ -1045,7 +1064,8 @@ class _JobsScreenState extends State<JobsScreen> {
                 style:
                     const TextStyle(color: Color(0xFF111827), fontSize: 13.5),
                 items: reasons
-                    .map((r) => DropdownMenuItem(value: r, child: Text(r)))
+                    .map((r) => DropdownMenuItem(
+                        value: r, child: Text(isAr ? arabicReasons[r]! : r)))
                     .toList(),
                 onChanged: (v) => setSheetState(() => selectedReason = v!),
               ),
@@ -1055,12 +1075,12 @@ class _JobsScreenState extends State<JobsScreen> {
                   controller: otherReasonController,
                   style:
                       const TextStyle(color: Color(0xFF111827), fontSize: 13.5),
-                  decoration: const InputDecoration(
-                    hintText: 'Type your custom reason...',
-                    hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
+                  decoration: InputDecoration(
+                    hintText: isAr ? 'اكتب السبب…' : 'Type your reason…',
+                    hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
                     filled: true,
-                    fillColor: Color(0xFFF9FAFB),
-                    border: OutlineInputBorder(
+                    fillColor: const Color(0xFFF9FAFB),
+                    border: const OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(16))),
                   ),
                 ),
@@ -1081,8 +1101,8 @@ class _JobsScreenState extends State<JobsScreen> {
                   Navigator.pop(c);
                   await _rejectJob(docId, finalReason);
                 },
-                child: const Text('Submit Decline',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                child: Text(isAr ? 'تأكيد الرفض' : 'Confirm decline',
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -1093,6 +1113,7 @@ class _JobsScreenState extends State<JobsScreen> {
 
   // --- COMPLETE JOB BOTTOM SHEET ---
   void _showCompleteJobBottomSheet(String docId, Map<String, dynamic> data) {
+    final isAr = widget.locale.languageCode == 'ar';
     final priceController =
         TextEditingController(text: data['estimatedPrice']?.toString() ?? '');
     final notesController = TextEditingController();
@@ -1115,8 +1136,8 @@ class _JobsScreenState extends State<JobsScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('Complete Service Job',
-                    style: TextStyle(
+                Text(isAr ? 'إكمال طلب الخدمة' : 'Complete service job',
+                    style: const TextStyle(
                         color: Color(0xFF047857),
                         fontSize: 18,
                         fontWeight: FontWeight.bold)),
@@ -1125,12 +1146,13 @@ class _JobsScreenState extends State<JobsScreen> {
                   controller: priceController,
                   keyboardType: TextInputType.number,
                   style: const TextStyle(color: Color(0xFF111827)),
-                  decoration: const InputDecoration(
-                    labelText: 'Final Price (AED)',
-                    labelStyle: TextStyle(color: Color(0xFF4B5563)),
+                  decoration: InputDecoration(
+                    labelText:
+                        isAr ? 'السعر النهائي (درهم)' : 'Final price (AED)',
+                    labelStyle: const TextStyle(color: Color(0xFF4B5563)),
                     filled: true,
-                    fillColor: Color(0xFFF9FAFB),
-                    border: OutlineInputBorder(
+                    fillColor: const Color(0xFFF9FAFB),
+                    border: const OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(16))),
                   ),
                 ),
@@ -1138,13 +1160,12 @@ class _JobsScreenState extends State<JobsScreen> {
                 TextField(
                   controller: partsController,
                   style: const TextStyle(color: Color(0xFF111827)),
-                  decoration: const InputDecoration(
-                    labelText:
-                        'Parts Used (e.g. Screen Assembly, Thermal Paste)',
-                    labelStyle: TextStyle(color: Color(0xFF4B5563)),
+                  decoration: InputDecoration(
+                    labelText: isAr ? 'قطع الغيار المستخدمة' : 'Parts used',
+                    labelStyle: const TextStyle(color: Color(0xFF4B5563)),
                     filled: true,
-                    fillColor: Color(0xFFF9FAFB),
-                    border: OutlineInputBorder(
+                    fillColor: const Color(0xFFF9FAFB),
+                    border: const OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(16))),
                   ),
                 ),
@@ -1153,12 +1174,13 @@ class _JobsScreenState extends State<JobsScreen> {
                   controller: notesController,
                   maxLines: 3,
                   style: const TextStyle(color: Color(0xFF111827)),
-                  decoration: const InputDecoration(
-                    labelText: 'Completion Work Notes',
-                    labelStyle: TextStyle(color: Color(0xFF4B5563)),
+                  decoration: InputDecoration(
+                    labelText:
+                        isAr ? 'ملاحظات إنجاز العمل' : 'Completion notes',
+                    labelStyle: const TextStyle(color: Color(0xFF4B5563)),
                     filled: true,
-                    fillColor: Color(0xFFF9FAFB),
-                    border: OutlineInputBorder(
+                    fillColor: const Color(0xFFF9FAFB),
+                    border: const OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(16))),
                   ),
                 ),
@@ -1166,19 +1188,24 @@ class _JobsScreenState extends State<JobsScreen> {
                 DropdownButtonFormField<String>(
                   initialValue: paymentMethod,
                   dropdownColor: Colors.white,
-                  decoration: const InputDecoration(
-                    labelText: 'Payment Method',
+                  decoration: InputDecoration(
+                    labelText: isAr ? 'طريقة الدفع' : 'Payment method',
                     filled: true,
-                    fillColor: Color(0xFFF9FAFB),
-                    border: OutlineInputBorder(
+                    fillColor: const Color(0xFFF9FAFB),
+                    border: const OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(16))),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 'Cash', child: Text('Cash')),
-                    DropdownMenuItem(value: 'Card', child: Text('Card')),
+                  items: [
                     DropdownMenuItem(
-                        value: 'Bank Transfer', child: Text('Bank Transfer')),
-                    DropdownMenuItem(value: 'Online', child: Text('Online')),
+                        value: 'Cash', child: Text(isAr ? 'نقدًا' : 'Cash')),
+                    DropdownMenuItem(
+                        value: 'Card', child: Text(isAr ? 'بطاقة' : 'Card')),
+                    DropdownMenuItem(
+                        value: 'Bank Transfer',
+                        child: Text(isAr ? 'تحويل بنكي' : 'Bank transfer')),
+                    DropdownMenuItem(
+                        value: 'Online',
+                        child: Text(isAr ? 'دفع إلكتروني' : 'Online')),
                   ],
                   onChanged: (value) {
                     if (value != null) {
@@ -1202,8 +1229,9 @@ class _JobsScreenState extends State<JobsScreen> {
                           if (price == null ||
                               price < 0 ||
                               workNotes.length < 3) {
-                            _showMessage(
-                                'Enter a valid final price and completion notes.');
+                            _showMessage(isAr
+                                ? 'أدخل سعرًا نهائيًا صحيحًا وملاحظات الإنجاز.'
+                                : 'Enter a valid final price and completion notes.');
                             return;
                           }
                           setSheetState(() => submitting = true);
@@ -1225,9 +1253,13 @@ class _JobsScreenState extends State<JobsScreen> {
                             );
                             _pendingPhotos.remove(docId);
                             if (c.mounted) Navigator.pop(c);
-                            _showMessage('Job completed successfully.');
+                            _showMessage(isAr
+                                ? 'تم إكمال الطلب بنجاح.'
+                                : 'Job completed successfully.');
                           } catch (error) {
-                            _showMessage('Unable to complete job: $error');
+                            _showMessage(isAr
+                                ? 'تعذر إكمال الطلب: $error'
+                                : 'Unable to complete job: $error');
                             if (c.mounted) {
                               setSheetState(() => submitting = false);
                             }
@@ -1239,7 +1271,7 @@ class _JobsScreenState extends State<JobsScreen> {
                           height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Submit Completion'),
+                      : Text(isAr ? 'تأكيد الإكمال' : 'Complete job'),
                 ),
               ],
             ),
@@ -1724,6 +1756,7 @@ class _JobsScreenState extends State<JobsScreen> {
 
   Widget _buildDetailsActions(BuildContext sheetContext, String docId,
       Map<String, dynamic> data, ServiceRequestModel job) {
+    final isAr = widget.locale.languageCode == 'ar';
     final status = normalizeJobStatus(data['status']);
     final phone =
         (data['clientPhone'] ?? data['customerPhone'] ?? '').toString().trim();
@@ -1752,9 +1785,10 @@ class _JobsScreenState extends State<JobsScreen> {
                 Navigator.pop(sheetContext);
                 _showRejectReasonBottomSheet(docId);
               },
-              child: const Text(
-                'Decline',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+              child: Text(
+                isAr ? 'رفض' : 'Decline',
+                style:
+                    const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
               ),
             ),
           ),
@@ -1777,9 +1811,10 @@ class _JobsScreenState extends State<JobsScreen> {
                 _showAcceptConfirmationDialog(docId);
               },
               icon: const Icon(Icons.check_rounded, size: 20),
-              label: const Text(
-                'Accept Job',
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+              label: Text(
+                isAr ? 'قبول الطلب' : 'Accept job',
+                style:
+                    const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
               ),
             ),
           ),
@@ -1808,9 +1843,10 @@ class _JobsScreenState extends State<JobsScreen> {
                     phone.isEmpty ? null : () => _launchUrl('tel:$phone'),
                 icon: const Icon(Icons.phone_rounded,
                     size: 16, color: Color(0xFF10B981)),
-                label: const Text(
-                  'Call',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+                label: Text(
+                  isAr ? 'اتصال' : 'Call',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 12.5),
                 ),
               ),
             ),
@@ -1836,9 +1872,10 @@ class _JobsScreenState extends State<JobsScreen> {
                       },
                 icon: const Icon(Icons.chat_rounded,
                     size: 16, color: Color(0xFF25D366)),
-                label: const Text(
-                  'WhatsApp',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+                label: Text(
+                  isAr ? 'واتساب' : 'WhatsApp',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 12.5),
                 ),
               ),
             ),
@@ -1862,9 +1899,10 @@ class _JobsScreenState extends State<JobsScreen> {
                 },
                 icon: const Icon(Icons.navigation_rounded,
                     size: 16, color: Color(0xFF3B82F6)),
-                label: const Text(
-                  'Navigate',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+                label: Text(
+                  isAr ? 'الملاحة' : 'Navigate',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 12.5),
                 ),
               ),
             ),
@@ -2144,14 +2182,15 @@ class _JobsScreenState extends State<JobsScreen> {
   }
 
   void _showAddNoteDialog(String docId) {
+    final isAr = widget.locale.languageCode == 'ar';
     final controller = TextEditingController();
     showDialog(
       context: context,
       builder: (c) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Add Technician Note',
-            style: TextStyle(
+        title: Text(isAr ? 'إضافة ملاحظة فنية' : 'Add technician note',
+            style: const TextStyle(
                 color: Color(0xFF111827),
                 fontWeight: FontWeight.bold,
                 fontSize: 17)),
@@ -2159,7 +2198,7 @@ class _JobsScreenState extends State<JobsScreen> {
           controller: controller,
           style: const TextStyle(color: Color(0xFF111827), fontSize: 14),
           decoration: InputDecoration(
-              hintText: 'Type internal note...',
+              hintText: isAr ? 'اكتب ملاحظة داخلية…' : 'Type internal note…',
               hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
               filled: true,
               fillColor: const Color(0xFFF9FAFB),
@@ -2169,8 +2208,8 @@ class _JobsScreenState extends State<JobsScreen> {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(c),
-              child: const Text('Cancel',
-                  style: TextStyle(color: Color(0xFF6B7280)))),
+              child: Text(isAr ? 'إلغاء' : 'Cancel',
+                  style: const TextStyle(color: Color(0xFF6B7280)))),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF00C9A7),
@@ -2186,13 +2225,15 @@ class _JobsScreenState extends State<JobsScreen> {
                     requestId: docId,
                     note: controller.text.trim(),
                   );
-                  _showMessage('Note added.');
+                  _showMessage(isAr ? 'تمت إضافة الملاحظة.' : 'Note added.');
                 } catch (error) {
-                  _showMessage('Unable to add note: $error');
+                  _showMessage(isAr
+                      ? 'تعذر إضافة الملاحظة: $error'
+                      : 'Unable to add note: $error');
                 }
               }
             },
-            child: const Text('Save Note'),
+            child: Text(isAr ? 'حفظ الملاحظة' : 'Save note'),
           ),
         ],
       ),

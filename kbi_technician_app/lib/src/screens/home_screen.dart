@@ -129,19 +129,35 @@ class _HomeScreenState extends State<HomeScreen> {
 
             return Scaffold(
               backgroundColor: Colors.transparent,
-              extendBody: true,
+              extendBody: false,
               body: SafeArea(
                 bottom: false,
                 child: LiquidGlassBackdrop(child: _pageBody()),
               ),
-              bottomNavigationBar: SafeArea(
-                minimum: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-                child: _NavigationGlass(
-                  axis: Axis.horizontal,
-                  selectedIndex: _index,
-                  unread: unread,
-                  isAr: isAr,
-                  onSelected: _selectTab,
+              bottomNavigationBar: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.98),
+                  border: const Border(
+                    top: BorderSide(color: Color(0xFFE5E7EB), width: 0.7),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 18,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
+                ),
+                child: SafeArea(
+                  top: false,
+                  minimum: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+                  child: _NavigationGlass(
+                    axis: Axis.horizontal,
+                    selectedIndex: _index,
+                    unread: unread,
+                    isAr: isAr,
+                    onSelected: _selectTab,
+                  ),
                 ),
               ),
             );
@@ -166,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             if (isOffline)
               PositionedDirectional(
-                bottom: 84,
+                bottom: 14,
                 start: 16,
                 end: 16,
                 child: Center(
@@ -289,59 +305,67 @@ class _NavigationGlass extends StatelessWidget {
       );
     });
 
-    return LiquidGlassSurface(
-      borderRadius: BorderRadius.circular(30),
-      blur: 34,
-      tint: Colors.white.withValues(alpha: 0.82),
-      borderColor: Colors.white.withValues(alpha: 0.92),
-      padding: EdgeInsets.symmetric(
-        horizontal: axis == Axis.horizontal ? 12 : 8,
-        vertical: axis == Axis.horizontal ? 8 : 12,
-      ),
-      child: axis == Axis.horizontal
-          ? Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children:
-                  children.map((child) => Expanded(child: child)).toList(),
-            )
-          : SizedBox(
-              width: 76,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    margin: const EdgeInsets.only(bottom: 14),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [kbiBlue, kbiBlueDark],
-                      ),
-                      borderRadius: BorderRadius.circular(13),
-                      boxShadow: [
-                        BoxShadow(
-                          color: kbiBlue.withValues(alpha: 0.28),
-                          blurRadius: 14,
-                          offset: const Offset(0, 6),
+    final navigationContent = axis == Axis.horizontal
+        ? Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: children.map((child) => Expanded(child: child)).toList(),
+          )
+        : LayoutBuilder(
+            builder: (context, constraints) {
+              final showLogo = constraints.maxHeight >= 430;
+              return SingleChildScrollView(
+                child: SizedBox(
+                  width: 76,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (showLogo)
+                        Container(
+                          width: 40,
+                          height: 40,
+                          margin: const EdgeInsets.only(bottom: 14),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [kbiBlue, kbiBlueDark],
+                            ),
+                            borderRadius: BorderRadius.circular(13),
+                            boxShadow: [
+                              BoxShadow(
+                                color: kbiBlue.withValues(alpha: 0.28),
+                                blurRadius: 14,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          alignment: Alignment.center,
+                          child: const Text(
+                            'K',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
                         ),
-                      ],
-                    ),
-                    alignment: Alignment.center,
-                    child: const Text(
-                      'K',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
+                      ...children,
+                    ],
                   ),
-                  ...children,
-                ],
-              ),
-            ),
+                ),
+              );
+            },
+          );
+
+    if (axis == Axis.horizontal) return navigationContent;
+
+    return LiquidGlassSurface(
+      borderRadius: BorderRadius.circular(26),
+      blur: 30,
+      tint: Colors.white.withValues(alpha: 0.9),
+      borderColor: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      child: navigationContent,
     );
   }
 }
@@ -378,81 +402,85 @@ class _NavigationItem extends StatelessWidget {
       label: label,
       child: Tooltip(
         message: label,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: duration,
-            curve: Curves.easeOutCubic,
-            constraints: BoxConstraints(
-              minHeight: axis == Axis.horizontal ? 52 : 62,
-              minWidth: 48,
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
-            decoration: BoxDecoration(
-              color: selected
-                  ? kbiBlue.withValues(alpha: 0.10)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    AnimatedSwitcher(
-                      duration: duration,
-                      child: Icon(
-                        selected ? selectedIcon : icon,
-                        key: ValueKey(selected),
-                        size: 22,
-                        color: selected ? kbiBlue : const Color(0xFF94A3B8),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: onTap,
+            child: AnimatedContainer(
+              duration: duration,
+              curve: Curves.easeOutCubic,
+              constraints: BoxConstraints(
+                minHeight: axis == Axis.horizontal ? 54 : 62,
+                minWidth: 48,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
+              decoration: BoxDecoration(
+                color: selected
+                    ? kbiBlue.withValues(alpha: 0.09)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      AnimatedSwitcher(
+                        duration: duration,
+                        child: Icon(
+                          selected ? selectedIcon : icon,
+                          key: ValueKey(selected),
+                          size: 22,
+                          color: selected ? kbiBlue : const Color(0xFF94A3B8),
+                        ),
                       ),
-                    ),
-                    if (badgeCount > 0)
-                      PositionedDirectional(
-                        top: -6,
-                        end: -8,
-                        child: Container(
-                          constraints: const BoxConstraints(minWidth: 16),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 3,
-                            vertical: 1,
-                          ),
-                          decoration: BoxDecoration(
-                            color: kbiBlue,
-                            borderRadius: BorderRadius.circular(999),
-                            border: Border.all(color: Colors.white, width: 1.5),
-                          ),
-                          child: Text(
-                            badgeCount > 99 ? '99+' : '$badgeCount',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 8.5,
-                              height: 1.2,
-                              fontWeight: FontWeight.w800,
+                      if (badgeCount > 0)
+                        PositionedDirectional(
+                          top: -6,
+                          end: -8,
+                          child: Container(
+                            constraints: const BoxConstraints(minWidth: 16),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 3,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: kbiBlue,
+                              borderRadius: BorderRadius.circular(999),
+                              border:
+                                  Border.all(color: Colors.white, width: 1.5),
+                            ),
+                            child: Text(
+                              badgeCount > 99 ? '99+' : '$badgeCount',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 8.5,
+                                height: 1.2,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: selected ? kbiBlue : const Color(0xFF94A3B8),
-                    fontSize: 10.5,
-                    height: 1.1,
-                    fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 3),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: selected ? kbiBlue : const Color(0xFF94A3B8),
+                      fontSize: 11,
+                      height: 1.1,
+                      fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
