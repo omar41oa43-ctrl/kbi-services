@@ -231,8 +231,7 @@ export default async function ServicePage({ params }: Props) {
 
       <section className="container mx-auto mb-16 px-6">
         <GlassCard className="mx-auto max-w-6xl p-8">
-          <h2 className="mb-3 text-3xl font-bold">Supported Brands and Devices</h2>
-          <p className="mb-8 text-sm text-white/60">Brand names identify devices we can assess and do not imply manufacturer authorization or endorsement.</p>
+          <h2 className="mb-8 text-3xl font-bold">Supported Brands and Devices</h2>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {service.supportedBrands.map((brand) => (
               <div key={brand.name}>

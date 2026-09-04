@@ -14,17 +14,11 @@ Future<void> pumpAuthAt(
       home: AuthScreen(
         locale: const Locale('en'),
         onLocaleChanged: (_) {},
+        initialShowLoginForm: showLogin,
       ),
     ),
   );
   await tester.pump();
-  if (showLogin) {
-    final action = find.byKey(const Key('welcome-primary-action'));
-    await tester.ensureVisible(action);
-    await tester.pumpAndSettle();
-    await tester.tap(action);
-    await tester.pumpAndSettle();
-  }
 }
 
 void main() {

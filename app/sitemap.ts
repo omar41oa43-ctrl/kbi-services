@@ -18,7 +18,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ]
 
     const now = new Date()
-    const localizedStaticPaths = new Set(['/book', '/corporate', '/about', '/contact'])
+    const localizedStaticPaths = new Set(['/book', '/corporate', '/about', '/contact', '/track'])
 
     const staticRoutes = routes.map((r) => ({
         url: `${baseUrl}${r.path}`,
@@ -77,7 +77,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 0.9,
             alternates: { languages: { en: `${baseUrl}/services`, ar: `${baseUrl}/ar/services`, 'x-default': `${baseUrl}/services` } },
         },
-        ...['/book', '/corporate', '/about', '/contact'].map((path) => ({
+        ...['/book', '/corporate', '/about', '/contact', '/track'].map((path) => ({
             url: `${baseUrl}/ar${path}`,
             lastModified: now,
             changeFrequency: 'monthly' as const,

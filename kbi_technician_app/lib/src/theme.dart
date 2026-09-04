@@ -143,7 +143,7 @@ ThemeData buildKbiTheme({bool highContrast = false}) {
       ),
     ),
     cardTheme: CardThemeData(
-      color: Color(0xFFFEFEFF),
+      color: const Color(0xFFFEFEFF),
       elevation: 0,
       margin: EdgeInsets.zero,
       surfaceTintColor: Colors.transparent,

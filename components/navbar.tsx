@@ -31,7 +31,7 @@ export function Navbar({ contact }: NavbarProps) {
 
   const [supportReady, setSupportReady] = useState(false)
   const isExcluded = pathname?.startsWith("/admin") || pathname?.startsWith("/tech")
-  const isBookingPage = pathname?.startsWith("/book")
+  const isBookingPage = pathname?.startsWith("/book") || pathname?.startsWith("/ar/book")
 
   useEffect(() => {
     const updateScrolled = () => {
@@ -53,7 +53,8 @@ export function Navbar({ contact }: NavbarProps) {
 
     if (connection?.saveData || connection?.effectiveType?.includes("2g")) return
 
-    const routes = ["/services", "/book", "/track", "/corporate"]
+    const routePrefix = hasArabicUrls ? "/ar" : ""
+    const routes = ["/services", "/book", "/track", "/corporate"].map((route) => `${routePrefix}${route}`)
     const doPrefetch = () => routes.forEach((r) => router.prefetch(r))
 
     const g = globalThis as any
@@ -64,7 +65,7 @@ export function Navbar({ contact }: NavbarProps) {
 
     const id = setTimeout(doPrefetch, 1800)
     return () => clearTimeout(id)
-  }, [router, isExcluded])
+  }, [router, isExcluded, hasArabicUrls])
 
   useEffect(() => {
     if (isExcluded || isBookingPage) return
@@ -100,6 +101,7 @@ export function Navbar({ contact }: NavbarProps) {
           || pathname === "/about"
           || pathname === "/contact"
           || pathname === "/book"
+          || pathname === "/track"
           || pathname === "/corporate"
           || pathname?.startsWith("/locations/")
 
@@ -137,7 +139,7 @@ export function Navbar({ contact }: NavbarProps) {
     { name: t("Corporate Services"), raw: "Corporate Services", href: hasArabicUrls ? "/ar/corporate" : "/corporate" },
     { name: t("About"), raw: "About", href: hasArabicUrls ? "/ar/about" : "/about" },
     { name: t("Contact"), raw: "Contact", href: hasArabicUrls ? "/ar/contact" : "/contact" },
-    { name: t("Track Order"), raw: "Track Order", href: "/track" },
+    { name: t("Track Order"), raw: "Track Order", href: hasArabicUrls ? "/ar/track" : "/track" },
   ]
 
   const sortedNavLinks = lang === "ar" 
@@ -242,10 +244,10 @@ export function Navbar({ contact }: NavbarProps) {
         <div className="apple-nav">
           <div className="apple-nav-items">
             {[
-              { href: "/", label: "Home", icon: Home },
-              { href: "/book", label: "Book Now", icon: CalendarDays },
-              { href: "/corporate", label: "Corporate", icon: Building2 },
-              { href: "/track", label: "Track Order", icon: Search },
+              { href: hasArabicUrls ? "/ar" : "/", label: "Home", icon: Home },
+              { href: hasArabicUrls ? "/ar/book" : "/book", label: "Book Now", icon: CalendarDays },
+              { href: hasArabicUrls ? "/ar/corporate" : "/corporate", label: "Corporate", icon: Building2 },
+              { href: hasArabicUrls ? "/ar/track" : "/track", label: "Track Order", icon: Search },
             ].map((item) => {
               const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href)
               const Icon = item.icon as any

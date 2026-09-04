@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -21,9 +20,10 @@ List<String> _visibleText() => find
     .toList();
 
 void main() {
-  final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('Verify Account Creation Stage 0 to Stage 1 Navigation and Form Render',
+  testWidgets(
+      'Verify Account Creation Stage 0 to Stage 1 Navigation and Form Render',
       (tester) async {
     debugPrint('=== [1] LAUNCHING APP ===');
     final testOnError = FlutterError.onError;
@@ -74,6 +74,7 @@ void main() {
     expect(find.text('Password *'), findsOneWidget);
     expect(find.text('Confirm Password *'), findsOneWidget);
 
-    debugPrint('SUCCESS: All registration Step 1 form fields rendered perfectly!');
+    debugPrint(
+        'SUCCESS: All registration Step 1 form fields rendered perfectly!');
   });
 }

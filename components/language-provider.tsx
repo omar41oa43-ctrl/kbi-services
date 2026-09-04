@@ -275,7 +275,6 @@ const DICTIONARY: Record<string, string> = {
   "Services We Offer": "الخدمات المتاحة",
   "View Service": "عرض تفاصيل الخدمة",
   "Brands We Service": "الععلامات التجارية التي نخدمها",
-  "Brand names identify devices we repair and do not imply manufacturer authorization.": "أسماء العلامات توضح الأجهزة التي نصونها ولا تعني أننا جهة معتمدة من الشركة المصنّعة.",
   "Popular models we repair:": "نماذج شائعة نقوم بإصلاحها:",
   "+ many more": "+ المزيد",
   "Book a technician now and get your device repaired at your doorstep. Fast, reliable, and guaranteed.": "احجز فنيًا الآن ليصل إليك ويصلح جهازك في موقعك. خدمة سريعة، موثوقة، ومضمونة.",

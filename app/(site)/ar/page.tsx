@@ -47,7 +47,7 @@ export default function ArabicHomePage() {
           اطلب فني KBI إلى منزلك أو مكتبك لصيانة الأجهزة أو تركيب الشبكات وكاميرات المراقبة. نفحص الطلب ونؤكد الموعد وعرض السعر قبل بدء أي عمل مدفوع.
         </p>
         <div className="flex flex-col justify-center gap-4 sm:flex-row">
-          <Link href="/book" className="rounded-full bg-cyan-500 px-8 py-4 text-lg font-bold text-black transition-colors hover:bg-cyan-400">احجز فنيًا</Link>
+          <Link href="/ar/book" className="rounded-full bg-cyan-500 px-8 py-4 text-lg font-bold text-black transition-colors hover:bg-cyan-400">احجز فنيًا</Link>
           <Link href="/ar/services" className="rounded-full border border-white/20 px-8 py-4 text-lg font-bold transition-colors hover:border-cyan-400 hover:text-cyan-400">عرض جميع الخدمات</Link>
         </div>
       </section>

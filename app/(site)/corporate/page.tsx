@@ -1,8 +1,6 @@
 import { SlidingLogoMarquee } from "@/components/sliding-logo-marquee"
 import { GlassCard } from "@/components/ui/glass-card"
 import { CorporateBookingForm } from "@/components/corporate-booking-form"
-import Link from "next/link"
-
 import { PageEntrance, FadeIn, StaggerContainer, StaggerItem, HoverScale } from "@/components/ui/animations"
 import type { Metadata } from "next"
 import Image from "next/image"
@@ -93,28 +91,28 @@ export default async function CorporatePage() {
                 <StaggerItem className="flex items-start gap-4 group">
                   <div className="p-3 rounded-2xl bg-cyan-500/10 text-cyan-500 dark:text-cyan-400 ring-1 ring-cyan-500/20 group-hover:bg-cyan-500/20 transition-colors"><CalendarClock className="w-6 h-6" /></div>
                   <div>
-                    <h3 className="font-bold text-foreground mb-1"><T k="Priority SLA" /></h3>
+                    <p className="font-bold text-foreground mb-1"><T k="Priority SLA" /></p>
                     <p className="text-sm text-muted-foreground"><T k="Response targets defined in your SLA" /></p>
                   </div>
                 </StaggerItem>
                 <StaggerItem className="flex items-start gap-4 group">
                   <div className="p-3 rounded-2xl bg-green-500/10 text-green-500 dark:text-green-400 ring-1 ring-green-500/20 group-hover:bg-green-500/20 transition-colors"><Shield className="w-6 h-6" /></div>
                   <div>
-                    <h3 className="font-bold text-foreground mb-1"><T k="Secure Handling" /></h3>
+                    <p className="font-bold text-foreground mb-1"><T k="Secure Handling" /></p>
                     <p className="text-sm text-muted-foreground"><T k="Data privacy compliant" /></p>
                   </div>
                 </StaggerItem>
                 <StaggerItem className="flex items-start gap-4 group">
                   <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-500 dark:text-blue-400 ring-1 ring-blue-500/20 group-hover:bg-blue-500/20 transition-colors"><FileText className="w-6 h-6" /></div>
                   <div>
-                    <h3 className="font-bold text-foreground mb-1"><T k="Contract-Based" /></h3>
+                    <p className="font-bold text-foreground mb-1"><T k="Contract-Based" /></p>
                     <p className="text-sm text-muted-foreground"><T k="Flexible monthly plans" /></p>
                   </div>
                 </StaggerItem>
                 <StaggerItem className="flex items-start gap-4 group">
                   <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-500 dark:text-purple-400 ring-1 ring-purple-500/20 group-hover:bg-purple-500/20 transition-colors"><Truck className="w-6 h-6" /></div>
                   <div>
-                    <h3 className="font-bold text-foreground mb-1"><T k="24/7 Ops" /></h3>
+                    <p className="font-bold text-foreground mb-1"><T k="24/7 Ops" /></p>
                     <p className="text-sm text-muted-foreground"><T k="Critical infrastructure support" /></p>
                   </div>
                 </StaggerItem>
@@ -126,7 +124,7 @@ export default async function CorporatePage() {
                   <a href="#corporate-form" className="px-8 py-4 rounded-full bg-cyan-500 text-black font-bold hover:bg-cyan-400 transition-colors shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_35px_rgba(6,182,212,0.6)] flex items-center justify-center gap-2"><T k="Request Partnership" /> <ArrowRight className="w-4 h-4 rtl:rotate-180" /></a>
                 </HoverScale>
                 <HoverScale>
-                  <a href={`https://wa.me/${contact.whatsappRaw}`} target="_blank" rel="noopener noreferrer" className="px-8 py-4 rounded-full bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_35px_rgba(34,197,94,0.6)] flex items-center justify-center gap-2"><MessageCircle className="w-5 h-5" /> <T k="WhatsApp" /></a>
+                  <a href={`https://wa.me/${contact.whatsappRaw}`} target="_blank" rel="noopener noreferrer" className="px-8 py-4 rounded-full bg-green-700 text-white font-semibold hover:bg-green-800 transition-colors shadow-[0_0_20px_rgba(21,128,61,0.3)] hover:shadow-[0_0_35px_rgba(21,128,61,0.55)] flex items-center justify-center gap-2"><MessageCircle className="w-5 h-5" /> <T k="WhatsApp" /></a>
                 </HoverScale>
               </FadeIn>
             </div>

@@ -13,27 +13,23 @@ Future<void> _settle(WidgetTester tester, {int seconds = 3}) async {
   }
 }
 
-List<String> _visibleText() => find
-    .byType(Text)
-    .evaluate()
-    .map((e) => (e.widget as Text).data)
-    .whereType<String>()
-    .where((s) => s.trim().isNotEmpty)
-    .toList();
-
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('Complete End-to-End System Test: Auth, Tech/Company Reg, Wallet, Signature & Dashboard',
+  testWidgets(
+      'Complete End-to-End System Test: Auth, Tech/Company Reg, Wallet, Signature & Dashboard',
       (tester) async {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final indEmail = 'tech_full_e2e_$timestamp@kbi.test';
     final compEmail = 'comp_full_e2e_$timestamp@kbi.test';
     const testPassword = 'Password123!';
 
-    debugPrint('========================================================================');
-    debugPrint('=== [PHASE 1] APP INITIALIZATION & WELCOME TO REGISTRATION FLOW       ===');
-    debugPrint('========================================================================');
+    debugPrint(
+        '========================================================================');
+    debugPrint(
+        '=== [PHASE 1] APP INITIALIZATION & WELCOME TO REGISTRATION FLOW       ===');
+    debugPrint(
+        '========================================================================');
 
     final testOnError = FlutterError.onError;
     await app.main();
@@ -48,7 +44,8 @@ void main() {
     // 1. Welcome -> Login
     final welcomeBtn = find.byKey(const Key('welcome-primary-action'));
     if (welcomeBtn.evaluate().isNotEmpty) {
-      debugPrint('[1.1] Welcome screen detected, tapping Continue to sign in...');
+      debugPrint(
+          '[1.1] Welcome screen detected, tapping Continue to sign in...');
       await tester.tap(welcomeBtn.first);
       await _settle(tester, seconds: 3);
     }
@@ -60,9 +57,12 @@ void main() {
     await tester.tap(applyBtn.first);
     await _settle(tester, seconds: 3);
 
-    debugPrint('========================================================================');
-    debugPrint('=== [PHASE 2] INDIVIDUAL TECHNICIAN REGISTRATION & FIRESTORE SYNC    ===');
-    debugPrint('========================================================================');
+    debugPrint(
+        '========================================================================');
+    debugPrint(
+        '=== [PHASE 2] INDIVIDUAL TECHNICIAN REGISTRATION & FIRESTORE SYNC    ===');
+    debugPrint(
+        '========================================================================');
 
     final nameField = find.widgetWithText(TextField, 'Full Name *');
     final emailField = find.widgetWithText(TextField, 'Email Address *');
@@ -100,14 +100,21 @@ void main() {
     expect(indUser, isNotNull);
     final indUid = indUser!.uid;
 
-    final techDoc = await FirebaseFirestore.instance.collection('technicians').doc(indUid).get();
+    final techDoc = await FirebaseFirestore.instance
+        .collection('technicians')
+        .doc(indUid)
+        .get();
     expect(techDoc.exists, isTrue);
     expect(techDoc.data()!['accountType'], 'employee');
     expect(techDoc.data()!['status'], 'pending');
     expect(techDoc.data()!['full_name'], 'Sultan Al Mansoori');
-    debugPrint('[2.3] Individual Tech Firestore document verified: ${techDoc.data()}');
+    debugPrint(
+        '[2.3] Individual Tech Firestore document verified: ${techDoc.data()}');
 
-    final reqDoc = await FirebaseFirestore.instance.collection('technician_requests').doc(indUid).get();
+    final reqDoc = await FirebaseFirestore.instance
+        .collection('technician_requests')
+        .doc(indUid)
+        .get();
     expect(reqDoc.exists, isTrue);
     expect(reqDoc.data()!['status'], 'pending');
     debugPrint('[2.4] Admin technician_requests document verified.');
@@ -119,9 +126,12 @@ void main() {
     await FirebaseAuth.instance.signOut();
     await _settle(tester, seconds: 2);
 
-    debugPrint('========================================================================');
-    debugPrint('=== [PHASE 3] COMPANY REGISTRATION & FIRESTORE SYNC                  ===');
-    debugPrint('========================================================================');
+    debugPrint(
+        '========================================================================');
+    debugPrint(
+        '=== [PHASE 3] COMPANY REGISTRATION & FIRESTORE SYNC                  ===');
+    debugPrint(
+        '========================================================================');
 
     final welcomeBtn2 = find.byKey(const Key('welcome-primary-action'));
     if (welcomeBtn2.evaluate().isNotEmpty) {
@@ -143,10 +153,13 @@ void main() {
     final compNameField = find.widgetWithText(TextField, 'Company Name *');
     final compEmailField = find.widgetWithText(TextField, 'Company Email *');
     final compPhoneField = find.widgetWithText(TextField, 'Company Phone *');
-    final compOwnerField = find.widgetWithText(TextField, 'Manager / Owner Name *');
-    final compLicenseField = find.widgetWithText(TextField, 'Trade License Number *');
+    final compOwnerField =
+        find.widgetWithText(TextField, 'Manager / Owner Name *');
+    final compLicenseField =
+        find.widgetWithText(TextField, 'Trade License Number *');
     final compPassField = find.widgetWithText(TextField, 'Password *');
-    final compConfirmField = find.widgetWithText(TextField, 'Confirm Password *');
+    final compConfirmField =
+        find.widgetWithText(TextField, 'Confirm Password *');
 
     await tester.enterText(compNameField, 'Apex Fix Solutions LLC');
     await tester.enterText(compEmailField, compEmail);
@@ -168,7 +181,8 @@ void main() {
 
     // Submit
     debugPrint('[3.1] Submitting Company application: $compEmail');
-    final submitBtn2 = find.widgetWithText(ElevatedButton, 'Submit Application');
+    final submitBtn2 =
+        find.widgetWithText(ElevatedButton, 'Submit Application');
     await tester.ensureVisible(submitBtn2.first);
     await tester.tap(submitBtn2.first);
     await _settle(tester, seconds: 5);
@@ -180,21 +194,31 @@ void main() {
     expect(compUser, isNotNull);
     final compUid = compUser!.uid;
 
-    final compTechDoc = await FirebaseFirestore.instance.collection('technicians').doc(compUid).get();
+    final compTechDoc = await FirebaseFirestore.instance
+        .collection('technicians')
+        .doc(compUid)
+        .get();
     expect(compTechDoc.exists, isTrue);
     expect(compTechDoc.data()!['accountType'], 'company');
     expect(compTechDoc.data()!['company_name'], 'Apex Fix Solutions LLC');
     expect(compTechDoc.data()!['trade_license_number'], 'CN-1234567');
-    debugPrint('[3.3] Company Firestore document verified: ${compTechDoc.data()}');
+    debugPrint(
+        '[3.3] Company Firestore document verified: ${compTechDoc.data()}');
 
-    final compReqDoc = await FirebaseFirestore.instance.collection('technician_requests').doc(compUid).get();
+    final compReqDoc = await FirebaseFirestore.instance
+        .collection('technician_requests')
+        .doc(compUid)
+        .get();
     expect(compReqDoc.exists, isTrue);
     expect(compReqDoc.data()!['accountType'], 'company');
     debugPrint('[3.4] Company Admin technician_requests document verified.');
 
-    debugPrint('========================================================================');
-    debugPrint('=== [PHASE 4] DIGITAL SIGNATURE PAD TOUCH DRAWING TEST               ===');
-    debugPrint('========================================================================');
+    debugPrint(
+        '========================================================================');
+    debugPrint(
+        '=== [PHASE 4] DIGITAL SIGNATURE PAD TOUCH DRAWING TEST               ===');
+    debugPrint(
+        '========================================================================');
 
     bool signatureCallbackFired = false;
     List<Offset?> capturedPoints = [];
@@ -216,29 +240,41 @@ void main() {
 
     // Perform gestures on the signature canvas
     final signCanvas = find.byType(CustomPaint).first;
-    await tester.timedDrag(signCanvas, const Offset(80, 50), const Duration(milliseconds: 500));
+    await tester.timedDrag(
+        signCanvas, const Offset(80, 50), const Duration(milliseconds: 500));
     await _settle(tester, seconds: 1);
 
-    final confirmSignBtn = find.widgetWithText(ElevatedButton, 'Confirm Signature');
+    final confirmSignBtn =
+        find.widgetWithText(ElevatedButton, 'Confirm Signature');
     await tester.tap(confirmSignBtn.first);
     await _settle(tester, seconds: 2);
 
     expect(signatureCallbackFired, isTrue);
     expect(capturedPoints.isNotEmpty, isTrue);
-    debugPrint('[4.1] Signature Pad points captured and verified: ${capturedPoints.length} points recorded.');
+    debugPrint(
+        '[4.1] Signature Pad points captured and verified: ${capturedPoints.length} points recorded.');
 
-    debugPrint('========================================================================');
-    debugPrint('=== [PHASE 5] WALLET & REQUEST FIRESTORE INTEGRATION VERIFICATION    ===');
-    debugPrint('========================================================================');
+    debugPrint(
+        '========================================================================');
+    debugPrint(
+        '=== [PHASE 5] WALLET & REQUEST FIRESTORE INTEGRATION VERIFICATION    ===');
+    debugPrint(
+        '========================================================================');
 
-    final reqCheck = await FirebaseFirestore.instance.collection('technician_requests').doc(compUid).get();
+    final reqCheck = await FirebaseFirestore.instance
+        .collection('technician_requests')
+        .doc(compUid)
+        .get();
     expect(reqCheck.exists, isTrue);
     expect(reqCheck.data()!['userId'], compUid);
     expect(reqCheck.data()!['status'], 'pending');
     debugPrint('[5.1] Verified Company Technician Request: ${reqCheck.data()}');
 
-    debugPrint('========================================================================');
-    debugPrint('=== ALL END-TO-END WORKFLOWS AND SYSTEM COMPONENTS VERIFIED 100%!    ===');
-    debugPrint('========================================================================');
+    debugPrint(
+        '========================================================================');
+    debugPrint(
+        '=== ALL END-TO-END WORKFLOWS AND SYSTEM COMPONENTS VERIFIED 100%!    ===');
+    debugPrint(
+        '========================================================================');
   });
 }

@@ -9,12 +9,9 @@ export function BrandsSection() {
 
   return (
     <section className="container mx-auto px-6 py-12 md:py-16">
-      <h2 className="text-2xl md:text-3xl font-bold mb-2 text-foreground" suppressHydrationWarning>
+      <h2 className="mb-6 text-2xl font-bold text-foreground md:text-3xl" suppressHydrationWarning>
         {t("Brands We Service")}
       </h2>
-      <p className="text-sm text-muted-foreground mb-6" suppressHydrationWarning>
-        {t("Brand names identify devices we repair and do not imply manufacturer authorization.")}
-      </p>
       <SlidingLogoMarquee
         items={[
           { id: "apple", label: "Apple", content: <SiApple aria-hidden="true" className="w-10 h-10 text-white fill-white hover:text-cyan-400 transition-colors" />, href: "https://www.apple.com" },

@@ -28,9 +28,9 @@ void main() {
       (tester) async {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final techEmail = 'tech_$timestamp@kbi.test';
-    final techPassword = 'Password123!';
+    const techPassword = 'Password123!';
     final companyEmail = 'company_$timestamp@kbi.test';
-    final companyPassword = 'Password123!';
+    const companyPassword = 'Password123!';
 
     debugPrint('====================================================');
     debugPrint('=== [PART 1] CREATING & TESTING INDIVIDUAL TECH ===');
@@ -71,7 +71,11 @@ void main() {
       'full_name': 'Rashid Al Nuaimi',
       'phone': '+971501234567',
       'experience_main_skill': 'iPhone Screen & Battery, iPad Repair',
-      'skills': ['iPhone Screen & Battery', 'iPad Repair', 'MacBook Diagnostic'],
+      'skills': [
+        'iPhone Screen & Battery',
+        'iPad Repair',
+        'MacBook Diagnostic'
+      ],
       'experience': '3-5 years',
       'emirate': 'Abu Dhabi',
       'area': 'Al Reem Island',
@@ -168,8 +172,7 @@ void main() {
 
     // 2. Programmatically create Company User in Firebase Auth & Firestore
     debugPrint('Creating Firebase Auth account for $companyEmail...');
-    final compCred =
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+    final compCred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
       email: companyEmail,
       password: companyPassword,
     );
@@ -287,7 +290,8 @@ void main() {
     navBar.onDestinationSelected?.call(4);
     await _settle(tester, seconds: 4);
 
-    debugPrint('Company User Profile View: ${_visibleText().take(20).join(" | ")}');
+    debugPrint(
+        'Company User Profile View: ${_visibleText().take(20).join(" | ")}');
 
     // Switch back to Home (Tab 0)
     navBar.onDestinationSelected?.call(0);

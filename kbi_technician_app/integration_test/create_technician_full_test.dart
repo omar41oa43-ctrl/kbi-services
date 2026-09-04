@@ -28,13 +28,16 @@ void main() {
       (tester) async {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final techEmail = 'new_tech_$timestamp@kbi.test';
-    final techPassword = 'Password123!';
+    const techPassword = 'Password123!';
     final companyEmail = 'new_company_$timestamp@kbi.test';
-    final companyPassword = 'Password123!';
+    const companyPassword = 'Password123!';
 
-    debugPrint('================================================================');
-    debugPrint('=== [PHASE 1] CREATING & TESTING INDIVIDUAL TECHNICIAN USER ===');
-    debugPrint('================================================================');
+    debugPrint(
+        '================================================================');
+    debugPrint(
+        '=== [PHASE 1] CREATING & TESTING INDIVIDUAL TECHNICIAN USER ===');
+    debugPrint(
+        '================================================================');
 
     final testOnError = FlutterError.onError;
     await app.main();
@@ -71,7 +74,11 @@ void main() {
       'full_name': 'Hamad Al Dhaheri',
       'phone': '+971509988776',
       'experience_main_skill': 'Smartphones & Tablets Repair',
-      'skills': ['iPhone Screen Replacement', 'Battery Replacement', 'iPad Screen'],
+      'skills': [
+        'iPhone Screen Replacement',
+        'Battery Replacement',
+        'iPad Screen'
+      ],
       'experience': '5+ years',
       'emirate': 'Abu Dhabi',
       'area': 'Al Khalidiyah',
@@ -102,7 +109,8 @@ void main() {
       },
     );
     await batch1.commit();
-    debugPrint('[1.3] Firestore records provisioned: users, technicians, technician_requests.');
+    debugPrint(
+        '[1.3] Firestore records provisioned: users, technicians, technician_requests.');
 
     // Step 2: Test unapproved gate in the application
     await app.main();
@@ -114,7 +122,8 @@ void main() {
       findsNothing,
       reason: 'Pending technician must not access main Dashboard yet',
     );
-    debugPrint('Unapproved screen text: ${_visibleText().take(10).join(" | ")}');
+    debugPrint(
+        'Unapproved screen text: ${_visibleText().take(10).join(" | ")}');
 
     // Step 3: Approve & Activate Individual Tech (simulating Admin action)
     debugPrint('[1.5] Approving and activating Individual Technician...');
@@ -152,11 +161,14 @@ void main() {
     debugPrint('[1.9] Testing Tab Navigation: Profile (Tab 4)...');
     navBar.onDestinationSelected?.call(4);
     await _settle(tester, seconds: 3);
-    debugPrint('Profile screen content: ${_visibleText().take(20).join(" | ")}');
+    debugPrint(
+        'Profile screen content: ${_visibleText().take(20).join(" | ")}');
 
-    debugPrint('================================================================');
+    debugPrint(
+        '================================================================');
     debugPrint('=== [PHASE 2] CREATING & TESTING COMPANY TECHNICIAN USER ===');
-    debugPrint('================================================================');
+    debugPrint(
+        '================================================================');
 
     // Step 1: Sign out current user
     await FirebaseAuth.instance.signOut();
@@ -281,14 +293,17 @@ void main() {
     debugPrint('[2.7] Checking Company Profile Tab...');
     compNavBar.onDestinationSelected?.call(4);
     await _settle(tester, seconds: 4);
-    debugPrint('Company profile view content: ${_visibleText().take(20).join(" | ")}');
+    debugPrint(
+        'Company profile view content: ${_visibleText().take(20).join(" | ")}');
 
     // Return to Home Tab
     compNavBar.onDestinationSelected?.call(0);
     await _settle(tester, seconds: 3);
 
-    debugPrint('================================================================');
+    debugPrint(
+        '================================================================');
     debugPrint('=== [SUCCESS] BOTH TECH & COMPANY USERS CREATED & TESTED! ===');
-    debugPrint('================================================================');
+    debugPrint(
+        '================================================================');
   });
 }

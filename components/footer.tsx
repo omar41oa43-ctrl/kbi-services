@@ -107,7 +107,7 @@ export function Footer({ contact }: FooterProps) {
               {[
                 { key: "Services", href: isAr ? "/ar/services" : "/services" },
                 { key: "Book Now", href: isAr ? "/ar/book" : "/book" },
-                { key: "Track Order", href: "/track" },
+                { key: "Track Order", href: isAr ? "/ar/track" : "/track" },
                 { key: "About", href: isAr ? "/ar/about" : "/about" },
                 { key: "Contact", href: isAr ? "/ar/contact" : "/contact" },
               ].map((item) => (

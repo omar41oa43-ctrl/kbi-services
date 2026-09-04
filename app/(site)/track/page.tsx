@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   description: "Track the latest status of your KBI Services repair or technician appointment securely using your order details.",
   alternates: {
     canonical: "/track",
+    languages: { en: "/track", ar: "/ar/track", "x-default": "/track" },
   },
   robots: { index: true, follow: true },
   openGraph: {
