@@ -202,8 +202,8 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
 
   Future<void> _pickPhoto(bool isBefore) async {
     final title = isBefore
-        ? 'Before-Repair Inspection Photo'
-        : 'After-Repair Quality Photo';
+        ? _text('Before-Repair Inspection Photo', 'صورة فحص قبل الصيانة')
+        : _text('After-Repair Quality Photo', 'صورة جودة ما بعد الصيانة');
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
       backgroundColor: Colors.white,
@@ -240,10 +240,14 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
                   child:
                       Icon(Icons.camera_alt_rounded, color: Color(0xFF0284C7)),
                 ),
-                title: const Text('Take a Photo (Camera)',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: const Text('Capture clear photo with device camera',
-                    style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                title: Text(
+                    _text('Take a Photo (Camera)', 'التقاط صورة بالكاميرا'),
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Text(
+                    _text('Capture a clear photo with the device camera',
+                        'التقط صورة واضحة باستخدام كاميرا الجهاز'),
+                    style: const TextStyle(
+                        fontSize: 12, color: Color(0xFF64748B))),
                 onTap: () => Navigator.pop(ctx, ImageSource.camera),
               ),
               ListTile(
@@ -252,10 +256,15 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
                   child: Icon(Icons.photo_library_rounded,
                       color: Color(0xFF16A34A)),
                 ),
-                title: const Text('Upload from Gallery / Files',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: const Text('Select an existing photo from library',
-                    style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                title: Text(
+                    _text('Upload from Gallery / Files',
+                        'رفع من المعرض أو الملفات'),
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Text(
+                    _text('Select an existing photo from your library',
+                        'اختر صورة موجودة من المعرض'),
+                    style: const TextStyle(
+                        fontSize: 12, color: Color(0xFF64748B))),
                 onTap: () => Navigator.pop(ctx, ImageSource.gallery),
               ),
             ],
@@ -306,15 +315,20 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: const Color(0xFF10B981),
-            content: Text(
-                '${isBefore ? "Before-repair" : "After-repair"} photo added successfully!'),
+            content: Text(isBefore
+                ? _text('Before-repair photo added.',
+                    'تمت إضافة صورة ما قبل الصيانة.')
+                : _text('After-repair photo added.',
+                    'تمت إضافة صورة ما بعد الصيانة.')),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Photo upload failed: $e')),
+          SnackBar(
+              content: Text(
+                  _text('Photo upload failed: $e', 'تعذر رفع الصورة: $e'))),
         );
       }
     }
@@ -2276,11 +2290,144 @@ Thank you for choosing KBI Services!
   }
 
   // --- TAB 3: BILLING, PAYMENT & DIGITAL SIGN-OFF ---
+  List<String> _closeoutMissingItems() {
+    final missing = <String>[];
+    if (_beforePhotos.isEmpty) {
+      missing.add(_text('Before-repair photo', 'صورة ما قبل الصيانة'));
+    }
+    if (_afterPhotos.isEmpty) {
+      missing.add(_text('After-repair photo', 'صورة ما بعد الصيانة'));
+    }
+    if (!_signatureCaptured) {
+      missing.add(_text('Customer signature', 'توقيع العميل'));
+    }
+    return missing;
+  }
+
+  Widget _buildCloseoutReadinessCard() {
+    final missing = _closeoutMissingItems();
+    final requirements = [
+      (
+        label: _text('Before-repair photo', 'صورة ما قبل الصيانة'),
+        done: _beforePhotos.isNotEmpty,
+        tab: 1,
+      ),
+      (
+        label: _text('After-repair photo', 'صورة ما بعد الصيانة'),
+        done: _afterPhotos.isNotEmpty,
+        tab: 1,
+      ),
+      (
+        label: _text('Customer signature', 'توقيع العميل'),
+        done: _signatureCaptured,
+        tab: 2,
+      ),
+    ];
+    final ready = missing.isEmpty;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ready ? const Color(0xFFF0FDF4) : const Color(0xFFFFFBEB),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: ready ? const Color(0xFF86EFAC) : const Color(0xFFFCD34D),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                ready ? Icons.verified_rounded : Icons.assignment_late_rounded,
+                color:
+                    ready ? const Color(0xFF16A34A) : const Color(0xFFD97706),
+                size: 21,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  ready
+                      ? _text('Closeout ready', 'الطلب جاهز للإنهاء')
+                      : _text('Closeout checklist', 'قائمة إنهاء الطلب'),
+                  style: const TextStyle(
+                    color: Color(0xFF0F172A),
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+              Text(
+                '${requirements.where((item) => item.done).length}/${requirements.length}',
+                textDirection: TextDirection.ltr,
+                style: TextStyle(
+                  color:
+                      ready ? const Color(0xFF15803D) : const Color(0xFFB45309),
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            ready
+                ? _text(
+                    'Documentation is complete. You can finish the work order when the repair is done.',
+                    'اكتملت مستندات الطلب. يمكنك إنهاء أمر العمل بعد إتمام الصيانة.')
+                : _text('Complete these items before closing the work order.',
+                    'أكمل هذه العناصر قبل إغلاق أمر العمل.'),
+            style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+          ),
+          const SizedBox(height: 10),
+          ...requirements.map((item) => InkWell(
+                onTap:
+                    item.done ? null : () => _tabController.animateTo(item.tab),
+                borderRadius: BorderRadius.circular(10),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  child: Row(
+                    children: [
+                      Icon(
+                        item.done
+                            ? Icons.check_circle_rounded
+                            : Icons.radio_button_unchecked_rounded,
+                        color: item.done
+                            ? const Color(0xFF16A34A)
+                            : const Color(0xFFB45309),
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          item.label,
+                          style: TextStyle(
+                            color: const Color(0xFF334155),
+                            fontWeight:
+                                item.done ? FontWeight.w600 : FontWeight.w700,
+                            fontSize: 12.5,
+                          ),
+                        ),
+                      ),
+                      if (!item.done)
+                        const Icon(Icons.chevron_right_rounded,
+                            color: Color(0xFF94A3B8), size: 18),
+                    ],
+                  ),
+                ),
+              )),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBillingAndSignTab() {
     final amount = _job.totalAmount ?? 250.0;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        _buildCloseoutReadinessCard(),
+        const SizedBox(height: 16),
         // Invoice Breakdown Card
         Container(
           padding: const EdgeInsets.all(18),
@@ -2713,28 +2860,38 @@ Thank you for choosing KBI Services!
     if (normalizedNext == 'completed') {
       final failedChecks =
           _checklist.values.where((value) => value == 'FAIL').length;
+      final missingItems = _closeoutMissingItems();
       final confirmed = await showCupertinoDialog<bool>(
         context: context,
         builder: (dialogContext) => CupertinoAlertDialog(
           title: Text(_text('Complete this job?', 'إنهاء هذا الطلب؟')),
           content: Text(
-            failedChecks > 0
+            missingItems.isNotEmpty
                 ? _text(
-                    '$failedChecks diagnostic checks are marked FAIL. The closeout record will be saved.',
-                    'تم تحديد $failedChecks من عناصر الفحص كعطل. سيتم حفظ سجل الإنهاء.')
-                : _text(
-                    'Diagnostics, photos, payment selection, and signature status will be saved to the order.',
-                    'سيتم حفظ الفحص والصور وطريقة الدفع والتوقيع في الطلب.'),
+                    'Before closing, add: ${missingItems.join(', ')}. You can still complete the work order only if this documentation is not applicable.',
+                    'قبل الإنهاء، أضف: ${missingItems.join('، ')}. يمكنك الإكمال فقط إذا كانت هذه المستندات لا تنطبق على هذا الطلب.')
+                : failedChecks > 0
+                    ? _text(
+                        '$failedChecks diagnostic checks are marked FAIL. The closeout record will be saved.',
+                        'تم تحديد $failedChecks من عناصر الفحص كعطل. سيتم حفظ سجل الإنهاء.')
+                    : _text(
+                        'Diagnostics, photos, payment selection, and signature status will be saved to the order.',
+                        'سيتم حفظ الفحص والصور وطريقة الدفع والتوقيع في الطلب.'),
           ),
           actions: [
             CupertinoDialogAction(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(_text('Review', 'مراجعة')),
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+                if (missingItems.isNotEmpty) _tabController.animateTo(2);
+              },
+              child: Text(_text('Review closeout', 'مراجعة الإنهاء')),
             ),
             CupertinoDialogAction(
               isDefaultAction: true,
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text(_text('Complete', 'إنهاء')),
+              child: Text(missingItems.isEmpty
+                  ? _text('Complete', 'إنهاء')
+                  : _text('Complete anyway', 'إنهاء رغم ذلك')),
             ),
           ],
         ),
