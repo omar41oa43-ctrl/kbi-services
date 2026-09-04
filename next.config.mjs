@@ -29,7 +29,7 @@ const nextConfig = {
     return `build-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
   },
   async redirects() {
-    return [
+    const serviceRedirects = [
       ['mobile', 'mobile-phone-repair'],
       ['laptop', 'laptop-repair'],
       ['pc', 'computer-repair'],
@@ -47,6 +47,11 @@ const nextConfig = {
       destination: `/services/${destination}`,
       permanent: true,
     }))
+
+    return [
+      { source: '/home', destination: '/', permanent: true },
+      ...serviceRedirects,
+    ]
   },
   async headers() {
     const noStore = 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0'
