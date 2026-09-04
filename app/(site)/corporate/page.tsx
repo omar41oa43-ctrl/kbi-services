@@ -67,8 +67,8 @@ export default async function CorporatePage() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-radial-gradient from-transparent to-background" />
         </div>
         <div className="container mx-auto px-6 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            <div className="order-2 lg:order-1">
+          <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-20">
+            <div>
               <FadeIn delay={0.1}>
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-8 backdrop-blur-sm shadow-[0_0_15px_rgba(6,182,212,0.1)]">
                   <Shield className="w-4 h-4 text-cyan-400" />
@@ -129,7 +129,7 @@ export default async function CorporatePage() {
               </FadeIn>
             </div>
 
-            <FadeIn delay={0.4} className="relative h-[500px] rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl order-1 lg:order-2 group">
+            <FadeIn delay={0.4} className="group relative h-[360px] overflow-hidden rounded-[1.75rem] border border-white/10 shadow-2xl sm:h-[460px] sm:rounded-[2rem] lg:h-[500px]">
               {hasHandshake && (
                 <Image
                   src="/handshake-mobile.webp"
@@ -143,19 +143,19 @@ export default async function CorporatePage() {
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 
-              <div className="absolute bottom-0 left-0 right-0 p-8">
-                <div className="grid grid-cols-3 divide-x divide-white/10 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-4">
-                  <div className="text-center px-2">
-                    <div className="text-3xl font-bold text-cyan-400 mb-1">Priority</div>
-                    <div className="text-xs text-white/60 uppercase tracking-wider">SLA targets</div>
+              <div className="absolute inset-x-0 bottom-0 p-3 sm:p-8">
+                <div className="grid grid-cols-3 divide-x divide-white/10 rounded-2xl border border-white/10 bg-black/35 p-2 backdrop-blur-md sm:p-4">
+                  <div className="min-w-0 px-1 text-center sm:px-2">
+                    <div className="mb-1 break-words text-lg font-bold leading-tight text-cyan-400 sm:text-3xl">Priority</div>
+                    <div className="break-words text-[9px] font-medium uppercase leading-tight tracking-[0.06em] text-white/75 sm:text-xs sm:tracking-wider">SLA targets</div>
                   </div>
-                  <div className="text-center px-2">
-                    <div className="text-3xl font-bold text-cyan-400 mb-1">Multi-site</div>
-                    <div className="text-xs text-white/60 uppercase tracking-wider">Coverage</div>
+                  <div className="min-w-0 px-1 text-center sm:px-2">
+                    <div className="mb-1 break-words text-lg font-bold leading-tight text-cyan-400 sm:text-3xl">Multi-site</div>
+                    <div className="break-words text-[9px] font-medium uppercase leading-tight tracking-[0.06em] text-white/75 sm:text-xs sm:tracking-wider">Coverage</div>
                   </div>
-                  <div className="text-center px-2">
-                    <div className="text-3xl font-bold text-cyan-400 mb-1">Flexible</div>
-                    <div className="text-xs text-white/60 uppercase tracking-wider">Service plans</div>
+                  <div className="min-w-0 px-1 text-center sm:px-2">
+                    <div className="mb-1 break-words text-lg font-bold leading-tight text-cyan-400 sm:text-3xl">Flexible</div>
+                    <div className="break-words text-[9px] font-medium uppercase leading-tight tracking-[0.06em] text-white/75 sm:text-xs sm:tracking-wider">Service plans</div>
                   </div>
                 </div>
               </div>
