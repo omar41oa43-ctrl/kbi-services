@@ -53,14 +53,14 @@ export function NotificationBell({ role = "admin" }: NotificationBellProps) {
         fetchNotifications()
     }, [fetchNotifications])
 
-    // Admin decisions should surface without requiring a page reload. Poll
-    // only while the tab is visible and bypass the short server cache.
+    // Admin decisions should surface without requiring a page reload. Keep the
+    // polling modest and pause it in background tabs to reduce repeated reads.
     useEffect(() => {
         if (role !== "admin") return
         const refreshWhenVisible = () => {
             if (document.visibilityState === "visible") void fetchNotifications(true)
         }
-        const interval = window.setInterval(refreshWhenVisible, 15000)
+        const interval = window.setInterval(refreshWhenVisible, 60000)
         document.addEventListener("visibilitychange", refreshWhenVisible)
         return () => {
             window.clearInterval(interval)

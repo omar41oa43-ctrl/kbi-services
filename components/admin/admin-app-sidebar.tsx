@@ -90,29 +90,6 @@ export function AdminAppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 
   React.useEffect(() => onAuthStateChanged(auth, (user) => setUserEmail(user?.email ?? null)), []);
 
-  React.useEffect(() => {
-    const adminRoutes = [
-      "/admin",
-      "/admin/orders",
-      "/admin/tracking",
-      "/admin/technicians",
-      "/admin/inventory",
-      "/admin/inbox/corporate",
-      "/admin/analytics",
-      "/admin/settings",
-      "/admin/settings/security",
-    ];
-    const prefetchRoutes = () => {
-      adminRoutes.forEach((route) => {
-        try {
-          router.prefetch(route);
-        } catch {}
-      });
-    };
-    const timer = setTimeout(prefetchRoutes, 100);
-    return () => clearTimeout(timer);
-  }, [router]);
-
   const handleLogout = async () => {
     await clearAdminSession();
     await signOut(auth);

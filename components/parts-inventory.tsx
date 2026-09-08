@@ -122,11 +122,17 @@ export function PartsInventory({ isAdmin = true }: { isAdmin?: boolean }) {
     }, [])
 
     useEffect(() => {
-        fetchParts()
-        const interval = setInterval(() => {
-            if (isMounted.current) fetchParts()
-        }, 30000)
-        return () => clearInterval(interval)
+        const refreshWhenVisible = () => {
+            if (document.visibilityState === "visible" && isMounted.current) void fetchParts()
+        }
+
+        refreshWhenVisible()
+        const interval = window.setInterval(refreshWhenVisible, 60000)
+        document.addEventListener("visibilitychange", refreshWhenVisible)
+        return () => {
+            window.clearInterval(interval)
+            document.removeEventListener("visibilitychange", refreshWhenVisible)
+        }
     }, [fetchParts])
 
     const filteredParts = parts.filter(part => {

@@ -4,9 +4,6 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { onAuthStateChanged, signOut, type User } from "firebase/auth"
 import {
   AlertTriangle,
-  Boxes,
-  Building2,
-  ChartNoAxesCombined,
   ClipboardList,
   Languages,
   LayoutDashboard,
@@ -14,7 +11,6 @@ import {
   MapPin,
   Search,
   Settings,
-  ShieldCheck,
   Users,
 } from "lucide-react"
 import Link from "next/link"
@@ -211,7 +207,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className={cn("admin-theme min-h-svh bg-background text-foreground relative selection:bg-primary/20 selection:text-primary", lang === "ar" && "[direction:rtl]")}>
       {/* Background ambient lighting effects */}
-      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-50">
+      <div className="pointer-events-none fixed inset-0 z-0 hidden overflow-hidden opacity-50 md:block">
         <div className="absolute -top-40 -left-40 size-[32rem] rounded-full bg-cyan-400/10 blur-[120px]" />
         <div className="absolute top-1/3 -right-40 size-[30rem] rounded-full bg-blue-500/10 blur-[120px]" />
         <div className="absolute -bottom-60 left-1/3 size-[36rem] rounded-full bg-indigo-400/8 blur-[130px]" />
@@ -222,8 +218,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         style={{ "--sidebar-width": "15.5rem", "--sidebar-width-icon": "3.25rem" } as CSSProperties}
       >
         <AdminAppSidebar side={lang === "ar" ? "right" : "left"} />
-        <SidebarInset className="relative z-10 min-w-0 w-auto overflow-hidden border border-white/70 dark:border-white/10 bg-background/80 backdrop-blur-3xl shadow-[0_25px_80px_rgba(41,72,112,.12)] dark:shadow-black/30 md:rounded-[24px] md:m-3 md:ml-0">
-          <header className="sticky top-0 z-30 flex flex-col border-b border-border/40 bg-background/80 backdrop-blur-3xl transition-all">
+        <SidebarInset className="relative z-10 min-w-0 w-auto overflow-hidden border border-white/70 bg-background/95 shadow-[0_25px_80px_rgba(41,72,112,.12)] dark:border-white/10 dark:shadow-black/30 md:m-3 md:ml-0 md:rounded-[24px] md:bg-background/80 md:backdrop-blur-3xl">
+          <header className="sticky top-0 z-30 flex flex-col border-b border-border/40 bg-background/95 transition-colors md:bg-background/80 md:backdrop-blur-3xl">
             <div className="flex h-16 shrink-0 items-center justify-between gap-3 px-4 md:px-6">
               <div className="flex items-center gap-3 min-w-0">
                 <SidebarTrigger className="-ml-1 rounded-xl size-9 text-muted-foreground hover:bg-accent hover:text-foreground transition-all duration-200" />

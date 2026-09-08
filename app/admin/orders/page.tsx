@@ -128,15 +128,15 @@ export default function OrdersPage() {
       markReady(source)
     }
 
-    const bookingStream = onSnapshot(query(collection(db, "bookings"), limit(250)), (snapshot) => {
+    const bookingStream = onSnapshot(query(collection(db, "bookings"), limit(100)), (snapshot) => {
       setBookings(snapshot.docs.map((doc) => normalizeWorkOrder("bookings", doc.id, doc.data())))
       markReady("bookings")
     }, (cause) => fail("bookings", cause))
-    const orderStream = onSnapshot(query(collection(db, "orders"), limit(250)), (snapshot) => {
+    const orderStream = onSnapshot(query(collection(db, "orders"), limit(100)), (snapshot) => {
       setOrders(snapshot.docs.map((doc) => normalizeWorkOrder("orders", doc.id, doc.data())))
       markReady("orders")
     }, (cause) => fail("orders", cause))
-    const technicianStream = onSnapshot(query(collection(db, "technicians"), limit(150)), (snapshot) => {
+    const technicianStream = onSnapshot(query(collection(db, "technicians"), limit(100)), (snapshot) => {
       setTechnicians(snapshot.docs.filter((doc) => isTechnicianProfile(doc.data())).map((doc) => {
         const data = doc.data()
         const online = data.isOnline === true || data.online === true

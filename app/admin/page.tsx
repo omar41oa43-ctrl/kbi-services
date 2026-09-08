@@ -5,25 +5,15 @@ import Link from "next/link";
 import { collection, limit, onSnapshot, query } from "firebase/firestore";
 import {
   Activity,
-  AlertTriangle,
   ArrowRight,
-  CheckCircle2,
   Clock,
-  Clock3,
   DollarSign,
   MapPin,
-  PackageSearch,
-  PlusCircle,
-  Radio,
   Search,
   UserCheck,
   UserPlus,
-  Users,
-  Wifi,
-  Wrench,
   Zap,
   FileText,
-  TrendingUp,
   BarChart3,
   ClipboardList,
   BellRing,
@@ -39,13 +29,12 @@ import {
   YAxis,
 } from "recharts";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PasswordResetRequestsCard } from "@/components/admin/password-reset-requests-card";
 import { db } from "@/firebase/firebaseConfig";
-import { isActiveOrderStatus, normalizeOrderStatus, orderStatusLabel, type OrderStatus } from "@/lib/order-status";
+import { isActiveOrderStatus, normalizeOrderStatus, type OrderStatus } from "@/lib/order-status";
 import { isTechnicianProfile } from "@/lib/technician-profile";
 
 type WorkItem = {
@@ -77,12 +66,6 @@ type TechnicianState = {
   status: string;
 };
 
-const currency = new Intl.NumberFormat("en-AE", {
-  style: "currency",
-  currency: "AED",
-  maximumFractionDigits: 0,
-});
-
 const toDate = (value: unknown) => {
   if (!value) return null;
   if (typeof (value as { toDate?: unknown }).toDate === "function") return (value as { toDate: () => Date }).toDate();
@@ -113,7 +96,6 @@ export default function AdminDashboardPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
-  const [errors, setErrors] = useState<string[]>([]);
 
   useEffect(() => {
     let pending = 3;
@@ -127,12 +109,11 @@ export default function AdminDashboardPage() {
 
     const handleError = (source: string, error: unknown) => {
       console.warn(`Unable to stream ${source}`, error);
-      setErrors((curr) => Array.from(new Set([...curr, `${source} stream notice`])));
       markReady();
     };
 
     const bookingStream = onSnapshot(
-      query(collection(db, "bookings"), limit(100)),
+      query(collection(db, "bookings"), limit(50)),
       (snapshot) => {
         setBookings(snapshot.docs.map((doc) => normalizeWorkItem(doc.id, doc.data())));
         markReady();
@@ -141,7 +122,7 @@ export default function AdminDashboardPage() {
     );
 
     const orderStream = onSnapshot(
-      query(collection(db, "orders"), limit(100)),
+      query(collection(db, "orders"), limit(50)),
       (snapshot) => {
         setOrders(snapshot.docs.map((doc) => normalizeWorkItem(doc.id, doc.data())));
         markReady();
@@ -150,7 +131,7 @@ export default function AdminDashboardPage() {
     );
 
     const technicianStream = onSnapshot(
-      query(collection(db, "technicians"), limit(100)),
+      query(collection(db, "technicians"), limit(50)),
       (snapshot) => {
         setTechnicians(
           snapshot.docs

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import nextDynamic from "next/dynamic"
-import { collection, onSnapshot, query } from "firebase/firestore"
 import {
   BarChart3,
   CheckCircle2,
@@ -14,12 +13,11 @@ import {
   Wrench,
 } from "lucide-react"
 
-import { getAdminOrdersAction } from "@/app/actions/admin-orders"
+import { getAdminOrdersPageAction } from "@/app/actions/admin-orders"
 import { useT } from "@/components/language-provider"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { auth } from "@/firebase/authClient"
-import { db } from "@/firebase/firebaseConfig"
 
 const ResponsiveContainer = nextDynamic(() => import("recharts").then((m) => m.ResponsiveContainer as any), { ssr: false }) as any
 const BarChart = nextDynamic(() => import("recharts").then((m) => m.BarChart as any), { ssr: false }) as any
@@ -50,56 +48,34 @@ export default function AdminAnalyticsPage() {
   useEffect(() => {
     setMounted(true)
 
-    // Listen to real-time client Firestore orders
-    const ordersQuery = query(collection(db, "orders"))
-    const unsubOrders = onSnapshot(ordersQuery, (snapshot) => {
-      const liveList: OrderAnalyticsItem[] = snapshot.docs.map((doc) => {
-        const raw = doc.data()
-        const createdAtDate = raw.createdAt?.toDate ? raw.createdAt.toDate().toISOString() : String(raw.createdAt || "")
-        return {
-          id: doc.id,
-          status: String(raw.status || "pending").toLowerCase(),
-          price: Number(raw.price || raw.totalAmount || raw.amount || 0),
-          deviceType: String(raw.deviceType || raw.device || raw.service || "Device"),
-          createdAt: createdAtDate || null,
-        }
-      })
-
-      if (liveList.length > 0) {
-        setOrders(liveList)
-        setLoading(false)
-      }
-    }, (err) => {
-      console.warn("Analytics Firestore listener notice:", err)
-    })
-
-    // Fallback: Fetch via admin Server Action
+    let active = true
     const fetchAdminOrders = async () => {
       try {
         const user = auth.currentUser
-        const idToken = user ? await user.getIdToken() : undefined
-        const adminData = await getAdminOrdersAction(idToken)
-        if (Array.isArray(adminData) && adminData.length > 0) {
-          const mappedAdminList: OrderAnalyticsItem[] = adminData.map((raw: any) => ({
+        if (!user) return
+        const idToken = await user.getIdToken()
+        const response = await getAdminOrdersPageAction({ limit: 100, idToken })
+        if (active && Array.isArray(response.orders)) {
+          const mappedAdminList: OrderAnalyticsItem[] = response.orders.map((raw: any) => ({
             id: raw.id,
             status: String(raw.status || "pending").toLowerCase(),
-            price: Number(raw.price || 0),
-            deviceType: String(raw.deviceType || raw.brand || "Device"),
+            price: Number(raw.price || raw.totalAmount || raw.amount || 0),
+            deviceType: String(raw.deviceType || raw.device || raw.service || raw.brand || "Device"),
             createdAt: raw.createdAt || null,
           }))
-          setOrders((prev) => (prev.length === 0 ? mappedAdminList : prev))
+          setOrders(mappedAdminList)
         }
       } catch (err) {
         console.warn("Admin orders action notice:", err)
       } finally {
-        setLoading(false)
+        if (active) setLoading(false)
       }
     }
 
-    fetchAdminOrders()
+    void fetchAdminOrders()
 
     return () => {
-      unsubOrders()
+      active = false
     }
   }, [])
 

@@ -6,31 +6,23 @@ import dynamic from "next/dynamic";
 import {
   MapPin,
   Navigation,
-  Battery,
-  Wifi,
   ShieldAlert,
   CheckCircle2,
   RefreshCw,
-  Power,
-  Lock,
   Smartphone,
-  Send,
   Clock,
   UserCheck,
   Radio,
-  ExternalLink,
   Search,
   Users,
   Activity,
   Layers,
-  Zap,
   Phone,
-  AlertTriangle,
   ArrowRight,
   Wrench,
   MessageCircle,
 } from "lucide-react";
-import { collection, onSnapshot, query, doc, updateDoc, setDoc, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, limit, onSnapshot, query } from "firebase/firestore";
 import { db } from "@/firebase/firebaseConfig";
 import { authorizedFetch } from "@/lib/authorized-fetch";
 import { isTechnicianProfile } from "@/lib/technician-profile";
@@ -170,14 +162,11 @@ export default function LiveTrackingPage() {
   const [technicians, setTechnicians] = useState<TechMarker[]>([]);
   const [bookings, setBookings] = useState<PendingBooking[]>([]);
   const [selectedTech, setSelectedTech] = useState<TechMarker | null>(null);
-  const [selectedBooking, setSelectedBooking] = useState<PendingBooking | null>(null);
   const [lastSync, setLastSync] = useState<Date>(new Date());
-  const [alertMessage, setAlertMessage] = useState("");
   const [notice, setNotice] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [emirateFilter, setEmirateFilter] = useState<"ALL" | "abu-dhabi" | "dubai" | "sharjah" | "ajman">("ALL");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ONLINE" | "AVAILABLE" | "ON_JOB" | "OFFLINE">("ALL");
-  const [rightTab, setRightTab] = useState<"INSPECTOR" | "SMART_DISPATCH">("INSPECTOR");
   const [trackingNow, setTrackingNow] = useState(() => Date.now());
   const [requestingLocation, setRequestingLocation] = useState(false);
 
@@ -188,7 +177,9 @@ export default function LiveTrackingPage() {
 
   // Bookings Real-time Listener
   useEffect(() => {
-    const bookQ = query(collection(db, "bookings"));
+    // The dispatch map only needs the current work queue. Bounding the stream
+    // prevents historical bookings from being downloaded on every visit.
+    const bookQ = query(collection(db, "bookings"), limit(100));
     const unsub = onSnapshot(bookQ, (snap) => {
       const list: PendingBooking[] = snap.docs.map((d) => {
         const data = d.data();
@@ -225,7 +216,9 @@ export default function LiveTrackingPage() {
 
   // Technicians Real-time Listener
   useEffect(() => {
-    const techQ = query(collection(db, "technicians"));
+    // Technicians remain real-time, but the dashboard has a practical cap so a
+    // growing directory cannot freeze the map client.
+    const techQ = query(collection(db, "technicians"), limit(200));
     const unsub = onSnapshot(
       techQ,
       (snap) => {
@@ -418,7 +411,6 @@ export default function LiveTrackingPage() {
         type: "success",
         text: `Remote command [${action}] dispatched to ${selectedTech.name}.`,
       });
-      if (action === "POPUP_ALERT" || action === "EMERGENCY_ALERT") setAlertMessage("");
       return true;
     } catch (error: unknown) {
       setNotice({
@@ -436,90 +428,6 @@ export default function LiveTrackingPage() {
       message: "KBI Dispatch requested your current GPS location.",
     });
     setRequestingLocation(false);
-  };
-
-  const dispatchTechnicianToBooking = async (techId: string, techName: string, bookingId: string) => {
-    try {
-      const payload = {
-        assignedTechnician: techId,
-        assignedTechnicianId: techId,
-        technicianId: techId,
-        technicianName: techName,
-        assignedTechnicians: [techId],
-        assignedTechnicianNames: [techName],
-        technicianIds: [techId],
-        technicianNames: [techName],
-        status: "assigned",
-        assignedAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
-
-      // 1. Update in bookings collection
-      await setDoc(doc(db, "bookings", bookingId), payload, { merge: true });
-
-      // 2. Mirror update in orders and service_requests collections
-      try {
-        await setDoc(doc(db, "orders", bookingId), payload, { merge: true });
-      } catch (err) {
-        console.warn("Orders mirror write notice:", err);
-      }
-      try {
-        await setDoc(doc(db, "service_requests", bookingId), payload, { merge: true });
-      } catch (err) {
-        console.warn("service_requests mirror write notice:", err);
-      }
-
-      // 3. Update technician active state & dispatch direct remote screen trigger
-      await setDoc(
-        doc(db, "technicians", techId),
-        {
-          currentJob: bookingId,
-          currentOrder: bookingId,
-          status: "ON_JOB",
-          available: false,
-          pendingRemoteCommand: {
-            cmdId: `cmd-${Date.now()}`,
-            action: "NAVIGATE",
-            payload: {
-              screen: "INCOMING_ORDER",
-              orderId: bookingId,
-              reference: String(bookingId),
-            },
-            createdAt: serverTimestamp(),
-          },
-          updatedAt: serverTimestamp(),
-        },
-        { merge: true }
-      );
-
-      // 4. Create in-app dispatch notification
-      try {
-        await addDoc(collection(db, "notifications"), {
-          userId: techId,
-          technicianId: techId,
-          title: `New Dispatch: ${bookingId}`,
-          body: `You have been dispatched to order #${bookingId}. Open app to view location and job details.`,
-          type: "job",
-          category: "Jobs",
-          orderId: bookingId,
-          isRead: false,
-          createdAt: serverTimestamp(),
-        });
-      } catch (notifErr) {
-        console.warn("In-app notification write notice:", notifErr);
-      }
-
-      setNotice({
-        type: "success",
-        text: `Directly dispatched ${techName} to Order #${bookingId}!`,
-      });
-      setSelectedBooking(null);
-    } catch (e: any) {
-      setNotice({
-        type: "error",
-        text: `Dispatch failed: ${e?.message || e}`,
-      });
-    }
   };
 
   return (
