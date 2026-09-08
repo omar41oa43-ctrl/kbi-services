@@ -119,7 +119,27 @@ const createModel = (model: string) => {
   const collectionName = collectionFor(model)
 
   const findMany = async (args: Data = {}) => {
-    const snapshot = await getAdminDb().collection(collectionName).limit(Math.min(Number(args.take || 500), 500)).get()
+    const db = getAdminDb()
+    const requestedLimit = Math.min(Number(args.take || 500), 500)
+    const whereEntries = Object.entries(args.where || {})
+    const canUseIndexedLookup =
+      whereEntries.length === 1 &&
+      !args.where?.OR &&
+      !args.where?.AND &&
+      whereEntries[0][1] !== undefined &&
+      whereEntries[0][1] !== null &&
+      typeof whereEntries[0][1] !== "object"
+
+    // Most identity lookups use one equality field (for example a customer's
+    // phone). Let Firestore use its index instead of downloading 500 records
+    // and filtering them in the server process.
+    const source = canUseIndexedLookup
+      ? db
+          .collection(collectionName)
+          .where(whereEntries[0][0], "==", whereEntries[0][1])
+          .limit(requestedLimit)
+      : db.collection(collectionName).limit(requestedLimit)
+    const snapshot = await source.get()
     let rows: Data[] = snapshot.docs
       .map((doc): Data => ({ id: doc.id, ...doc.data() }))
       .filter((row) => matches(row, args.where))

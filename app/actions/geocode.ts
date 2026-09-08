@@ -19,6 +19,8 @@ export async function reverseGeocode(lat: number, lon: number, lang: "en" | "ar"
         const response = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`,
             {
+                cache: "no-store",
+                signal: AbortSignal.timeout(4500),
                 headers: {
                     'Accept-Language': lang,
                     'User-Agent': 'KBIRepairService/1.0 (contact@kbi.services)' // Required by Nominatim

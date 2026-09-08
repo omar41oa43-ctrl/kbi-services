@@ -68,9 +68,9 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
             return { error: "Unable to reserve a unique order number. Please try again." }
         }
 
-        let pgUserId = ""
-        try {
-            const pgUser = await prisma.user.upsert({
+        // Keep the customer directory in sync, but do it alongside the booking
+        // write so it cannot add a full extra round trip to the form response.
+        const customerSync = prisma.user.upsert({
                 where: { phone: customerPhone },
                 update: {
                     name: customerName,
@@ -83,52 +83,20 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
                     role: 'CUSTOMER',
                 }
             })
-            pgUserId = pgUser?.id || ""
-
-            const sanitizedDevices = deviceEntries.map((entry: any) => ({
-                category: String(entry?.deviceName || entry?.deviceType || "Device"),
-                brand: String(entry?.brandName || entry?.brand || "Brand"),
-                model: String(entry?.model || "Model"),
-                issue: Array.isArray(entry?.issues) ? entry.issues.join(", ") : String(entry?.issue || "Inspection"),
-            }))
-
-            const pgOrder = await prisma.order.create({
-                data: {
-                    orderNumber: pgOrderNumber,
-                    customerId: pgUserId,
-                    description: formData?.notes || null,
-                    address: formData?.address || formData?.areaName || "UAE",
-                    latitude: typeof formData?.locationLat === "number" ? formData.locationLat : null,
-                    longitude: typeof formData?.locationLng === "number" ? formData.locationLng : null,
-                    images: [],
-                    devices: sanitizedDevices,
-                },
+            .catch((customerError: unknown) => {
+                console.error("Customer directory sync notice:", customerError)
+                return null
             })
-
-            // Add to customer timeline safely
-            if (pgUserId) {
-                await prisma.customerTimeline.create({
-                    data: {
-                        userId: pgUserId,
-                        eventType: "ORDER_CREATED",
-                        title: `New Order ${pgOrderNumber} Created`,
-                        data: {
-                            orderNumber: pgOrderNumber,
-                            orderId: pgOrder?.id || pgOrderNumber,
-                        },
-                    },
-                }).catch(() => {})
-            }
-        } catch (pgErr) {
-            console.error("Prisma order creation fallback:", pgErr)
-        }
 
         // Use one short, atomic counter value everywhere the customer sees or
         // searches for the request. Legacy long tracking codes remain searchable
         // through the tracking API, but all new bookings use KBI-000000 format.
         const publicTrackingCode = pgOrderNumber
 
-        // Continue with Firebase for backward compatibility
+        const bookingWrites: Array<Promise<FirebaseFirestore.WriteResult[]>> = []
+
+        // Persist every booking representation atomically. This removes the
+        // previous duplicate order record and five sequential network writes.
         for (const entry of deviceEntries) {
             const orderId = publicTrackingCode
 
@@ -142,6 +110,7 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
             const area = String(formData.areaName || "")
             const fullAddress = [area, formData.address, emirate, "UAE"].filter(Boolean).join(", ")
 
+            const now = Timestamp.now()
             const payload = {
                 orderId,
                 orderNumber: pgOrderNumber,
@@ -169,14 +138,11 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
                 status: "Order Created",
                 technician: "unassigned",
                 price: 0,
-                createdAt: Timestamp.now(),
-                updatedAt: Timestamp.now(),
+                createdAt: now,
+                updatedAt: now,
             }
 
-            try {
-                await adminDb.collection("orders").add(payload)
-
-                const bookingPayload: any = {
+            const bookingPayload: any = {
                     bookingId: orderId,
                     orderId,
                     orderNumber: pgOrderNumber,
@@ -198,8 +164,8 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
                     scheduledTime: formData?.preferredTime || "afternoon",
                     status: "pending",
                     priority: "MEDIUM",
-                    createdAt: Timestamp.now(),
-                    updatedAt: Timestamp.now(),
+                    createdAt: now,
+                    updatedAt: now,
                 }
 
                 if (hasCoords) {
@@ -212,19 +178,19 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
                     }
                 }
 
-                await adminDb.collection("bookings").doc(orderId).set(bookingPayload)
-
-                await adminDb.collection("customer_timeline").add({
+            const batch = adminDb.batch()
+            batch.set(adminDb.collection("orders").doc(orderId), payload, { merge: true })
+            batch.set(adminDb.collection("bookings").doc(orderId), bookingPayload, { merge: true })
+            batch.set(adminDb.collection("customer_timeline").doc(), {
                     bookingId: orderId,
                     orderId,
                     status: "pending",
                     action: "Booking Created",
                     notes: `Customer created a booking in ${emirate} (${area || 'Doorstep'}) for ${entry?.brandName || ""} ${entry?.model || ""}`,
-                    timestamp: Timestamp.now(),
-                }).catch(() => {})
+                    timestamp: now,
+                })
 
-                const srRef = adminDb.collection("service_requests").doc()
-                await srRef.set({
+            batch.set(adminDb.collection("service_requests").doc(), {
                     type: String(entry?.deviceName || "Device"),
                     description: `${entry?.brandName || ""} ${entry?.model || ""} - ${(entry?.issues || []).join(", ")}`.trim(),
                     country: "UAE",
@@ -241,13 +207,12 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
                     status: "new",
                     assignedTo: [],
                     offers: [],
-                    createdAt: Timestamp.now(),
-                    updatedAt: Timestamp.now(),
+                    createdAt: now,
+                    updatedAt: now,
                     orderId,
-                }).catch(() => {})
+                })
 
-                // Add Notification
-                await adminDb.collection("notifications").add({
+            batch.set(adminDb.collection("notifications").doc(), {
                     type: "order_created",
                     title: "New Order",
                     message: `New order ${orderId} from ${customerName}`,
@@ -255,12 +220,12 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
                     orderId,
                     link: `/admin/orders`,
                     read: false,
-                    createdAt: new Date()
-                }).catch(() => {})
-            } catch (fbErr) {
-                console.error("Firebase booking write error:", fbErr)
-            }
+                    createdAt: now,
+                })
+            bookingWrites.push(batch.commit())
         }
+
+        await Promise.all([customerSync, ...bookingWrites])
 
         return { success: true, orderIds: [publicTrackingCode], primaryOrderId: publicTrackingCode }
 

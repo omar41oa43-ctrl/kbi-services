@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { APP_VERSION, BUILD_TIMESTAMP } from '@/lib/app-version'
 import { Button } from '@/components/ui/button'
@@ -21,12 +21,12 @@ export function UpdateNotification({
   checkInterval = 60000,
 }: UpdateNotificationProps) {
   const [showUpdate, setShowUpdate] = useState(false)
-  const [isChecking, setIsChecking] = useState(false)
   const [newVersion, setNewVersion] = useState<string | null>(null)
+  const checkingRef = useRef(false)
 
   const checkForUpdate = useCallback(async () => {
-    if (isChecking) return
-    setIsChecking(true)
+    if (checkingRef.current) return
+    checkingRef.current = true
 
     try {
       // Simple version-based checking first
@@ -45,9 +45,9 @@ export function UpdateNotification({
       // Silent fail - don't show errors to user
       console.warn('Update check failed:', error)
     } finally {
-      setIsChecking(false)
+      checkingRef.current = false
     }
-  }, [isChecking])
+  }, [])
 
   const handleUpdate = useCallback(() => {
     window.location.reload()
@@ -64,35 +64,54 @@ export function UpdateNotification({
     const storedVersion = localStorage.getItem('app-version')
     if (!storedVersion) {
       localStorage.setItem('app-version', APP_VERSION)
-      return
     }
 
-    checkForUpdate()
+    void checkForUpdate()
 
-    const interval = setInterval(checkForUpdate, checkInterval)
+    const interval = window.setInterval(checkForUpdate, checkInterval)
+    let registration: ServiceWorkerRegistration | undefined
+    let installingWorker: ServiceWorker | null = null
+
+    const handleControllerChange = () => setShowUpdate(true)
+    const handleWorkerStateChange = () => {
+      if (
+        installingWorker?.state === 'installed' &&
+        navigator.serviceWorker.controller
+      ) {
+        setShowUpdate(true)
+      }
+    }
+    const handleUpdateFound = () => {
+      installingWorker = registration?.installing ?? null
+      installingWorker?.addEventListener('statechange', handleWorkerStateChange)
+    }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        setShowUpdate(true)
-      })
+      navigator.serviceWorker.addEventListener(
+        'controllerchange',
+        handleControllerChange,
+      )
 
-      navigator.serviceWorker.getRegistration().then((registration) => {
+      void navigator.serviceWorker.getRegistration().then((activeRegistration) => {
+        registration = activeRegistration
         if (registration) {
-          registration.addEventListener('updatefound', () => {
-            const newWorker = registration.installing
-            if (newWorker) {
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  setShowUpdate(true)
-                }
-              })
-            }
-          })
+          registration.addEventListener('updatefound', handleUpdateFound)
         }
       })
     }
 
-    return () => clearInterval(interval)
+    return () => {
+      window.clearInterval(interval)
+      navigator.serviceWorker?.removeEventListener(
+        'controllerchange',
+        handleControllerChange,
+      )
+      registration?.removeEventListener('updatefound', handleUpdateFound)
+      installingWorker?.removeEventListener(
+        'statechange',
+        handleWorkerStateChange,
+      )
+    }
   }, [checkForUpdate, checkInterval])
 
   if (!showUpdate) return null

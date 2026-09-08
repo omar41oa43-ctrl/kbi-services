@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useTransition } from "react"
+import { useState, useEffect, useRef, useTransition } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
@@ -35,7 +35,6 @@ import {
   CheckCircle2,
   Copy,
   Loader2,
-  Navigation,
   Sparkles,
   Zap,
   Sunrise,
@@ -46,8 +45,6 @@ import {
   HelpCircle,
   Clock,
   ArrowRight,
-  QrCode,
-  Flame,
 } from "lucide-react"
 
 export interface BookingState {
@@ -254,6 +251,7 @@ export function BookingForm() {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [confirmedOrderId, setConfirmedOrderId] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const submittingRef = useRef(false)
 
   // Booking Data State
   const [state, setState] = useState<BookingState>({
@@ -331,29 +329,36 @@ export function BookingForm() {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords
-        try {
-          const detectedEmirate = detectEmirateFromGPS(latitude, longitude)
-          const geoRes = await reverseGeocode(latitude, longitude)
-          const detectedArea = (geoRes && "address" in geoRes && typeof geoRes.address === "string") ? geoRes.address : ""
+        const detectedEmirate = detectEmirateFromGPS(latitude, longitude)
 
-          setState((prev) => ({
-            ...prev,
+        // A valid GPS fix is enough to continue. Reverse geocoding is an
+        // optional enhancement and must never keep the form spinner blocked.
+        setState((prev) => ({
+          ...prev,
+          latitude,
+          longitude,
+          emirateId: detectedEmirate?.id || prev.emirateId,
+          emirateName: detectedEmirate?.nameEn || prev.emirateName,
+        }))
+        setIsLocating(false)
+
+        try {
+          const geoRes = await reverseGeocode(
             latitude,
             longitude,
-            emirateId: detectedEmirate?.id || prev.emirateId,
-            emirateName: detectedEmirate?.nameEn || prev.emirateName,
-            area: detectedArea || prev.area,
-          }))
+            isAr ? "ar" : "en",
+          )
+          const detectedArea = (geoRes && "address" in geoRes && typeof geoRes.address === "string") ? geoRes.address : ""
 
-          toast({
-            title: isAr ? "تم تحديد موقعك بدقة 🎯" : "Location Pinpointed 🎯",
-            description: `${detectedEmirate?.nameEn || "UAE"} - ${detectedArea || "Current Location"}`,
-          })
-        } catch {
-          setState((prev) => ({ ...prev, latitude, longitude }))
-        } finally {
-          setIsLocating(false)
-        }
+          if (detectedArea) {
+            setState((prev) => ({ ...prev, area: detectedArea }))
+          }
+        } catch {}
+
+        toast({
+          title: isAr ? "تم تحديد موقعك بدقة 🎯" : "Location Pinpointed 🎯",
+          description: detectedEmirate?.nameEn || "Current Location",
+        })
       },
       () => {
         setIsLocating(false)
@@ -402,7 +407,17 @@ export function BookingForm() {
 
   // Final Submit
   const handleConfirmBooking = async () => {
-    if (!isStep3Valid || isPending) return
+    if (!isStep3Valid || isPending || submittingRef.current) return
+    if (navigator.onLine === false) {
+      setSubmitError(
+        isAr
+          ? "لا يوجد اتصال بالإنترنت. تحقق من الشبكة ثم أعد المحاولة."
+          : "You are offline. Check your connection and try again.",
+      )
+      return
+    }
+
+    submittingRef.current = true
     setSubmitError(null)
 
     startTransition(async () => {
@@ -492,6 +507,8 @@ export function BookingForm() {
             : "We couldn't submit your booking. Please try again or contact us on WhatsApp.",
         )
         trackEvent("booking_failed", { error: String(err) })
+      } finally {
+        submittingRef.current = false
       }
     })
   }
@@ -506,9 +523,9 @@ export function BookingForm() {
   }
 
   return (
-    <div className="relative pt-24 sm:pt-28 pb-24 min-h-screen overflow-hidden">
+    <div className="booking-flow relative pt-24 sm:pt-28 pb-24 min-h-screen overflow-hidden">
       {/* APPLE LIQUID GLASS AMBIENCE MESH */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 hidden overflow-hidden md:block">
         <div
           className={cn(
             "absolute top-[-18%] left-[-15%] w-[60vw] h-[60vw] rounded-full blur-[160px] transition-all duration-1000",
@@ -532,7 +549,7 @@ export function BookingForm() {
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-card/60 border border-white/10 dark:border-cyan-500/25 mb-3.5 backdrop-blur-2xl shadow-xl shadow-cyan-500/5 ring-1 ring-white/10"
+              className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-card sm:bg-card/60 border border-white/10 dark:border-cyan-500/25 mb-3.5 backdrop-blur-2xl shadow-xl shadow-cyan-500/5 ring-1 ring-white/10"
             >
               <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -560,14 +577,13 @@ export function BookingForm() {
         {/* LIQUID GLASS SEGMENTED TRACKER */}
         {step !== 4 ? (
           <div className="max-w-xl mx-auto mb-6 sm:mb-8">
-            <div className="relative p-1.5 rounded-2xl bg-card/70 backdrop-blur-2xl border border-white/10 dark:border-white/5 shadow-2xl shadow-cyan-500/5">
+            <div className="relative p-1.5 rounded-2xl bg-card sm:bg-card/70 backdrop-blur-2xl border border-white/10 dark:border-white/5 shadow-2xl shadow-cyan-500/5">
               <div className="grid grid-cols-3 gap-1.5">
                 {[
                   { num: 1, label: t("Device"), labelAr: "الجهاز", icon: Smartphone },
                   { num: 2, label: t("Location"), labelAr: "الموقع", icon: MapPin },
                   { num: 3, label: t("Details"), labelAr: "البيانات", icon: User },
                 ].map((st) => {
-                  const Icon = st.icon
                   const isActive = step === st.num
                   const isDone = step > st.num
                   return (
@@ -621,9 +637,9 @@ export function BookingForm() {
 
         {/* MAIN LIQUID GLASS CONTAINER */}
         <div className="max-w-2xl mx-auto">
-          <div className="relative rounded-[36px] border border-white/15 dark:border-white/10 bg-card/80 backdrop-blur-3xl p-5 sm:p-9 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/10 before:to-transparent before:pointer-events-none">
+          <div className="relative rounded-[36px] border border-white/15 dark:border-white/10 bg-card sm:bg-card/80 backdrop-blur-3xl p-5 sm:p-9 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/10 before:to-transparent before:pointer-events-none">
             {/* Top Liquid Flare */}
-            <div className="pointer-events-none absolute -top-28 left-1/2 -translate-x-1/2 w-4/5 h-28 bg-cyan-400/25 rounded-full blur-3xl" />
+            <div className="pointer-events-none absolute -top-28 left-1/2 hidden h-28 w-4/5 -translate-x-1/2 rounded-full bg-cyan-400/25 blur-3xl sm:block" />
 
             <AnimatePresence mode="wait">
               {/* =========================================================================

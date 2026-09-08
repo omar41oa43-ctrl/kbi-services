@@ -1545,7 +1545,9 @@ html:not(.dark) .adaptive-theme-page [class*="from-white"][class*="text-transpar
 
   .site-shell footer .animate-ping,
   .site-shell footer .animate-spin,
-  .site-shell footer .circular-text {
+  .site-shell footer .circular-text,
+  .site-shell .booking-flow .animate-ping,
+  .site-shell .booking-flow .animate-pulse {
     animation: none;
   }
 }
