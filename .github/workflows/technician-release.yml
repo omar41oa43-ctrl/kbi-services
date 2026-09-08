@@ -56,6 +56,10 @@ jobs:
           BUILD_TOOLS_DIR="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
           "$BUILD_TOOLS_DIR/apksigner" verify --verbose --print-certs \
             build/app/outputs/flutter-apk/app-release.apk | tee build/release-signature.txt
+          if grep -F "CN=Android Debug" build/release-signature.txt; then
+            echo "::error::The configured Android signing secret uses a debug certificate. Replace it with the existing Google Play upload key, or create a new release key only for a brand-new Play listing."
+            exit 1
+          fi
           "$BUILD_TOOLS_DIR/aapt" dump badging \
             build/app/outputs/flutter-apk/app-release.apk | tee build/release-badging.txt
           grep -F "package: name='ae.kbi.kbi_technician_app' versionCode='11' versionName='1.4.4'" \

@@ -4,8 +4,8 @@
 
 - iOS release build succeeds with bundle ID `ae.kbi.kbiTechnicianApp` and version `1.4.4 (11)`.
 - The release build is installed on the USB iPhone and passes a force-close/relaunch test.
-- Android is configured for package `ae.kbi.kbi_technician_app`, version `1.4.4 (11)`, target API 36, and production signing.
-- A signed Android App Bundle and APK were built and verified successfully by GitHub Actions run `34218988090`. The pipeline runs analysis, the full test suite, package checks, signature verification, and checksums before publishing artifacts.
+- Android is configured for package `ae.kbi.kbi_technician_app`, version `1.4.4 (11)`, and target API 36.
+- GitHub Actions run `34218988090` built the AAB/APK and exposed that the configured signing secret uses `CN=Android Debug`. These diagnostic binaries must not be uploaded to Google Play. The pipeline now rejects this certificate before publishing artifacts.
 - Firebase Android and iOS apps are registered in project `kbi2-f4f19`; both package IDs match.
 - The Firebase iOS configuration is included in the Runner target.
 - Firestore rules compile and are deployed. Account deletion is available inside Profile and requires password confirmation.
@@ -15,12 +15,13 @@
 
 ## Do not submit until these items are completed
 
-1. Enable billing for Firebase project `kbi2-f4f19`, open Firebase Storage, click **Get started**, choose the production region, then deploy `storage.rules`. Document and profile uploads currently cannot work because the Storage bucket is not provisioned.
-2. In Firebase Cloud Messaging, upload an Apple Push Notification authentication key for the Apple team and confirm Push Notifications plus Background Modes / Remote notifications are enabled for the App ID.
-3. Build the final archive with a public release of Xcode 26 or later. The current host uses a prerelease Xcode 27 build, so use it for testing only.
-4. Provide a permanently available, fully approved technician review account. It must bypass approval/subscription waiting screens and contain at least one demo active job, one completed job, and one shareable invoice.
-5. Test account deletion, registration document upload, notification delivery, background location, job completion, and invoice sharing against production before upload.
-6. Restore System Integrity Protection on the build Mac before relying on it for local Android builds. Java currently crashes because SIP is disabled; signed Android releases are therefore generated and verified by GitHub Actions.
+1. Replace the GitHub Android signing secrets with the existing Google Play upload keystore. If this package has never been registered or uploaded anywhere, create and securely back up a new release upload key instead. Never replace an existing app's key without checking Play Console first.
+2. Enable billing for Firebase project `kbi2-f4f19`, open Firebase Storage, click **Get started**, choose the production region, then deploy `storage.rules`. Document and profile uploads currently cannot work because the Storage bucket is not provisioned.
+3. In Firebase Cloud Messaging, upload an Apple Push Notification authentication key for the Apple team and confirm Push Notifications plus Background Modes / Remote notifications are enabled for the App ID.
+4. Build the final archive with a public release of Xcode 26 or later. The current host uses a prerelease Xcode 27 build, so use it for testing only.
+5. Provide a permanently available, fully approved technician review account. It must bypass approval/subscription waiting screens and contain at least one demo active job, one completed job, and one shareable invoice.
+6. Test account deletion, registration document upload, notification delivery, background location, job completion, and invoice sharing against production before upload.
+7. Restore System Integrity Protection on the build Mac before relying on it for local Android builds. Java currently crashes because SIP is disabled; signed Android releases are therefore generated and verified by GitHub Actions.
 
 ## Apple App Store Connect recommendations
 
@@ -105,7 +106,7 @@ An approved KBI technician account is required.
 - Complete the Background Location declaration. Upload a short video showing: the in-app disclosure, permission request, technician going online, active-job ETA/location use, and going offline to stop sharing.
 - Use this exact prominent disclosure in the app and declaration: `KBI Technician collects your location to share live ETA and job progress with KBI dispatch and customers while you are on duty or handling an active service, including when the app is in the background. You can stop sharing by going offline.`
 - Provide the privacy-policy URL, app-access review credentials, content rating, target-audience answers, ads declaration, government-app declaration, financial-features declaration, and account-deletion URL/details where requested.
-- Upload the CI-generated signed AAB to Internal testing before Production. Keep the workflow verification reports with the release record.
+- After installing the correct release upload key and obtaining a green pipeline, upload that CI-generated AAB to Internal testing before Production. Keep the workflow verification reports with the release record.
 
 ## Recommended rollout
 
