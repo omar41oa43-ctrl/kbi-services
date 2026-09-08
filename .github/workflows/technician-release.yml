@@ -45,6 +45,23 @@ jobs:
             "$ANDROID_KEY_ALIAS" \
             "$ANDROID_KEY_PASSWORD" > android/key.properties
 
+      - name: Validate release signing identity
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          SIGNING_IDENTITY="$(keytool -list -v \
+            -keystore android/kbi-release.jks \
+            -alias "$ANDROID_KEY_ALIAS" \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" \
+            -keypass "$ANDROID_KEY_PASSWORD")"
+          if printf '%s\n' "$SIGNING_IDENTITY" | grep -F "CN=Android Debug"; then
+            echo "::error::The configured Android signing secret uses the insecure Android debug certificate."
+            exit 1
+          fi
+          printf '%s\n' "$SIGNING_IDENTITY" | grep -E "^(Owner:|SHA256:)"
+
       - run: flutter pub get
       - run: flutter analyze --no-fatal-infos --no-fatal-warnings
       - run: flutter test
