@@ -131,8 +131,8 @@ class _JobsScreenState extends State<JobsScreen> {
 
             return RefreshIndicator(
               onRefresh: _handleRefresh,
-              color: const Color(0xFF111318),
-              backgroundColor: const Color(0xF2FFFFFF),
+              color: kbiBrand,
+              backgroundColor: kbiSurfaceRaised,
               child: CustomScrollView(
                 slivers: [
                   SliverToBoxAdapter(
@@ -163,8 +163,8 @@ class _JobsScreenState extends State<JobsScreen> {
                         width: double.infinity,
                         child: CupertinoSlidingSegmentedControl<String>(
                           groupValue: _selectedFilter,
-                          backgroundColor: Colors.white.withValues(alpha: 0.72),
-                          thumbColor: Colors.white,
+                          backgroundColor: kbiBlack,
+                          thumbColor: kbiSurfaceMuted,
                           padding: const EdgeInsets.all(3),
                           onValueChanged: (value) {
                             if (value == null) return;
@@ -268,12 +268,12 @@ class _JobsScreenState extends State<JobsScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.88),
+        color: kbiSurfaceRaised.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white),
+        border: Border.all(color: kbiSeparator),
         boxShadow: [
           BoxShadow(
-            color: kbiNavy.withValues(alpha: 0.055),
+            color: Colors.black.withValues(alpha: 0.38),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
@@ -302,7 +302,7 @@ class _JobsScreenState extends State<JobsScreen> {
                   ],
                 ),
                 child: const Icon(
-                  CupertinoIcons.waveform_path_ecg,
+                  CupertinoIcons.tray_full_fill,
                   color: Colors.white,
                   size: 18,
                 ),
@@ -344,7 +344,7 @@ class _JobsScreenState extends State<JobsScreen> {
                 child: Text(
                   isAr ? 'مباشر' : 'LIVE',
                   style: const TextStyle(
-                    color: Color(0xFF047857),
+                    color: kbiBrand,
                     fontSize: 9,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 0.6,
@@ -443,9 +443,9 @@ class _JobsScreenState extends State<JobsScreen> {
   Widget _buildSearchBar() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: kbiSurfaceRaised,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: kbiSeparator),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -462,10 +462,8 @@ class _JobsScreenState extends State<JobsScreen> {
         backgroundColor: Colors.transparent,
         borderRadius: BorderRadius.circular(16),
         style: const TextStyle(
-            color: Color(0xFF0F172A),
-            fontSize: 14.5,
-            fontWeight: FontWeight.w600),
-        itemColor: const Color(0xFF2563EB),
+            color: kbiLabel, fontSize: 14.5, fontWeight: FontWeight.w600),
+        itemColor: kbiBrand,
         onSuffixTap: () {
           _searchController.clear();
           setState(() => _searchQuery = '');
@@ -486,19 +484,19 @@ class _JobsScreenState extends State<JobsScreen> {
       icon: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: kbiSurfaceMuted,
           borderRadius: const BorderRadius.all(Radius.circular(16)),
-          border: Border.all(color: const Color(0xFFE8E9EC)),
+          border: Border.all(color: kbiSeparator),
         ),
         child: const Row(
           children: [
-            Icon(Icons.sort_rounded, color: Color(0xFF111318), size: 18),
+            Icon(Icons.sort_rounded, color: kbiLabel, size: 18),
             SizedBox(width: 4),
-            Icon(Icons.arrow_drop_down, color: Colors.black54, size: 16),
+            Icon(Icons.arrow_drop_down, color: kbiSecondaryLabel, size: 16),
           ],
         ),
       ),
-      color: Colors.white,
+      color: kbiSurfaceRaised,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(24))),
       onSelected: (option) => setState(() => _sortOption = option),
@@ -506,28 +504,23 @@ class _JobsScreenState extends State<JobsScreen> {
         PopupMenuItem(
             value: OrderSortOption.newest,
             child: Text(isAr ? 'الأحدث أولًا' : 'Newest first',
-                style:
-                    const TextStyle(color: Color(0xFF111318), fontSize: 13))),
+                style: const TextStyle(color: kbiLabel, fontSize: 13))),
         PopupMenuItem(
             value: OrderSortOption.oldest,
             child: Text(isAr ? 'الأقدم أولًا' : 'Oldest first',
-                style:
-                    const TextStyle(color: Color(0xFF111318), fontSize: 13))),
+                style: const TextStyle(color: kbiLabel, fontSize: 13))),
         PopupMenuItem(
             value: OrderSortOption.today,
             child: Text(isAr ? 'طلبات اليوم' : 'Today\'s jobs',
-                style:
-                    const TextStyle(color: Color(0xFF111318), fontSize: 13))),
+                style: const TextStyle(color: kbiLabel, fontSize: 13))),
         PopupMenuItem(
             value: OrderSortOption.highestPriority,
             child: Text(isAr ? 'الأعلى أولوية' : 'Highest priority',
-                style:
-                    const TextStyle(color: Color(0xFF111318), fontSize: 13))),
+                style: const TextStyle(color: kbiLabel, fontSize: 13))),
         PopupMenuItem(
             value: OrderSortOption.recentlyUpdated,
             child: Text(isAr ? 'المحدثة مؤخرًا' : 'Recently updated',
-                style:
-                    const TextStyle(color: Color(0xFF111318), fontSize: 13))),
+                style: const TextStyle(color: kbiLabel, fontSize: 13))),
       ],
     );
   }
@@ -582,12 +575,11 @@ class _JobsScreenState extends State<JobsScreen> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: kbiSurfaceRaised,
           borderRadius: BorderRadius.circular(22),
           border: Border.all(
-            color: isEmphasized
-                ? kbiBlue.withValues(alpha: 0.72)
-                : const Color(0xFFE2E8F0),
+            color:
+                isEmphasized ? kbiBlue.withValues(alpha: 0.72) : kbiSeparator,
             width: isEmphasized ? 1.5 : 1.0,
           ),
           boxShadow: [
@@ -628,13 +620,12 @@ class _JobsScreenState extends State<JobsScreen> {
                         decoration: BoxDecoration(
                           color: isEmphasized
                               ? kbiBlue.withValues(alpha: 0.10)
-                              : const Color(0xFFF1F5F9),
+                              : kbiSurfaceMuted,
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Icon(
                           _getServiceIcon(job.type),
-                          color:
-                              isEmphasized ? kbiBlue : const Color(0xFF0F172A),
+                          color: isEmphasized ? kbiBlue : kbiLabel,
                           size: 22,
                         ),
                       ),
@@ -661,7 +652,7 @@ class _JobsScreenState extends State<JobsScreen> {
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                color: Color(0xFF0F172A),
+                                color: kbiLabel,
                                 fontSize: 14.5,
                                 fontWeight: FontWeight.w800,
                                 height: 1.25,
@@ -671,7 +662,7 @@ class _JobsScreenState extends State<JobsScreen> {
                             Row(
                               children: [
                                 const Icon(Icons.person_outline_rounded,
-                                    color: Color(0xFF64748B), size: 13),
+                                    color: kbiSecondaryLabel, size: 13),
                                 const SizedBox(width: 4),
                                 Expanded(
                                   child: Text(
@@ -679,7 +670,7 @@ class _JobsScreenState extends State<JobsScreen> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
-                                      color: Color(0xFF475569),
+                                      color: kbiSecondaryLabel,
                                       fontSize: 12.5,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -804,7 +795,7 @@ class _JobsScreenState extends State<JobsScreen> {
           Expanded(
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF111318),
+                backgroundColor: kbiLabel,
                 foregroundColor: Colors.white,
                 shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(24))),
@@ -884,8 +875,7 @@ class _JobsScreenState extends State<JobsScreen> {
       return Row(
         children: [
           IconButton(
-            icon:
-                const Icon(Icons.camera_alt_outlined, color: Color(0xFF111318)),
+            icon: const Icon(Icons.camera_alt_outlined, color: kbiLabel),
             onPressed: () => _uploadPhotoToJob(docId),
           ),
           IconButton(
@@ -944,7 +934,7 @@ class _JobsScreenState extends State<JobsScreen> {
     showDialog(
       context: context,
       builder: (c) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: kbiSurfaceRaised,
         shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(24))),
         title: Row(
@@ -1028,7 +1018,7 @@ class _JobsScreenState extends State<JobsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: kbiSurfaceRaised,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (c) => StatefulBuilder(
@@ -1124,7 +1114,7 @@ class _JobsScreenState extends State<JobsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: kbiSurfaceRaised,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (c) => StatefulBuilder(
@@ -1284,6 +1274,7 @@ class _JobsScreenState extends State<JobsScreen> {
   // --- ORDER DETAILS BOTTOM SHEET ---
   void _showOrderDetailsBottomSheet(
       String docId, Map<String, dynamic> data, ServiceRequestModel job) {
+    final isAr = widget.locale.languageCode == 'ar';
     final status = normalizeJobStatus(data['status']);
     final isPreAcceptance = {
       'assigned',
@@ -1317,7 +1308,7 @@ class _JobsScreenState extends State<JobsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: kbiSurfaceRaised,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
       builder: (c) => DraggableScrollableSheet(
@@ -1403,6 +1394,13 @@ class _JobsScreenState extends State<JobsScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
+                if (isPreAcceptance) ...[
+                  _PendingAcceptanceBanner(
+                    createdAt: TechnicianService.extractDocDate(data),
+                    isArabic: isAr,
+                  ),
+                  const SizedBox(height: 14),
+                ],
 
                 // Main Service Title (Wrapped in Expanded/Flex to prevent overflow)
                 Row(
@@ -1731,9 +1729,9 @@ class _JobsScreenState extends State<JobsScreen> {
                 ],
 
                 // Timeline Stepper
-                const Text(
-                  'DISPATCH & SERVICE TIMELINE',
-                  style: TextStyle(
+                Text(
+                  isAr ? 'مسار الطلب والخدمة' : 'DISPATCH & SERVICE TIMELINE',
+                  style: const TextStyle(
                     color: Color(0xFF6B7280),
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -1741,7 +1739,10 @@ class _JobsScreenState extends State<JobsScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                _buildTimelineStepper(data['status']?.toString() ?? 'Assigned'),
+                _buildTimelineStepper(
+                  data['status']?.toString() ?? 'Assigned',
+                  isArabic: isAr,
+                ),
                 const SizedBox(height: 24),
 
                 // Actions Section
@@ -1917,15 +1918,24 @@ class _JobsScreenState extends State<JobsScreen> {
   }
 
   // --- TIMELINE STEPPER ---
-  Widget _buildTimelineStepper(String status) {
-    final steps = [
-      {'title': 'Assigned', 'sub': 'Order matched to technician'},
-      {'title': 'Accepted', 'sub': 'Technician accepted dispatch'},
-      {'title': 'On The Way', 'sub': 'Driving to service location'},
-      {'title': 'Arrived', 'sub': 'Technician arrived at site'},
-      {'title': 'In Progress', 'sub': 'Repair & diagnostic active'},
-      {'title': 'Completed', 'sub': 'Device tested & delivered'},
-    ];
+  Widget _buildTimelineStepper(String status, {required bool isArabic}) {
+    final steps = isArabic
+        ? const [
+            {'title': 'تم الإسناد', 'sub': 'تم إرسال الطلب إلى الفني'},
+            {'title': 'تم القبول', 'sub': 'وافق الفني على تنفيذ الطلب'},
+            {'title': 'في الطريق', 'sub': 'الفني في طريقه إلى الموقع'},
+            {'title': 'تم الوصول', 'sub': 'وصل الفني إلى موقع الخدمة'},
+            {'title': 'قيد التنفيذ', 'sub': 'جاري الفحص والإصلاح'},
+            {'title': 'مكتمل', 'sub': 'تم الاختبار وتسليم الجهاز'},
+          ]
+        : const [
+            {'title': 'Assigned', 'sub': 'Order matched to technician'},
+            {'title': 'Accepted', 'sub': 'Technician accepted dispatch'},
+            {'title': 'On The Way', 'sub': 'Driving to service location'},
+            {'title': 'Arrived', 'sub': 'Technician arrived at site'},
+            {'title': 'In Progress', 'sub': 'Repair & diagnostic active'},
+            {'title': 'Completed', 'sub': 'Device tested & delivered'},
+          ];
     final normalized = status.toLowerCase().replaceAll('_', ' ');
     int current = 0;
     if (normalized == 'accepted') current = 1;
@@ -2079,7 +2089,7 @@ class _JobsScreenState extends State<JobsScreen> {
         break;
       case 'in progress':
         bg = const Color(0xFF3B82F6).withValues(alpha: 0.12);
-        fg = const Color(0xFF2563EB);
+        fg = kbiBrand;
         break;
       case 'arrived':
       case 'on the way':
@@ -2199,7 +2209,7 @@ class _JobsScreenState extends State<JobsScreen> {
     showDialog(
       context: context,
       builder: (c) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: kbiSurfaceRaised,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(isAr ? 'إضافة ملاحظة فنية' : 'Add technician note',
             style: const TextStyle(
@@ -2431,7 +2441,7 @@ class _JobsScreenState extends State<JobsScreen> {
             const SizedBox(height: 20),
             Text(isAr ? 'لا توجد طلبات مسندة' : 'No assigned jobs',
                 style: const TextStyle(
-                    color: Color(0xFF111318),
+                    color: kbiLabel,
                     fontSize: 18,
                     fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
@@ -2445,8 +2455,7 @@ class _JobsScreenState extends State<JobsScreen> {
             const SizedBox(height: 24),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF111318),
-                  foregroundColor: Colors.white),
+                  backgroundColor: kbiLabel, foregroundColor: Colors.white),
               onPressed: _handleRefresh,
               icon: const Icon(Icons.refresh_rounded, size: 18),
               label: Text(isAr ? 'تحديث' : 'Refresh'),
@@ -2485,8 +2494,8 @@ class _JobsScreenState extends State<JobsScreen> {
             const SizedBox(height: 16),
             Text(
               isAr ? 'تعذر تحميل الطلبات' : 'Jobs could not be loaded',
-              style: const TextStyle(
-                  color: Color(0xFF111318), fontWeight: FontWeight.bold),
+              style:
+                  const TextStyle(color: kbiLabel, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
@@ -2528,8 +2537,12 @@ class _JobsScreenState extends State<JobsScreen> {
 
 class _PendingAcceptanceBanner extends StatefulWidget {
   final DateTime? createdAt;
+  final bool isArabic;
 
-  const _PendingAcceptanceBanner({required this.createdAt});
+  const _PendingAcceptanceBanner({
+    required this.createdAt,
+    required this.isArabic,
+  });
 
   @override
   State<_PendingAcceptanceBanner> createState() =>
@@ -2604,21 +2617,23 @@ class _PendingAcceptanceBannerState extends State<_PendingAcceptanceBanner> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Flexible(
+          Flexible(
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
+                const Icon(
                   Icons.warning_amber_rounded,
                   color: Colors.amberAccent,
                   size: 16,
                 ),
-                SizedBox(width: 6),
+                const SizedBox(width: 6),
                 Flexible(
                   child: Text(
-                    'Waiting For Your Response',
+                    widget.isArabic
+                        ? 'بانتظار قرارك'
+                        : 'Waiting for your response',
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.amberAccent,
                       fontSize: 11.5,
                       fontWeight: FontWeight.bold,
@@ -2630,9 +2645,9 @@ class _PendingAcceptanceBannerState extends State<_PendingAcceptanceBanner> {
           ),
           const SizedBox(width: 8),
           Text(
-            '⏱ $mins:$secs Remaining',
+            widget.isArabic ? '⏱ متبقي $mins:$secs' : '⏱ $mins:$secs remaining',
             style: const TextStyle(
-              color: Color(0xFF111318),
+              color: kbiLabel,
               fontSize: 11.5,
               fontWeight: FontWeight.bold,
             ),

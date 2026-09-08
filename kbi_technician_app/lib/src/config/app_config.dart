@@ -1,7 +1,7 @@
 abstract final class AppConfig {
   static const environment = String.fromEnvironment(
     'APP_ENVIRONMENT',
-    defaultValue: 'development',
+    defaultValue: 'production',
   );
 
   static const requireEmailVerification = bool.fromEnvironment(

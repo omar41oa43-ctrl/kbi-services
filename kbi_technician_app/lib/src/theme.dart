@@ -2,38 +2,47 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-const kbiBlue = Color(0xFF2563EB);
-const kbiBlueDark = Color(0xFF1D4ED8);
-const kbiNavy = Color(0xFF0B1220);
-const kbiCyan = Color(0xFF06B6D4);
-const kbiGreen = Color(0xFF10B981);
+/// The only non-semantic brand colours used throughout the technician app.
+/// Shades are created with opacity, rather than introducing unrelated blues.
+const kbiBrand = Color(0xFF1ECBC7);
+const kbiWhite = Color(0xFFFFFFFF);
+const kbiBlack = Color(0xFF030405);
+const kbiSurface = Color(0xFF071316);
+const kbiSurfaceRaised = Color(0xFF0B1D20);
+const kbiSurfaceMuted = Color(0xFF10282B);
+
+// Kept as aliases so existing screens inherit the KBI palette consistently.
+const kbiBlue = kbiBrand;
+const kbiBlueDark = kbiBlack;
+const kbiNavy = kbiBlack;
+const kbiCyan = kbiBrand;
+const kbiGreen = kbiBrand;
 const kbiOrange = Color(0xFFF59E0B);
 const kbiRed = Color(0xFFEF4444);
-const kbiLabel = Color(0xFF0F172A);
-const kbiSecondaryLabel = Color(0xFF64748B);
-const kbiGroupedBackground = Color(0xFFF4F7FB);
-const kbiSeparator = Color(0x1F475569);
+const kbiLabel = kbiWhite;
+const kbiSecondaryLabel = Color(0xB8FFFFFF);
+const kbiGroupedBackground = kbiBlack;
+const kbiSeparator = Color(0x331ECBC7);
 
 /// A platform-adaptive theme that keeps Cupertino typography, sizing, motion,
 /// and color conventions while retaining Material widgets used by the app.
 ThemeData buildKbiTheme({bool highContrast = false}) {
   final scheme = ColorScheme.fromSeed(
     seedColor: kbiBlue,
-    brightness: Brightness.light,
-    primary: highContrast ? const Color(0xFF0056B3) : kbiBlue,
-    secondary: kbiGreen,
-    surface: Colors.white,
+    brightness: Brightness.dark,
+    primary: kbiBrand,
+    secondary: kbiBrand,
+    surface: kbiSurface,
     error: kbiRed,
   ).copyWith(
-    onPrimary: Colors.white,
+    onPrimary: kbiBlack,
     onSurface: kbiLabel,
-    surfaceContainerLowest: Colors.white,
-    surfaceContainerLow: const Color(0xFFF9F9FB),
-    surfaceContainer: const Color(0xFFF2F2F7),
-    surfaceContainerHigh: const Color(0xFFEFEFF4),
-    outline: highContrast ? const Color(0xFF636366) : kbiSeparator,
-    outlineVariant:
-        highContrast ? const Color(0xFF8E8E93) : const Color(0x143C3C43),
+    surfaceContainerLowest: kbiBlack,
+    surfaceContainerLow: kbiSurface,
+    surfaceContainer: kbiSurfaceRaised,
+    surfaceContainerHigh: kbiSurfaceMuted,
+    outline: kbiSeparator,
+    outlineVariant: const Color(0x1F1ECBC7),
   );
 
   const baseTextTheme = TextTheme(
@@ -111,11 +120,11 @@ ThemeData buildKbiTheme({bool highContrast = false}) {
     textTheme: baseTextTheme,
     primaryTextTheme: baseTextTheme,
     cupertinoOverrideTheme: const CupertinoThemeData(
-      brightness: Brightness.light,
+      brightness: Brightness.dark,
       primaryColor: kbiBlue,
-      primaryContrastingColor: Colors.white,
+      primaryContrastingColor: kbiBlack,
       scaffoldBackgroundColor: kbiGroupedBackground,
-      barBackgroundColor: Color(0xE6F8FAFC),
+      barBackgroundColor: Color(0xF2030405),
       textTheme: CupertinoTextThemeData(primaryColor: kbiBlue),
     ),
     pageTransitionsTheme: const PageTransitionsTheme(
@@ -134,7 +143,7 @@ ThemeData buildKbiTheme({bool highContrast = false}) {
       scrolledUnderElevation: 0,
       centerTitle: false,
       surfaceTintColor: Colors.transparent,
-      systemOverlayStyle: SystemUiOverlayStyle.dark,
+      systemOverlayStyle: SystemUiOverlayStyle.light,
       titleTextStyle: TextStyle(
         color: kbiLabel,
         fontSize: 17,
@@ -143,7 +152,7 @@ ThemeData buildKbiTheme({bool highContrast = false}) {
       ),
     ),
     cardTheme: CardThemeData(
-      color: const Color(0xFFFEFEFF),
+      color: kbiSurfaceRaised,
       elevation: 0,
       margin: EdgeInsets.zero,
       surfaceTintColor: Colors.transparent,
@@ -158,7 +167,7 @@ ThemeData buildKbiTheme({bool highContrast = false}) {
       space: 0.5,
     ),
     dialogTheme: DialogThemeData(
-      backgroundColor: const Color(0xFFFDFDFE),
+      backgroundColor: kbiSurfaceRaised,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: const BorderRadius.all(Radius.circular(26)),
@@ -166,11 +175,11 @@ ThemeData buildKbiTheme({bool highContrast = false}) {
       ),
     ),
     bottomSheetTheme: const BottomSheetThemeData(
-      backgroundColor: Color(0xFFF9F9FB),
+      backgroundColor: kbiSurfaceRaised,
       surfaceTintColor: Colors.transparent,
-      modalBackgroundColor: Color(0xFFF9F9FB),
+      modalBackgroundColor: kbiSurfaceRaised,
       showDragHandle: true,
-      dragHandleColor: Color(0x4D3C3C43),
+      dragHandleColor: Color(0x668CFEFA),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
@@ -185,9 +194,9 @@ ThemeData buildKbiTheme({bool highContrast = false}) {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: const Color(0xFFF8FAFC),
+      fillColor: kbiSurfaceRaised,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-      hintStyle: const TextStyle(color: Color(0xFF8E8E93), fontSize: 16),
+      hintStyle: const TextStyle(color: Color(0x99FFFFFF), fontSize: 16),
       border: OutlineInputBorder(
         borderRadius: const BorderRadius.all(Radius.circular(16)),
         borderSide: BorderSide(color: scheme.outlineVariant),
@@ -208,9 +217,9 @@ ThemeData buildKbiTheme({bool highContrast = false}) {
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         backgroundColor: kbiBlue,
-        foregroundColor: Colors.white,
-        disabledBackgroundColor: const Color(0xFFD1D1D6),
-        disabledForegroundColor: const Color(0xFF8E8E93),
+        foregroundColor: kbiBlack,
+        disabledBackgroundColor: const Color(0xFF20373A),
+        disabledForegroundColor: const Color(0x99FFFFFF),
         elevation: 0,
         minimumSize: const Size(44, 50),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
@@ -223,8 +232,7 @@ ThemeData buildKbiTheme({bool highContrast = false}) {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: kbiBlue,
-        side:
-            BorderSide(color: highContrast ? kbiBlue : const Color(0x33787880)),
+        side: BorderSide(color: highContrast ? kbiBlue : kbiSeparator),
         minimumSize: const Size(44, 50),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
         shape: const RoundedRectangleBorder(
@@ -252,14 +260,14 @@ ThemeData buildKbiTheme({bool highContrast = false}) {
       trackColor: WidgetStateProperty.resolveWith(
         (states) => states.contains(WidgetState.selected)
             ? kbiGreen
-            : const Color(0xFFAEAEB2),
+            : const Color(0xFF617578),
       ),
       trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
     ),
     progressIndicatorTheme: const ProgressIndicatorThemeData(color: kbiBlue),
     scrollbarTheme: ScrollbarThemeData(
       thumbColor: WidgetStatePropertyAll(
-        highContrast ? const Color(0xFF636366) : const Color(0x4D3C3C43),
+        highContrast ? const Color(0xFF8CFEFA) : const Color(0x661ECBC7),
       ),
       thickness: const WidgetStatePropertyAll(3),
       radius: const Radius.circular(999),

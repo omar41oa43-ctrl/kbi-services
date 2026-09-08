@@ -1,0 +1,7 @@
+KBI Technician is the field-service workspace for approved KBI technicians.
+
+View assigned work, manage availability, follow job details, record diagnostics and parts, collect digital sign-off, create and share invoices, and review payments and notifications from one app.
+
+Location helps provide routing and live ETA while a technician is on duty or completing an active service. Going Offline stops location sharing.
+
+An approved KBI technician account is required.

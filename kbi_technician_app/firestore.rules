@@ -21,7 +21,7 @@ service cloud.firestore {
       allow update: if isOwner(uid)
         && request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['email', 'full_name', 'name', 'phone', 'profile_photo', 'updatedAt']);
-      allow delete: if isAdmin();
+      allow delete: if isOwner(uid) || isAdmin();
     }
 
     match /technician_requests/{uid} {
@@ -29,7 +29,7 @@ service cloud.firestore {
       allow create, update: if isOwner(uid)
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.status in ['draft', 'pending'];
-      allow delete: if isAdmin();
+      allow delete: if isOwner(uid) || isAdmin();
     }
 
     match /technicians/{uid} {
@@ -55,7 +55,7 @@ service cloud.firestore {
           || (request.resource.data.vehicle.isVerified == false
             && !resource.data.keys().hasAny(['vehicle']))
           || request.resource.data.vehicle.isVerified == resource.data.vehicle.isVerified);
-      allow delete: if isAdmin();
+      allow delete: if isOwner(uid) || isAdmin();
     }
 
     match /bookings/{bookingId} {
@@ -66,6 +66,16 @@ service cloud.firestore {
     match /orders/{orderId} {
       allow read, create, update: if signedIn();
       allow delete: if isAdmin();
+    }
+
+    match /parts/{partId} {
+      allow read: if signedIn();
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['quantity', 'updatedAt'])
+        && request.resource.data.quantity is int
+        && request.resource.data.quantity >= 0;
+      allow create, delete: if isAdmin();
     }
 
     match /job_history/{entryId} {
@@ -100,7 +110,7 @@ service cloud.firestore {
         && request.resource.data.status == 'pending'
         && request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['userId', 'status', 'channel', 'createdAt', 'updatedAt']);
-      allow delete: if isAdmin();
+      allow delete: if isOwner(requestId) || isAdmin();
     }
 
     match /password_reset_requests/{requestId} {

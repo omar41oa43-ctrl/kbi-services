@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
+import '../theme.dart';
+
 String normalizeJobStatus(Object? value) =>
     (value ?? '').toString().trim().toLowerCase().replaceAll('_', ' ');
 
@@ -182,7 +184,7 @@ Color jobStatusColor(Object? value) {
     'repairing' ||
     'inspection' =>
       const Color(0xFF6366F1), // Indigo
-    'on the way' || 'en route' || 'arrived' => const Color(0xFF06B6D4), // Cyan
+    'on the way' || 'en route' || 'arrived' => kbiBrand,
     'accepted' => const Color(0xFF3B82F6), // Blue
     'assigned' ||
     'pending' ||

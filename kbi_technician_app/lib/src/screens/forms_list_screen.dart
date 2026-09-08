@@ -64,7 +64,7 @@ class _FormsListScreenState extends State<FormsListScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: kbiSurfaceRaised,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: kbiSeparator),
                 boxShadow: [
@@ -81,8 +81,8 @@ class _FormsListScreenState extends State<FormsListScreen> {
                   hintText: isAr
                       ? 'بحث برقم الطلب، العميل أو الجهاز...'
                       : 'Search by Order No, Customer or Device...',
-                  hintStyle: const TextStyle(
-                      color: kbiSecondaryLabel, fontSize: 14),
+                  hintStyle:
+                      const TextStyle(color: kbiSecondaryLabel, fontSize: 14),
                   prefixIcon: const Icon(Icons.search_rounded,
                       color: kbiSecondaryLabel, size: 20),
                   border: InputBorder.none,
@@ -121,14 +121,11 @@ class _FormsListScreenState extends State<FormsListScreen> {
                           '')
                       .toString()
                       .toLowerCase();
-                  final client = (data['clientName'] ??
-                          data['customerName'] ??
-                          '')
-                      .toString()
-                      .toLowerCase();
-                  final device = (data['device'] ??
-                          data['deviceModel'] ??
-                          '')
+                  final client =
+                      (data['clientName'] ?? data['customerName'] ?? '')
+                          .toString()
+                          .toLowerCase();
+                  final device = (data['device'] ?? data['deviceModel'] ?? '')
                       .toString()
                       .toLowerCase();
 
@@ -149,8 +146,7 @@ class _FormsListScreenState extends State<FormsListScreen> {
                         children: [
                           Icon(CupertinoIcons.doc_text_fill,
                               size: 56,
-                              color:
-                                  kbiSecondaryLabel.withValues(alpha: 0.4)),
+                              color: kbiSecondaryLabel.withValues(alpha: 0.4)),
                           const SizedBox(height: 12),
                           Text(
                             isAr
@@ -194,15 +190,14 @@ class _FormsListScreenState extends State<FormsListScreen> {
                         '';
                     final date = jobDate(data);
                     final total = (data['finalAmount'] ??
-                            data['totalAmount'] ??
-                            data['price'] ??
-                            0) as num;
+                        data['totalAmount'] ??
+                        data['price'] ??
+                        0) as num;
 
-                    final isCurrentActive =
-                        widget.activeJob?.id == job.id;
+                    final isCurrentActive = widget.activeJob?.id == job.id;
 
                     return Material(
-                      color: Colors.white,
+                      color: kbiSurfaceRaised,
                       borderRadius: BorderRadius.circular(16),
                       clipBehavior: Clip.antiAlias,
                       child: InkWell(
@@ -248,8 +243,7 @@ class _FormsListScreenState extends State<FormsListScreen> {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
                                       children: [
@@ -265,13 +259,11 @@ class _FormsListScreenState extends State<FormsListScreen> {
                                         if (isCurrentActive) ...[
                                           const SizedBox(width: 6),
                                           Container(
-                                            padding:
-                                                const EdgeInsets.symmetric(
-                                                    horizontal: 6,
-                                                    vertical: 2),
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 6, vertical: 2),
                                             decoration: BoxDecoration(
-                                              color: kbiGreen
-                                                  .withValues(alpha: 0.12),
+                                              color: kbiGreen.withValues(
+                                                  alpha: 0.12),
                                               borderRadius:
                                                   BorderRadius.circular(4),
                                             ),

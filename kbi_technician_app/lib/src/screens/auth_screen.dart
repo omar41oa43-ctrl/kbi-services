@@ -7,6 +7,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../theme.dart';
 import 'registration_screen.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -249,8 +250,8 @@ class _AuthScreenState extends State<AuthScreen>
             labelStyle: TextStyle(color: Colors.white70),
             enabledBorder: UnderlineInputBorder(
                 borderSide: BorderSide(color: Colors.white30)),
-            focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFF0066FF))),
+            focusedBorder:
+                UnderlineInputBorder(borderSide: BorderSide(color: kbiBrand)),
           ),
         ),
         actions: [
@@ -260,8 +261,7 @@ class _AuthScreenState extends State<AuthScreen>
                 const Text('Cancel', style: TextStyle(color: Colors.white60)),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF0066FF)),
+            style: FilledButton.styleFrom(backgroundColor: kbiBrand),
             onPressed: () =>
                 Navigator.pop(dialogContext, controller.text.trim()),
             child: const Text('Send request'),
@@ -522,7 +522,7 @@ class _AuthScreenState extends State<AuthScreen>
                               key: const Key('welcome-primary-action'),
                               onPressed: _continueFromWelcome,
                               style: FilledButton.styleFrom(
-                                backgroundColor: const Color(0xFF0D67E8),
+                                backgroundColor: kbiBrand,
                                 foregroundColor: Colors.white,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
@@ -814,13 +814,13 @@ class _AuthScreenState extends State<AuthScreen>
                                           height: 20,
                                           decoration: BoxDecoration(
                                             color: _rememberMe
-                                                ? const Color(0xFF0A70FF)
+                                                ? kbiBrand
                                                 : Colors.transparent,
                                             borderRadius:
                                                 BorderRadius.circular(6),
                                             border: Border.all(
                                               color: _rememberMe
-                                                  ? const Color(0xFF0A70FF)
+                                                  ? kbiBrand
                                                   : const Color(0xFFCBD5E1),
                                               width: 1.5,
                                             ),
@@ -858,7 +858,7 @@ class _AuthScreenState extends State<AuthScreen>
                                       ? 'نسيت كلمة المرور؟'
                                       : 'Forgot password?',
                                   style: const TextStyle(
-                                    color: Color(0xFF0D67E8),
+                                    color: kbiBrand,
                                     fontSize: 12.5,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -909,7 +909,7 @@ class _AuthScreenState extends State<AuthScreen>
                                   child: ElevatedButton(
                                     onPressed: _loading ? null : _submit,
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF0A70FF),
+                                      backgroundColor: kbiBrand,
                                       foregroundColor: Colors.white,
                                       elevation: 0,
                                       shape: RoundedRectangleBorder(
@@ -952,7 +952,7 @@ class _AuthScreenState extends State<AuthScreen>
                                   ),
                                   child: IconButton(
                                     icon: const Icon(Icons.fingerprint_rounded,
-                                        color: Color(0xFF0D67E8), size: 26),
+                                        color: kbiBrand, size: 26),
                                     tooltip: isArabic
                                         ? 'الدخول بالبصمة أو الوجه'
                                         : 'Sign in with Biometrics',
@@ -983,14 +983,14 @@ class _AuthScreenState extends State<AuthScreen>
                                 style: TextButton.styleFrom(
                                   padding:
                                       const EdgeInsets.symmetric(horizontal: 4),
-                                  foregroundColor: const Color(0xFF0D67E8),
+                                  foregroundColor: kbiBrand,
                                 ),
                                 child: Text(
                                   isArabic
                                       ? 'انضم إلى أسطول KBI →'
                                       : 'Apply to join KBI →',
                                   style: const TextStyle(
-                                    color: Color(0xFF0D67E8),
+                                    color: kbiBrand,
                                     fontSize: 13,
                                     fontWeight: FontWeight.w800,
                                   ),
@@ -1129,7 +1129,7 @@ class _AuthScreenState extends State<AuthScreen>
                                             children: [
                                               Icon(
                                                 Icons.mail_outline_rounded,
-                                                color: Color(0xFF2563EB),
+                                                color: kbiBrand,
                                                 size: 14,
                                               ),
                                               SizedBox(width: 5),
@@ -1140,7 +1140,7 @@ class _AuthScreenState extends State<AuthScreen>
                                                   overflow:
                                                       TextOverflow.ellipsis,
                                                   style: TextStyle(
-                                                    color: Color(0xFF1D4ED8),
+                                                    color: kbiBrand,
                                                     fontSize: 10.5,
                                                     fontWeight: FontWeight.w700,
                                                   ),
@@ -1201,16 +1201,14 @@ class _AuthScreenState extends State<AuthScreen>
             color: const Color(0xFFF5F7FA),
             borderRadius: BorderRadius.circular(15),
             border: Border.all(
-              color: focusNode.hasFocus
-                  ? const Color(0xFF0D67E8)
-                  : const Color(0xFFDCE3EC),
+              color: focusNode.hasFocus ? kbiBrand : const Color(0xFFDCE3EC),
               width: focusNode.hasFocus ? 1.5 : 1.1,
             ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Row(
             children: [
-              Icon(icon, color: const Color(0xFF0D67E8), size: 19),
+              Icon(icon, color: kbiBrand, size: 19),
               const SizedBox(width: 11),
               Expanded(
                 child: TextField(
@@ -1286,7 +1284,7 @@ class _AuthScreenState extends State<AuthScreen>
               : Text(
                   text!,
                   style: const TextStyle(
-                    color: Color(0xFF0D67E8),
+                    color: kbiBrand,
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                   ),
@@ -1430,7 +1428,7 @@ class _SwipeToGetStartedState extends State<_SwipeToGetStarted>
               border: Border.all(
                 color: Color.lerp(
                   Colors.white.withValues(alpha: 0.2),
-                  const Color(0xFF0066FF),
+                  kbiBrand,
                   progress,
                 )!,
                 width: 1.4,
@@ -1501,12 +1499,12 @@ class _SwipeToGetStartedState extends State<_SwipeToGetStarted>
                     width: knobSize,
                     height: knobSize,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0066FF),
+                      color: kbiBrand,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF0066FF)
-                              .withValues(alpha: 0.5 + 0.3 * progress),
+                          color:
+                              kbiBrand.withValues(alpha: 0.5 + 0.3 * progress),
                           blurRadius: 12 + 6 * progress,
                           spreadRadius: 2 * progress,
                         ),

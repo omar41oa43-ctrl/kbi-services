@@ -1,0 +1,7 @@
+app_identifier("ae.kbi.kbiTechnicianApp")
+package_name("ae.kbi.kbi_technician_app")
+
+apple_id(ENV["APPLE_ID"]) if ENV["APPLE_ID"]
+team_id(ENV["APPLE_TEAM_ID"] || "PQUS4YTNNP")
+itc_team_id(ENV["APP_STORE_CONNECT_TEAM_ID"]) if ENV["APP_STORE_CONNECT_TEAM_ID"]
+json_key_file(ENV["GOOGLE_PLAY_JSON_KEY"]) if ENV["GOOGLE_PLAY_JSON_KEY"]

@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart' as fmap;
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart' as latlng;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/service_request.dart';
 import '../services/location_tracking_service.dart';
@@ -83,10 +84,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _restoreLocationTracking(String uid) async {
     try {
+      if (!await _ensureLocationDisclosure()) return;
       await LocationTrackingService.instance.start(requestPermission: true);
     } catch (error) {
       debugPrint('Could not restore location tracking: $error');
     }
+  }
+
+  Future<bool> _ensureLocationDisclosure() async {
+    const preferenceKey = 'background_location_disclosure_accepted';
+    final preferences = await SharedPreferences.getInstance();
+    if (preferences.getBool(preferenceKey) == true) return true;
+    if (!mounted) return false;
+
+    final isAr = widget.locale.languageCode == 'ar';
+    final accepted = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title:
+            Text(isAr ? 'مشاركة الموقع أثناء العمل' : 'Location while on duty'),
+        content: Text(
+          isAr
+              ? 'يجمع تطبيق KBI Technician بيانات موقعك لمشاركة وقت الوصول المتوقع وتقدم المهمة مع فريق التوزيع والعملاء أثناء دوامك أو تنفيذ خدمة نشطة، حتى عندما يكون التطبيق في الخلفية. يمكنك إيقاف المشاركة بالتحول إلى وضع غير متصل.'
+              : 'KBI Technician collects your location to share live ETA and job progress with KBI dispatch and customers while you are on duty or handling an active service, including when the app is in the background. You can stop sharing by going offline.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(isAr ? 'ليس الآن' : 'Not now'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(isAr ? 'السماح بالموقع' : 'Allow location'),
+          ),
+        ],
+      ),
+    );
+    if (accepted == true) {
+      await preferences.setBool(preferenceKey, true);
+      return true;
+    }
+    return false;
   }
 
   void _handlePendingLocationRequest(Map<String, dynamic>? techData) {
@@ -143,8 +182,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (user != null) {
         if (isOnline) {
           try {
-            await LocationTrackingService.instance
-                .start(requestPermission: true);
+            if (await _ensureLocationDisclosure()) {
+              await LocationTrackingService.instance
+                  .start(requestPermission: true);
+            }
           } catch (_) {}
         } else {
           try {
@@ -263,10 +304,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     user?.photoURL ??
                     '')
                 .toString();
-            final int batteryLevel = (techData?['batteryLevel'] is num)
-                ? (techData!['batteryLevel'] as num).toInt()
-                : 88;
-
             return StreamBuilder<List<DocumentSnapshot<Map<String, dynamic>>>>(
               stream: _jobsStream,
               builder: (context, jobsSnap) {
@@ -368,7 +405,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               techId: techId,
                               photoUrl: photoUrl,
                               currentMode: currentStatusMode,
-                              batteryLevel: batteryLevel,
                               hasFreshGps: hasFreshGps,
                               isAr: isAr,
                             ),
@@ -418,7 +454,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required String techId,
     required String photoUrl,
     required String currentMode,
-    required int batteryLevel,
     required bool hasFreshGps,
     required bool isAr,
   }) {
@@ -431,12 +466,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: kbiSurfaceRaised,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE8EEF5)),
+        border: Border.all(color: kbiSeparator),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.055),
+            color: Colors.black.withValues(alpha: 0.36),
             blurRadius: 22,
             offset: const Offset(0, 8),
           ),
@@ -454,7 +489,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     height: 56,
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Color(0xFFE2E8F0),
+                      color: kbiSurfaceMuted,
                     ),
                     child: ClipOval(
                       child: Image(
@@ -475,7 +510,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       decoration: BoxDecoration(
                         color: statusColor,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 3),
+                        border: Border.all(color: kbiSurfaceRaised, width: 3),
                       ),
                     ),
                   ),
@@ -490,7 +525,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Text(
                       isAr ? 'مرحباً بعودتك' : 'Welcome back',
                       style: const TextStyle(
-                        color: Color(0xFF64748B),
+                        color: kbiSecondaryLabel,
                         fontSize: 12.5,
                         fontWeight: FontWeight.w600,
                       ),
@@ -501,7 +536,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Color(0xFF0F172A),
+                        color: kbiLabel,
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.4,
@@ -531,7 +566,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                color: Color(0xFF64748B),
+                                color: kbiSecondaryLabel,
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -539,7 +574,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                           const SizedBox(width: 4),
                           const Icon(Icons.copy_rounded,
-                              size: 12, color: Color(0xFF94A3B8)),
+                              size: 12, color: kbiSecondaryLabel),
                         ],
                       ),
                     ),
@@ -551,14 +586,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                  color: kbiSurfaceMuted,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: kbiSeparator),
                 ),
                 child: IconButton(
                   tooltip: isAr ? 'الإشعارات' : 'Notifications',
                   icon: const Icon(CupertinoIcons.bell,
-                      size: 19, color: Color(0xFF334155)),
+                      size: 19, color: kbiLabel),
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -575,8 +610,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             width: double.infinity,
             child: CupertinoSlidingSegmentedControl<String>(
               groupValue: currentMode,
-              backgroundColor: const Color(0xFFF1F5F9),
-              thumbColor: Colors.white,
+              backgroundColor: kbiBlack,
+              thumbColor: kbiSurfaceMuted,
               padding: const EdgeInsets.all(4),
               children: {
                 'available': _buildStatusSegment(
@@ -606,7 +641,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: kbiBlack,
               borderRadius: BorderRadius.circular(14),
             ),
             child: Row(
@@ -623,20 +658,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const Spacer(),
                 _buildTelemetryItem(
                   icon: CupertinoIcons.arrow_2_circlepath,
-                  color: hasFreshGps
-                      ? const Color(0xFF2563EB)
-                      : const Color(0xFF94A3B8),
+                  color: hasFreshGps ? kbiBrand : const Color(0xFF94A3B8),
                   label: hasFreshGps
                       ? (isAr ? 'مزامن الآن' : 'Synced now')
                       : (isAr ? 'غير مزامن' : 'Not synced'),
-                ),
-                const Spacer(),
-                _buildTelemetryItem(
-                  icon: CupertinoIcons.battery_75_percent,
-                  color: batteryLevel <= 20
-                      ? const Color(0xFFEF4444)
-                      : const Color(0xFF16A34A),
-                  label: '$batteryLevel%',
                 ),
               ],
             ),
@@ -668,9 +693,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: selected
-                    ? const Color(0xFF0F172A)
-                    : const Color(0xFF64748B),
+                color: selected ? kbiLabel : kbiSecondaryLabel,
                 fontSize: 12,
                 fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
               ),
@@ -694,7 +717,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Text(
           label,
           style: const TextStyle(
-            color: Color(0xFF64748B),
+            color: kbiSecondaryLabel,
             fontSize: 10.5,
             fontWeight: FontWeight.w600,
           ),
@@ -705,12 +728,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildAvatarFallback(String name) {
     return Container(
-      color: const Color(0xFFE2E8F0),
+      color: kbiSurfaceMuted,
       alignment: Alignment.center,
       child: Text(
         name.isNotEmpty ? name[0].toUpperCase() : 'A',
         style: const TextStyle(
-          color: Color(0xFF0F172A),
+          color: kbiLabel,
           fontSize: 22,
           fontWeight: FontWeight.w800,
         ),
@@ -730,7 +753,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Text(
               isAr ? 'الطلب القادم' : 'Next Job',
               style: const TextStyle(
-                color: Color(0xFF0F172A),
+                color: kbiLabel,
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.3,
@@ -741,7 +764,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Text(
                 isAr ? 'عرض الكل' : 'View all',
                 style: const TextStyle(
-                  color: Color(0xFF2563EB),
+                  color: kbiBrand,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                 ),
@@ -754,9 +777,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           width: double.infinity,
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: kbiSurfaceRaised,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: const Color(0xFFF1F5F9)),
+            border: Border.all(color: kbiSeparator),
           ),
           child: Row(
             children: [
@@ -850,10 +873,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final String address = rawAddress == null || rawAddress.trim().isEmpty
         ? (isAr ? 'نطاق الخدمة داخل الإمارات' : 'UAE Service Area')
         : _extractGeneralArea(rawAddress);
-    final String timeSlot = (data['scheduledTime'] ??
-            data['timeSlot'] ??
-            (isAr ? 'لم يُحدد الوقت' : 'Time not set'))
-        .toString();
+    final rawTimeSlot = data['scheduledTime'] ?? data['timeSlot'];
+    final String? timeSlot = rawTimeSlot?.toString().trim().isNotEmpty == true
+        ? rawTimeSlot.toString().trim()
+        : null;
     final String phone =
         (data['customerPhone'] ?? data['phone'] ?? '').toString();
     final String rawStatus = normalizeJobStatus(data['status']);
@@ -941,7 +964,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ? (isAr ? 'طلب جديد' : 'New Assignment')
                   : (isAr ? 'الطلب القادم' : 'Next Job'),
               style: const TextStyle(
-                color: Color(0xFF0F172A),
+                color: kbiLabel,
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.3,
@@ -952,7 +975,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Text(
                 isAr ? 'عرض الكل' : 'View all',
                 style: const TextStyle(
-                  color: Color(0xFF2563EB),
+                  color: kbiBrand,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                 ),
@@ -976,9 +999,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: kbiSurfaceRaised,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: const Color(0xFFF1F5F9)),
+              border: Border.all(color: kbiSeparator),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.04),
@@ -1031,14 +1054,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEFF6FF),
+                          color: kbiBrand.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(11),
                         ),
                         child: Text(
                           'AED ${amount.toStringAsFixed(0)}',
                           textDirection: TextDirection.ltr,
                           style: const TextStyle(
-                            color: Color(0xFF2563EB),
+                            color: kbiBrand,
                             fontSize: 13,
                             fontWeight: FontWeight.w900,
                           ),
@@ -1051,7 +1074,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   orderNum,
                   textDirection: TextDirection.ltr,
                   style: const TextStyle(
-                    color: Color(0xFF0F172A),
+                    color: kbiLabel,
                     fontSize: 21,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -0.5,
@@ -1062,8 +1085,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   device,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFF334155),
+                  style: TextStyle(
+                    color: kbiWhite.withValues(alpha: 0.86),
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
                   ),
@@ -1073,7 +1096,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: Color(0xFF64748B),
+                    color: kbiSecondaryLabel,
                     fontSize: 12.5,
                     fontWeight: FontWeight.w500,
                     height: 1.35,
@@ -1083,9 +1106,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Container(
                   height: 150,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
+                    color: kbiBlack,
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: kbiSeparator),
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(18),
@@ -1125,9 +1148,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     polylines: [
                                       fmap.Polyline(
                                         points: [techPoint, jobPoint],
-                                        color: const Color(0xFF2563EB),
+                                        color: kbiBrand,
                                         strokeWidth: 4,
-                                        borderColor: Colors.white,
+                                        borderColor: kbiBlack,
                                         borderStrokeWidth: 2,
                                       ),
                                     ],
@@ -1141,10 +1164,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         height: 28,
                                         child: Container(
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFF2563EB),
+                                            color: kbiBrand,
                                             shape: BoxShape.circle,
                                             border: Border.all(
-                                                color: Colors.white, width: 4),
+                                                color: kbiBlack, width: 4),
                                             boxShadow: const [
                                               BoxShadow(
                                                   color: Colors.black26,
@@ -1159,10 +1182,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       height: 42,
                                       child: Container(
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFF0F172A),
+                                          color: kbiBlack,
                                           shape: BoxShape.circle,
                                           border: Border.all(
-                                              color: Colors.white, width: 3),
+                                              color: kbiSurfaceMuted, width: 3),
                                           boxShadow: const [
                                             BoxShadow(
                                               color: Colors.black26,
@@ -1185,20 +1208,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           )
                         else
                           Container(
-                            color: const Color(0xFFF1F5F9),
+                            color: kbiBlack,
                             alignment: Alignment.center,
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Icon(CupertinoIcons.location_slash,
-                                    color: Color(0xFF64748B), size: 28),
+                                    color: kbiSecondaryLabel, size: 28),
                                 const SizedBox(height: 7),
                                 Text(
                                   isAr
                                       ? 'بانتظار تثبيت موقع العميل'
                                       : 'Waiting for customer location',
                                   style: const TextStyle(
-                                    color: Color(0xFF475569),
+                                    color: kbiSecondaryLabel,
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -1214,7 +1237,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 8),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.94),
+                              color: kbiSurfaceRaised.withValues(alpha: 0.94),
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: const [
                                 BoxShadow(
@@ -1227,15 +1250,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             child: Row(
                               children: [
                                 const Icon(CupertinoIcons.location_solid,
-                                    size: 14, color: Color(0xFF2563EB)),
+                                    size: 14, color: kbiBrand),
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
                                     address,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: Color(0xFF334155),
+                                    style: TextStyle(
+                                      color: kbiWhite.withValues(alpha: 0.86),
                                       fontSize: 11.5,
                                       fontWeight: FontWeight.w700,
                                     ),
@@ -1247,7 +1270,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     '$distanceDisplay • $etaDisplay',
                                     textDirection: TextDirection.ltr,
                                     style: const TextStyle(
-                                      color: Color(0xFF2563EB),
+                                      color: kbiBrand,
                                       fontSize: 10.5,
                                       fontWeight: FontWeight.w800,
                                     ),
@@ -1261,25 +1284,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 11),
-                Row(
-                  children: [
-                    const Icon(CupertinoIcons.clock,
-                        size: 14, color: Color(0xFF94A3B8)),
-                    const SizedBox(width: 6),
-                    Text(
-                      timeSlot,
-                      style: const TextStyle(
-                        color: Color(0xFF64748B),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                if (timeSlot != null) ...[
+                  const SizedBox(height: 11),
+                  Row(
+                    children: [
+                      const Icon(CupertinoIcons.clock,
+                          size: 14, color: kbiSecondaryLabel),
+                      const SizedBox(width: 6),
+                      Text(
+                        timeSlot,
+                        style: const TextStyle(
+                          color: kbiSecondaryLabel,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    const Spacer(),
-                    const Icon(CupertinoIcons.chevron_forward,
-                        size: 15, color: Color(0xFF94A3B8)),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 18),
 
                 // Show only the actions that make sense for this job stage.
@@ -1289,8 +1311,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: () => widget.onNavigate?.call(1),
-                          icon: const Icon(CupertinoIcons.doc_text, size: 16),
-                          label: Text(isAr ? 'الطلبات' : 'Orders'),
+                          icon:
+                              const Icon(CupertinoIcons.list_bullet, size: 16),
+                          label: Text(isAr ? 'كل الطلبات' : 'All orders'),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 12),
@@ -1424,7 +1447,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Text(
               isAr ? 'نظرة عامة على اليوم' : 'Today Overview',
               style: const TextStyle(
-                color: Color(0xFF0F172A),
+                color: kbiLabel,
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.3,
@@ -1435,7 +1458,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Text(
                 isAr ? 'عرض الكل' : 'View all',
                 style: const TextStyle(
-                  color: Color(0xFF2563EB),
+                  color: kbiBrand,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                 ),
@@ -1454,9 +1477,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: kbiSurfaceRaised,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFF1F5F9)),
+                    border: Border.all(color: kbiSeparator),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.02),
@@ -1473,11 +1496,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         width: 34,
                         height: 34,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEFF6FF),
+                          color: kbiBrand.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(CupertinoIcons.briefcase,
-                            color: Color(0xFF2563EB), size: 17),
+                            color: kbiBrand, size: 17),
                       ),
                       const SizedBox(height: 10),
                       Column(
@@ -1488,7 +1511,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             child: Text(
                               '$jobsToday',
                               style: const TextStyle(
-                                color: Color(0xFF0F172A),
+                                color: kbiLabel,
                                 fontSize: 18,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: -0.3,
@@ -1501,7 +1524,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              color: Color(0xFF64748B),
+                              color: kbiSecondaryLabel,
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
@@ -1514,7 +1537,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              color: Color(0xFF94A3B8),
+                              color: kbiSecondaryLabel,
                               fontSize: 10,
                               fontWeight: FontWeight.w500,
                             ),
@@ -1533,9 +1556,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: kbiSurfaceRaised,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFF1F5F9)),
+                    border: Border.all(color: kbiSeparator),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.02),
@@ -1552,7 +1575,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         width: 34,
                         height: 34,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF0FDF4),
+                          color: kbiBrand.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(CupertinoIcons.creditcard,
@@ -1567,7 +1590,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             child: Text(
                               'AED ${earningsToday.toStringAsFixed(0)}',
                               style: const TextStyle(
-                                color: Color(0xFF0F172A),
+                                color: kbiLabel,
                                 fontSize: 18,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: -0.3,
@@ -1580,7 +1603,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              color: Color(0xFF64748B),
+                              color: kbiSecondaryLabel,
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
@@ -1618,9 +1641,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: kbiSurfaceRaised,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFF1F5F9)),
+                    border: Border.all(color: kbiSeparator),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.02),
@@ -1637,7 +1660,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         width: 34,
                         height: 34,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFFBEB),
+                          color: kbiOrange.withValues(alpha: 0.14),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(CupertinoIcons.square_grid_2x2,
@@ -1652,7 +1675,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             child: Text(
                               '$activeJobs',
                               style: const TextStyle(
-                                color: Color(0xFF0F172A),
+                                color: kbiLabel,
                                 fontSize: 18,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: -0.3,
@@ -1665,7 +1688,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              color: Color(0xFF64748B),
+                              color: kbiSecondaryLabel,
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
@@ -1676,7 +1699,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              color: Color(0xFF94A3B8),
+                              color: kbiSecondaryLabel,
                               fontSize: 10,
                               fontWeight: FontWeight.w500,
                             ),
@@ -1725,7 +1748,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Text(
               isAr ? 'النشاط الأخير' : 'Recent Activity',
               style: const TextStyle(
-                color: Color(0xFF0F172A),
+                color: kbiLabel,
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.3,
@@ -1736,7 +1759,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Text(
                 isAr ? 'عرض الكل' : 'View all',
                 style: const TextStyle(
-                  color: Color(0xFF2563EB),
+                  color: kbiBrand,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                 ),
@@ -1748,9 +1771,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: kbiSurfaceRaised,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFF1F5F9)),
+            border: Border.all(color: kbiSeparator),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.02),
@@ -1784,7 +1807,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Text(
                       '$ordNum ${isAr ? 'مكتمل' : 'Completed'}',
                       style: const TextStyle(
-                        color: Color(0xFF0F172A),
+                        color: kbiLabel,
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
                       ),
@@ -1795,7 +1818,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Color(0xFF64748B),
+                        color: kbiSecondaryLabel,
                         fontSize: 11.5,
                         fontWeight: FontWeight.w500,
                       ),
@@ -1804,7 +1827,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Text(
                       isAr ? 'اليوم، 09:15 ص' : 'Today, 09:15 AM',
                       style: const TextStyle(
-                        color: Color(0xFF94A3B8),
+                        color: kbiSecondaryLabel,
                         fontSize: 10.5,
                         fontWeight: FontWeight.w500,
                       ),
@@ -1827,7 +1850,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(width: 4),
                   const Icon(CupertinoIcons.chevron_forward,
-                      size: 14, color: Color(0xFF94A3B8)),
+                      size: 14, color: kbiSecondaryLabel),
                 ],
               ),
             ],

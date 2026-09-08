@@ -110,6 +110,7 @@ class _KbiTechnicianAppState extends State<KbiTechnicianApp> {
       title: 'KBI Technician',
       theme: buildKbiTheme(),
       highContrastTheme: buildKbiTheme(highContrast: true),
+      themeMode: ThemeMode.dark,
       themeAnimationDuration: const Duration(milliseconds: 240),
       themeAnimationCurve: Curves.easeOutCubic,
       debugShowCheckedModeBanner: false,
@@ -209,7 +210,7 @@ class _TechnicianGateState extends State<_TechnicianGate> {
           return const Scaffold(
             backgroundColor: Color(0xFF0F172A),
             body: Center(
-              child: CircularProgressIndicator(color: Color(0xFF0066FF)),
+              child: CircularProgressIndicator(color: kbiBrand),
             ),
           );
         }

@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 import '../models/service_request.dart';
 import '../theme.dart';
 import 'parts_inventory_screen.dart';
@@ -74,16 +75,22 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
     final now = DateTime.now();
     final defaultDate = DateFormat('dd/MM/yyyy').format(now);
     final orderNo = widget.job.orderId ?? widget.job.id;
-    final shortNo = orderNo.length > 8 ? orderNo.substring(orderNo.length - 8) : orderNo;
+    final shortNo =
+        orderNo.length > 8 ? orderNo.substring(orderNo.length - 8) : orderNo;
 
     _orderNoController = TextEditingController(text: shortNo.toUpperCase());
-    _invoiceNoController = TextEditingController(text: 'INV-$shortNo'.toUpperCase());
-    _issuedToController = TextEditingController(text: widget.job.customerName ?? '');
-    _locationController = TextEditingController(text: widget.job.address ?? 'Abu Dhabi, UAE');
+    _invoiceNoController =
+        TextEditingController(text: 'INV-$shortNo'.toUpperCase());
+    _issuedToController =
+        TextEditingController(text: widget.job.customerName ?? '');
+    _locationController =
+        TextEditingController(text: widget.job.address ?? 'Abu Dhabi, UAE');
     _dateController = TextEditingController(text: defaultDate);
-    _receivedByController = TextEditingController(text: widget.job.customerName ?? '');
+    _receivedByController =
+        TextEditingController(text: widget.job.customerName ?? '');
     _signatureController = TextEditingController(text: 'Customer Digital Sign');
-    _phoneNumController = TextEditingController(text: widget.job.customerPhone ?? '');
+    _phoneNumController =
+        TextEditingController(text: widget.job.customerPhone ?? '');
 
     // Default primary item from service & device
     final service = widget.job.serviceName ?? widget.job.type;
@@ -112,23 +119,42 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
         final data = doc.data()!;
         final invoiceData = data['officialInvoice'] as Map<String, dynamic>?;
 
-        if (invoiceData != null) {
-          setState(() {
-            if (invoiceData['orderNo'] != null) _orderNoController.text = invoiceData['orderNo'];
-            if (invoiceData['invoiceNo'] != null) _invoiceNoController.text = invoiceData['invoiceNo'];
-            if (invoiceData['issuedTo'] != null) _issuedToController.text = invoiceData['issuedTo'];
-            if (invoiceData['location'] != null) _locationController.text = invoiceData['location'];
-            if (invoiceData['date'] != null) _dateController.text = invoiceData['date'];
-            if (invoiceData['receivedBy'] != null) _receivedByController.text = invoiceData['receivedBy'];
-            if (invoiceData['signature'] != null) _signatureController.text = invoiceData['signature'];
-            if (invoiceData['phoneNum'] != null) _phoneNumController.text = invoiceData['phoneNum'];
+        if (!mounted || invoiceData == null) return;
 
-            final rawItems = invoiceData['items'] as List<dynamic>?;
-            if (rawItems != null && rawItems.isNotEmpty) {
-              _items = rawItems.map((e) => InvoiceItem.fromMap(Map<String, dynamic>.from(e as Map))).toList();
-            }
-          });
-        }
+        setState(() {
+          if (invoiceData['orderNo'] != null) {
+            _orderNoController.text = invoiceData['orderNo'];
+          }
+          if (invoiceData['invoiceNo'] != null) {
+            _invoiceNoController.text = invoiceData['invoiceNo'];
+          }
+          if (invoiceData['issuedTo'] != null) {
+            _issuedToController.text = invoiceData['issuedTo'];
+          }
+          if (invoiceData['location'] != null) {
+            _locationController.text = invoiceData['location'];
+          }
+          if (invoiceData['date'] != null) {
+            _dateController.text = invoiceData['date'];
+          }
+          if (invoiceData['receivedBy'] != null) {
+            _receivedByController.text = invoiceData['receivedBy'];
+          }
+          if (invoiceData['signature'] != null) {
+            _signatureController.text = invoiceData['signature'];
+          }
+          if (invoiceData['phoneNum'] != null) {
+            _phoneNumController.text = invoiceData['phoneNum'];
+          }
+
+          final rawItems = invoiceData['items'] as List<dynamic>?;
+          if (rawItems != null && rawItems.isNotEmpty) {
+            _items = rawItems
+                .map((e) =>
+                    InvoiceItem.fromMap(Map<String, dynamic>.from(e as Map)))
+                .toList();
+          }
+        });
       }
     } catch (_) {}
   }
@@ -146,7 +172,8 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
     super.dispose();
   }
 
-  double get _subtotal => _items.fold(0.0, (currentSum, i) => currentSum + i.total);
+  double get _subtotal =>
+      _items.fold(0.0, (currentSum, i) => currentSum + i.total);
   double get _total => _subtotal;
 
   void _addItem() {
@@ -189,6 +216,46 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
             });
           },
         ),
+      ),
+    );
+  }
+
+  void _goBack() {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+    }
+  }
+
+  Future<void> _shareInvoice() async {
+    final isAr = widget.locale.languageCode == 'ar';
+    final itemLines = _items
+        .map((item) =>
+            '• ${item.description} × ${item.qty} — AED ${item.total.toStringAsFixed(2)}')
+        .join('\n');
+    final invoiceNumber = _invoiceNoController.text.trim();
+    final summary = isAr
+        ? '''فاتورة KBI الرسمية
+رقم الفاتورة: $invoiceNumber
+التاريخ: ${_dateController.text.trim()}
+صادرة إلى: ${_issuedToController.text.trim()}
+
+$itemLines
+
+الإجمالي: AED ${_total.toStringAsFixed(2)}'''
+        : '''KBI Official Invoice
+Invoice: $invoiceNumber
+Date: ${_dateController.text.trim()}
+Issued to: ${_issuedToController.text.trim()}
+
+$itemLines
+
+Total: AED ${_total.toStringAsFixed(2)}''';
+
+    await SharePlus.instance.share(
+      ShareParams(
+        text: summary,
+        subject: isAr ? 'فاتورة $invoiceNumber' : 'Invoice $invoiceNumber',
       ),
     );
   }
@@ -264,9 +331,19 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
         elevation: 0,
         backgroundColor: const Color(0xFF00C7BE),
         foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => Navigator.of(context).pop(),
+        leadingWidth: isAr ? 96 : 112,
+        leading: TextButton.icon(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+          label: Text(
+            isAr ? 'رجوع' : 'Back',
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.white,
+            padding: const EdgeInsetsDirectional.only(start: 12, end: 8),
+            minimumSize: const Size(44, 44),
+          ),
+          onPressed: _goBack,
         ),
         title: Text(
           isAr ? 'نموذج الفاتورة الرسمي' : 'Official KBI Invoice',
@@ -281,12 +358,19 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
               size: 18,
             ),
             label: Text(
-              _isEditing ? (isAr ? 'معاينة' : 'Preview') : (isAr ? 'تعديل' : 'Edit'),
+              _isEditing
+                  ? (isAr ? 'معاينة' : 'Preview')
+                  : (isAr ? 'تعديل' : 'Edit'),
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.share_rounded, color: Colors.white),
+            tooltip: isAr ? 'مشاركة الفاتورة' : 'Share invoice',
+            onPressed: _shareInvoice,
           ),
           IconButton(
             icon: _isSaving
@@ -308,14 +392,16 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                 if (_isEditing)
                   Container(
                     margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
                       color: const Color(0xFF0F172A),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.edit_note_rounded, color: Color(0xFF00C7BE)),
+                        const Icon(Icons.edit_note_rounded,
+                            color: Color(0xFF00C7BE)),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -333,7 +419,8 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                           onPressed: _openPartsPicker,
                           style: TextButton.styleFrom(
                             backgroundColor: const Color(0xFF00C7BE),
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
                           ),
                           child: Text(
                             isAr ? '+ قطعة غيار' : '+ Add Part',
@@ -366,10 +453,12 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                     children: [
                       // 1. CYAN HEADER
                       Container(
-                        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 24, horizontal: 20),
                         decoration: const BoxDecoration(
                           color: Color(0xFF00C7BE),
-                          borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(8)),
                         ),
                         child: const Column(
                           children: [
@@ -411,16 +500,31 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                                   FittedBox(
                                     fit: BoxFit.scaleDown,
                                     child: Text('TEL : +971502491034',
-                                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 10,
+                                            color: Color(0xFF0F172A))),
                                   ),
                                   Text('P.O. BOX : 88888',
-                                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 10,
+                                          color: Color(0xFF0F172A))),
                                   Text('UNITED ARAB EMIRATES',
-                                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 10,
+                                          color: Color(0xFF0F172A))),
                                   Text('EMIRATE : ABU DHABI',
-                                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 10,
+                                          color: Color(0xFF0F172A))),
                                   Text('EMAIL : INFO@KBI.SERVICES',
-                                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 10,
+                                          color: Color(0xFF0F172A))),
                                 ],
                               ),
                             ),
@@ -453,20 +557,35 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         const Text('ORDER: KBI ',
-                                            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.w900,
+                                                fontSize: 10,
+                                                color: Color(0xFF0F172A))),
                                         _isEditing
                                             ? SizedBox(
                                                 width: 65,
                                                 height: 22,
                                                 child: TextField(
-                                                  controller: _orderNoController,
-                                                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                                                  decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.all(2)),
+                                                  controller:
+                                                      _orderNoController,
+                                                  style: const TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                  decoration:
+                                                      const InputDecoration(
+                                                          isDense: true,
+                                                          contentPadding:
+                                                              EdgeInsets.all(
+                                                                  2)),
                                                 ),
                                               )
                                             : Text(
                                                 _orderNoController.text,
-                                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800),
+                                                style: const TextStyle(
+                                                    fontSize: 10,
+                                                    fontWeight:
+                                                        FontWeight.w800),
                                               ),
                                       ],
                                     ),
@@ -480,7 +599,8 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
 
                       // 3. ISSUED TO, INVOICE NO, LOCATION, DATE
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
                         child: Column(
                           children: [
                             Row(
@@ -491,19 +611,33 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                                   child: Row(
                                     children: [
                                       const Text('ISSUED TO: ',
-                                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w900,
+                                              fontSize: 10,
+                                              color: Color(0xFF0F172A))),
                                       Expanded(
                                         child: _isEditing
                                             ? TextField(
                                                 controller: _issuedToController,
-                                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                                                decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.all(2)),
+                                                style: const TextStyle(
+                                                    fontSize: 10,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                                decoration:
+                                                    const InputDecoration(
+                                                        isDense: true,
+                                                        contentPadding:
+                                                            EdgeInsets.all(2)),
                                               )
                                             : Text(
                                                 _issuedToController.text,
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, decoration: TextDecoration.underline),
+                                                style: const TextStyle(
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w700,
+                                                    decoration: TextDecoration
+                                                        .underline),
                                               ),
                                       ),
                                     ],
@@ -516,20 +650,33 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
                                       const Text('INV NO: ',
-                                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w900,
+                                              fontSize: 10,
+                                              color: Color(0xFF0F172A))),
                                       _isEditing
                                           ? SizedBox(
                                               width: 75,
                                               height: 22,
                                               child: TextField(
-                                                controller: _invoiceNoController,
-                                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                                                decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.all(2)),
+                                                controller:
+                                                    _invoiceNoController,
+                                                style: const TextStyle(
+                                                    fontSize: 10,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                                decoration:
+                                                    const InputDecoration(
+                                                        isDense: true,
+                                                        contentPadding:
+                                                            EdgeInsets.all(2)),
                                               ),
                                             )
                                           : Text(
                                               _invoiceNoController.text,
-                                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800),
+                                              style: const TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w800),
                                             ),
                                     ],
                                   ),
@@ -545,19 +692,32 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                                   child: Row(
                                     children: [
                                       const Text('LOCATION: ',
-                                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w900,
+                                              fontSize: 10,
+                                              color: Color(0xFF0F172A))),
                                       Expanded(
                                         child: _isEditing
                                             ? TextField(
                                                 controller: _locationController,
-                                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                                                decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.all(2)),
+                                                style: const TextStyle(
+                                                    fontSize: 10,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                                decoration:
+                                                    const InputDecoration(
+                                                        isDense: true,
+                                                        contentPadding:
+                                                            EdgeInsets.all(2)),
                                               )
                                             : Text(
                                                 _locationController.text,
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+                                                style: const TextStyle(
+                                                    fontSize: 10,
+                                                    fontWeight:
+                                                        FontWeight.w600),
                                               ),
                                       ),
                                     ],
@@ -568,20 +728,30 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
                                     const Text('DATE: ',
-                                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 10,
+                                            color: Color(0xFF0F172A))),
                                     _isEditing
                                         ? SizedBox(
                                             width: 75,
                                             height: 22,
                                             child: TextField(
                                               controller: _dateController,
-                                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                                              decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.all(2)),
+                                              style: const TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.bold),
+                                              decoration: const InputDecoration(
+                                                  isDense: true,
+                                                  contentPadding:
+                                                      EdgeInsets.all(2)),
                                             ),
                                           )
                                         : Text(
                                             _dateController.text,
-                                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800),
+                                            style: const TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w800),
                                           ),
                                   ],
                                 ),
@@ -597,14 +767,16 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Container(
                           decoration: BoxDecoration(
-                            border: Border.all(color: const Color(0xFF00C7BE), width: 1.5),
+                            border: Border.all(
+                                color: const Color(0xFF00C7BE), width: 1.5),
                           ),
                           child: Column(
                             children: [
                               // Table Header
                               Container(
                                 color: const Color(0xFF00C7BE),
-                                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 8, horizontal: 8),
                                 child: const Row(
                                   children: [
                                     Expanded(
@@ -612,7 +784,10 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                                       child: Text(
                                         'DESCRIPTION',
                                         textAlign: TextAlign.center,
-                                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11),
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 11),
                                       ),
                                     ),
                                     Expanded(
@@ -620,7 +795,10 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                                       child: Text(
                                         'PART NO.',
                                         textAlign: TextAlign.center,
-                                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11),
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 11),
                                       ),
                                     ),
                                     Expanded(
@@ -628,7 +806,10 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                                       child: Text(
                                         'QTY',
                                         textAlign: TextAlign.center,
-                                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11),
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 11),
                                       ),
                                     ),
                                     Expanded(
@@ -636,7 +817,10 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                                       child: Text(
                                         'TOTAL',
                                         textAlign: TextAlign.center,
-                                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11),
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 11),
                                       ),
                                     ),
                                   ],
@@ -651,10 +835,13 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                                 return Container(
                                   decoration: BoxDecoration(
                                     border: Border(
-                                      top: BorderSide(color: const Color(0xFF00C7BE).withValues(alpha: 0.4)),
+                                      top: BorderSide(
+                                          color: const Color(0xFF00C7BE)
+                                              .withValues(alpha: 0.4)),
                                     ),
                                   ),
-                                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 8, horizontal: 8),
                                   child: Row(
                                     children: [
                                       // Description
@@ -662,79 +849,149 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                                         flex: 5,
                                         child: _isEditing
                                             ? TextField(
-                                                controller: TextEditingController(text: item.description),
-                                                onChanged: (val) => item.description = val,
-                                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                                                decoration: const InputDecoration(isDense: true, border: InputBorder.none),
+                                                controller:
+                                                    TextEditingController(
+                                                        text: item.description),
+                                                onChanged: (val) =>
+                                                    item.description = val,
+                                                style: const TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight:
+                                                        FontWeight.w600),
+                                                decoration:
+                                                    const InputDecoration(
+                                                        isDense: true,
+                                                        border:
+                                                            InputBorder.none),
                                               )
                                             : Text(item.description,
-                                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF0F172A))),
+                                                style: const TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: Color(0xFF0F172A))),
                                       ),
                                       // Part No
                                       Expanded(
                                         flex: 2,
                                         child: _isEditing
                                             ? TextField(
-                                                controller: TextEditingController(text: item.partNo),
-                                                onChanged: (val) => item.partNo = val,
+                                                controller:
+                                                    TextEditingController(
+                                                        text: item.partNo),
+                                                onChanged: (val) =>
+                                                    item.partNo = val,
                                                 textAlign: TextAlign.center,
-                                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                                                decoration: const InputDecoration(isDense: true, border: InputBorder.none),
+                                                style: const TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight:
+                                                        FontWeight.w600),
+                                                decoration:
+                                                    const InputDecoration(
+                                                        isDense: true,
+                                                        border:
+                                                            InputBorder.none),
                                               )
                                             : Text(item.partNo,
                                                 textAlign: TextAlign.center,
-                                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF0F172A))),
+                                                style: const TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Color(0xFF0F172A))),
                                       ),
                                       // Qty
                                       Expanded(
                                         flex: 1,
                                         child: _isEditing
                                             ? TextField(
-                                                controller: TextEditingController(text: item.qty.toString()),
-                                                keyboardType: TextInputType.number,
+                                                controller:
+                                                    TextEditingController(
+                                                        text: item.qty
+                                                            .toString()),
+                                                keyboardType:
+                                                    TextInputType.number,
                                                 onChanged: (val) {
-                                                  final q = int.tryParse(val) ?? 1;
+                                                  final q =
+                                                      int.tryParse(val) ?? 1;
                                                   setState(() => item.qty = q);
                                                 },
                                                 textAlign: TextAlign.center,
-                                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                                                decoration: const InputDecoration(isDense: true, border: InputBorder.none),
+                                                style: const TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight:
+                                                        FontWeight.w600),
+                                                decoration:
+                                                    const InputDecoration(
+                                                        isDense: true,
+                                                        border:
+                                                            InputBorder.none),
                                               )
                                             : Text(item.qty.toString(),
                                                 textAlign: TextAlign.center,
-                                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF0F172A))),
+                                                style: const TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: Color(0xFF0F172A))),
                                       ),
                                       // Total
                                       Expanded(
                                         flex: 2,
                                         child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.end,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
                                           children: [
                                             Expanded(
                                               child: _isEditing
                                                   ? TextField(
-                                                      controller: TextEditingController(text: item.total.toStringAsFixed(0)),
-                                                      keyboardType: TextInputType.number,
+                                                      controller:
+                                                          TextEditingController(
+                                                              text: item.total
+                                                                  .toStringAsFixed(
+                                                                      0)),
+                                                      keyboardType:
+                                                          TextInputType.number,
                                                       textAlign: TextAlign.end,
                                                       onChanged: (val) {
-                                                        final t = double.tryParse(val) ?? 0.0;
-                                                        setState(() => item.total = t);
+                                                        final t =
+                                                            double.tryParse(
+                                                                    val) ??
+                                                                0.0;
+                                                        setState(() =>
+                                                            item.total = t);
                                                       },
-                                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                                                      decoration: const InputDecoration(isDense: true, border: InputBorder.none),
+                                                      style: const TextStyle(
+                                                          fontSize: 11,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                      decoration:
+                                                          const InputDecoration(
+                                                              isDense: true,
+                                                              border:
+                                                                  InputBorder
+                                                                      .none),
                                                     )
                                                   : Text(
-                                                      item.total.toStringAsFixed(2),
+                                                      item.total
+                                                          .toStringAsFixed(2),
                                                       textAlign: TextAlign.end,
-                                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                                                      style: const TextStyle(
+                                                          fontSize: 11,
+                                                          fontWeight:
+                                                              FontWeight.w800,
+                                                          color: Color(
+                                                              0xFF0F172A)),
                                                     ),
                                             ),
                                             if (_isEditing)
                                               InkWell(
                                                 onTap: () => _removeItem(idx),
                                                 child: const Padding(
-                                                  padding: EdgeInsets.only(left: 4),
-                                                  child: Icon(Icons.delete_outline_rounded, size: 16, color: Colors.red),
+                                                  padding:
+                                                      EdgeInsets.only(left: 4),
+                                                  child: Icon(
+                                                      Icons
+                                                          .delete_outline_rounded,
+                                                      size: 16,
+                                                      color: Colors.red),
                                                 ),
                                               ),
                                           ],
@@ -751,15 +1008,21 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                                   onTap: _addItem,
                                   child: Container(
                                     color: const Color(0xFFF8FAFC),
-                                    padding: const EdgeInsets.symmetric(vertical: 8),
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 8),
                                     child: const Center(
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(Icons.add_circle_outline, size: 14, color: Color(0xFF00C7BE)),
+                                          Icon(Icons.add_circle_outline,
+                                              size: 14,
+                                              color: Color(0xFF00C7BE)),
                                           SizedBox(width: 4),
                                           Text('Add Item Line',
-                                              style: TextStyle(fontSize: 11, color: Color(0xFF00C7BE), fontWeight: FontWeight.bold)),
+                                              style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: Color(0xFF00C7BE),
+                                                  fontWeight: FontWeight.bold)),
                                         ],
                                       ),
                                     ),
@@ -769,14 +1032,24 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                               // Table Footer: SUBTOTAL & TOTAL
                               Container(
                                 color: const Color(0xFF00C7BE),
-                                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 8, horizontal: 12),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text('SUBTOTAL :  AED ${_subtotal.toStringAsFixed(2)}',
-                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11)),
-                                    Text('TOTAL :  AED ${_total.toStringAsFixed(2)}',
-                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12)),
+                                    Text(
+                                        'SUBTOTAL :  AED ${_subtotal.toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 11)),
+                                    Text(
+                                        'TOTAL :  AED ${_total.toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 12)),
                                   ],
                                 ),
                               ),
@@ -788,7 +1061,8 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
 
                       // 5. BOTTOM SECTION: SIGNATURE & TERMS & BANK DETAILS
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -798,38 +1072,65 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('RECEIVED BY:', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
+                                  const Text('RECEIVED BY:',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 10,
+                                          color: Color(0xFF0F172A))),
                                   _isEditing
                                       ? TextField(
                                           controller: _receivedByController,
                                           style: const TextStyle(fontSize: 10),
-                                          decoration: const InputDecoration(isDense: true),
+                                          decoration: const InputDecoration(
+                                              isDense: true),
                                         )
                                       : Text(_receivedByController.text,
-                                          style: const TextStyle(fontSize: 10, decoration: TextDecoration.underline)),
+                                          style: const TextStyle(
+                                              fontSize: 10,
+                                              decoration:
+                                                  TextDecoration.underline)),
                                   const SizedBox(height: 8),
-                                  const Text('SIGNATURE:', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
+                                  const Text('SIGNATURE:',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 10,
+                                          color: Color(0xFF0F172A))),
                                   _isEditing
                                       ? TextField(
                                           controller: _signatureController,
                                           style: const TextStyle(fontSize: 10),
-                                          decoration: const InputDecoration(isDense: true),
+                                          decoration: const InputDecoration(
+                                              isDense: true),
                                         )
                                       : Text(_signatureController.text,
-                                          style: const TextStyle(fontSize: 10, decoration: TextDecoration.underline)),
+                                          style: const TextStyle(
+                                              fontSize: 10,
+                                              decoration:
+                                                  TextDecoration.underline)),
                                   const SizedBox(height: 8),
-                                  const Text('PHONE NUM :', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
+                                  const Text('PHONE NUM :',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 10,
+                                          color: Color(0xFF0F172A))),
                                   _isEditing
                                       ? TextField(
                                           controller: _phoneNumController,
                                           style: const TextStyle(fontSize: 10),
-                                          decoration: const InputDecoration(isDense: true),
+                                          decoration: const InputDecoration(
+                                              isDense: true),
                                         )
                                       : Text(_phoneNumController.text,
-                                          style: const TextStyle(fontSize: 10, decoration: TextDecoration.underline)),
+                                          style: const TextStyle(
+                                              fontSize: 10,
+                                              decoration:
+                                                  TextDecoration.underline)),
                                   const SizedBox(height: 12),
                                   const Text('RECEIVED IN GOOD CONDITION',
-                                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 9, color: Color(0xFF0F172A))),
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 9,
+                                          color: Color(0xFF0F172A))),
                                 ],
                               ),
                             ),
@@ -843,12 +1144,18 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     Text('TERMS & CONDITIONS',
-                                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 10,
+                                            color: Color(0xFF0F172A))),
                                     SizedBox(height: 4),
                                     Text(
                                       'Please send payment within 20 days of receiving this invoice.\nThere will be a 10% interest charge per month on late invoices.',
                                       textAlign: TextAlign.center,
-                                      style: TextStyle(fontSize: 8.5, color: Color(0xFF334155), height: 1.3),
+                                      style: TextStyle(
+                                          fontSize: 8.5,
+                                          color: Color(0xFF334155),
+                                          height: 1.3),
                                     ),
                                   ],
                                 ),
@@ -861,13 +1168,54 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  Text('BANK DETAILS', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF0F172A))),
+                                  Text('BANK DETAILS',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 10,
+                                          color: Color(0xFF0F172A))),
                                   SizedBox(height: 4),
-                                  FittedBox(fit: BoxFit.scaleDown, child: Text('ACCOUNT HOLDER: KBI GLOBAL TECHNOLOGIES', textAlign: TextAlign.end, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 7.5, color: Color(0xFF0F172A)))),
-                                  FittedBox(fit: BoxFit.scaleDown, child: Text('IBAN: AE068090000000000623369', textAlign: TextAlign.end, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 7.5, color: Color(0xFF0F172A)))),
-                                  FittedBox(fit: BoxFit.scaleDown, child: Text('ACCOUNT NUMBER: 623369', textAlign: TextAlign.end, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 7.5, color: Color(0xFF0F172A)))),
-                                  FittedBox(fit: BoxFit.scaleDown, child: Text('CURRENCY: AED', textAlign: TextAlign.end, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 7.5, color: Color(0xFF0F172A)))),
-                                  FittedBox(fit: BoxFit.scaleDown, child: Text('SWIFT CODE: EMDVAEADXXX', textAlign: TextAlign.end, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 7.5, color: Color(0xFF0F172A)))),
+                                  FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                          'ACCOUNT HOLDER: KBI GLOBAL TECHNOLOGIES',
+                                          textAlign: TextAlign.end,
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 7.5,
+                                              color: Color(0xFF0F172A)))),
+                                  FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                          'IBAN: AE068090000000000623369',
+                                          textAlign: TextAlign.end,
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 7.5,
+                                              color: Color(0xFF0F172A)))),
+                                  FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text('ACCOUNT NUMBER: 623369',
+                                          textAlign: TextAlign.end,
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 7.5,
+                                              color: Color(0xFF0F172A)))),
+                                  FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text('CURRENCY: AED',
+                                          textAlign: TextAlign.end,
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 7.5,
+                                              color: Color(0xFF0F172A)))),
+                                  FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text('SWIFT CODE: EMDVAEADXXX',
+                                          textAlign: TextAlign.end,
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 7.5,
+                                              color: Color(0xFF0F172A)))),
                                 ],
                               ),
                             ),
@@ -877,10 +1225,12 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
 
                       // 6. BRAND LOGOS & STAMP FOOTER
                       Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 10, horizontal: 12),
                         decoration: const BoxDecoration(
                           color: Color(0xFF00C7BE),
-                          borderRadius: BorderRadius.vertical(bottom: Radius.circular(8)),
+                          borderRadius:
+                              BorderRadius.vertical(bottom: Radius.circular(8)),
                         ),
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -889,7 +1239,8 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                               child: FittedBox(
                                 fit: BoxFit.scaleDown,
                                 alignment: Alignment.centerLeft,
-                                child: Text('HP • APPLE • LG • DELL • SAMSUNG • IFIXIT',
+                                child: Text(
+                                    'HP • APPLE • LG • DELL • SAMSUNG • IFIXIT',
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.w900,
@@ -924,10 +1275,13 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.check_circle_rounded, color: Colors.white),
+                      const Icon(Icons.check_circle_rounded,
+                          color: Colors.white),
                       const SizedBox(width: 8),
                       Text(
-                        isAr ? 'حفظ وتأكيد نموذج الفاتورة' : 'Save & Confirm Invoice Form',
+                        isAr
+                            ? 'حفظ وتأكيد نموذج الفاتورة'
+                            : 'Save & Confirm Invoice Form',
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w800,

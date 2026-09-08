@@ -99,15 +99,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 margin: const EdgeInsets.fromLTRB(16, 2, 16, 10),
                 padding: const EdgeInsets.all(3),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.68),
+                  color: kbiBlack,
                   borderRadius: BorderRadius.circular(13),
-                  border: Border.all(color: Colors.white),
+                  border: Border.all(color: kbiSeparator),
                 ),
                 child: TabBar(
                   indicatorSize: TabBarIndicatorSize.tab,
                   dividerColor: Colors.transparent,
                   indicator: BoxDecoration(
-                    color: Colors.white,
+                    color: kbiSurfaceMuted,
                     borderRadius: BorderRadius.circular(10),
                     boxShadow: [
                       BoxShadow(
@@ -135,7 +135,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           body: uid == null
               ? Center(
                   child: Text(isAr ? 'لم يتم تسجيل الدخول' : 'Not logged in',
-                      style: const TextStyle(color: Color(0xFF111318))))
+                      style: const TextStyle(color: kbiLabel)))
               : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                   stream: _notificationsStream,
                   builder: (context, snap) {
@@ -165,7 +165,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                 ? 'تعذر تحميل الإشعارات.'
                                 : 'Notifications could not be loaded.',
                             textAlign: TextAlign.center,
-                            style: const TextStyle(color: Colors.black87),
+                            style: const TextStyle(color: kbiSecondaryLabel),
                           ),
                         ),
                       );
@@ -210,7 +210,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                       ? '$unreadCount غير مقروء'
                                       : '$unreadCount unread',
                                   style: const TextStyle(
-                                      color: Colors.black87, fontSize: 12),
+                                      color: kbiSecondaryLabel, fontSize: 12),
                                 ),
                                 _markingAllRead
                                     ? const SizedBox(
@@ -319,10 +319,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   String _localizedNotificationTitle(String title, bool isAr) {
     if (!isAr) return title;
     return title
-        .replaceFirst(RegExp(r'^New Dispatch:\s*', caseSensitive: false),
-            'مهمة جديدة: ')
-        .replaceFirst(RegExp(r'^Job Update:\s*', caseSensitive: false),
-            'تحديث الطلب: ')
+        .replaceFirst(
+            RegExp(r'^New Dispatch:\s*', caseSensitive: false), 'مهمة جديدة: ')
+        .replaceFirst(
+            RegExp(r'^Job Update:\s*', caseSensitive: false), 'تحديث الطلب: ')
         .replaceFirst(RegExp(r'^Payment Update:\s*', caseSensitive: false),
             'تحديث الدفعة: ');
   }
@@ -334,7 +334,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       caseSensitive: false,
     ).firstMatch(body.trim());
     if (assignment != null) {
-      final service = assignment.group(1)!
+      final service = assignment
+          .group(1)!
           .replaceAll('Customer', 'العميل')
           .replaceAll('Device Repair', 'صيانة جهاز');
       return 'تم تعيينك لخدمة $service في ${assignment.group(2)}.';
@@ -350,10 +351,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: kbiSurfaceRaised,
         borderRadius: const BorderRadius.all(Radius.circular(20)),
         border: Border.all(
-          color: isRead ? const Color(0xFFEDEEF1) : kbiBlue,
+          color: isRead ? kbiSeparator : kbiBlue,
           width: isRead ? 1.0 : 1.2,
         ),
       ),
@@ -367,7 +368,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           leading: Container(
             padding: const EdgeInsets.all(8),
             decoration: const BoxDecoration(
-              color: Color(0xFFF1F2F4),
+              color: kbiSurfaceMuted,
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -379,7 +380,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           title: Text(
             title,
             style: TextStyle(
-              color: const Color(0xFF111318),
+              color: kbiLabel,
               fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
               fontSize: 14,
             ),
@@ -391,7 +392,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               Text(
                 body,
                 style: const TextStyle(
-                    color: Colors.black87, fontSize: 12, height: 1.3),
+                    color: kbiSecondaryLabel, fontSize: 12, height: 1.3),
               ),
               const SizedBox(height: 6),
               Text(

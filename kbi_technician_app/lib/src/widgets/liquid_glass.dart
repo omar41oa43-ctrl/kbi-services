@@ -1,6 +1,8 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+
+import '../theme.dart';
 import 'package:flutter/services.dart';
 
 /// A quiet content canvas. Liquid Glass surfaces should float above this layer
@@ -13,7 +15,7 @@ class LiquidGlassBackdrop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: const Color(0xFFF4F7FB),
+      color: kbiBlack,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -23,9 +25,9 @@ class LiquidGlassBackdrop extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFFF7FAFF),
-                  Color(0xFFF3F6FB),
-                  Color(0xFFF8FAFC),
+                  Color(0xFF030405),
+                  Color(0xFF061417),
+                  Color(0xFF030405),
                 ],
               ),
             ),
@@ -35,7 +37,7 @@ class LiquidGlassBackdrop extends StatelessWidget {
             right: -150,
             child: _AmbientOrb(
               size: 360,
-              color: const Color(0xFF2563EB).withValues(alpha: 0.075),
+              color: kbiBrand.withValues(alpha: 0.16),
             ),
           ),
           Positioned(
@@ -43,7 +45,7 @@ class LiquidGlassBackdrop extends StatelessWidget {
             left: -170,
             child: _AmbientOrb(
               size: 380,
-              color: const Color(0xFF06B6D4).withValues(alpha: 0.055),
+              color: kbiBrand.withValues(alpha: 0.11),
             ),
           ),
           child ?? const SizedBox.expand(),
@@ -108,12 +110,10 @@ class LiquidGlassSurface extends StatelessWidget {
         (media?.accessibleNavigation ?? false);
     final resolvedTint = tint ??
         (highContrast
-            ? const Color(0xFFF8F8FA)
-            : Colors.white.withValues(alpha: 0.72));
+            ? kbiSurfaceRaised
+            : kbiSurfaceRaised.withValues(alpha: 0.82));
     final resolvedBorder = borderColor ??
-        (highContrast
-            ? const Color(0xFF636366)
-            : Colors.white.withValues(alpha: 0.78));
+        (highContrast ? kbiBrand : kbiBrand.withValues(alpha: 0.40));
 
     Widget surface = Container(
       decoration: BoxDecoration(
@@ -121,15 +121,15 @@ class LiquidGlassSurface extends StatelessWidget {
         boxShadow: shadows ??
             [
               BoxShadow(
-                color: const Color(0xFF1C1C1E)
-                    .withValues(alpha: highContrast ? 0.18 : 0.12),
+                color:
+                    Colors.black.withValues(alpha: highContrast ? 0.36 : 0.48),
                 blurRadius: highContrast ? 18 : 32,
                 offset: const Offset(0, 12),
               ),
               BoxShadow(
-                color: Colors.white.withValues(alpha: 0.55),
-                blurRadius: 2,
-                offset: const Offset(0, -1),
+                color: kbiBrand.withValues(alpha: 0.12),
+                blurRadius: 18,
+                spreadRadius: -6,
               ),
             ],
       ),
@@ -151,8 +151,8 @@ class LiquidGlassSurface extends StatelessWidget {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        Colors.white.withValues(alpha: 0.32),
-                        Colors.white.withValues(alpha: 0.08),
+                        kbiBrand.withValues(alpha: 0.12),
+                        kbiBlack.withValues(alpha: 0.04),
                       ],
                     ),
             ),

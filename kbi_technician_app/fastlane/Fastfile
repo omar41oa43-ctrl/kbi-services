@@ -1,0 +1,52 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Upload App Store text and screenshots without submitting a build"
+  lane :metadata do
+    deliver(
+      app_identifier: "ae.kbi.kbiTechnicianApp",
+      skip_binary_upload: true,
+      skip_metadata: false,
+      skip_screenshots: false,
+      overwrite_screenshots: true,
+      run_precheck_before_submit: true,
+      precheck_include_in_app_purchases: false,
+      force: true
+    )
+  end
+
+  desc "Upload an existing IPA to TestFlight"
+  lane :beta_upload do
+    ipa_path = ENV.fetch("IPA_PATH")
+    upload_to_testflight(
+      ipa: ipa_path,
+      skip_waiting_for_build_processing: false
+    )
+  end
+end
+
+platform :android do
+  desc "Upload Play listing text and screenshots"
+  lane :metadata do
+    upload_to_play_store(
+      package_name: "ae.kbi.kbi_technician_app",
+      track: "internal",
+      skip_upload_aab: true,
+      skip_upload_apk: true,
+      skip_upload_metadata: false,
+      skip_upload_images: false,
+      skip_upload_screenshots: false
+    )
+  end
+
+  desc "Upload an existing signed AAB to Play Internal testing"
+  lane :internal do
+    aab_path = ENV.fetch("AAB_PATH")
+    upload_to_play_store(
+      package_name: "ae.kbi.kbi_technician_app",
+      aab: aab_path,
+      track: "internal",
+      release_status: "draft"
+    )
+  end
+end

@@ -1,0 +1,9 @@
+KBI Technician is a workforce app for approved KBI field technicians. Use the supplied review account, which is approved and contains demo jobs.
+
+Demo path: Sign in → Orders → open the demo order → Closeout → Official Invoice → Share.
+
+Account deletion: Profile → Settings → Delete Account Permanently. Enter the review-account password to confirm.
+
+Background location is used only while the technician is online/on duty or handling an active service. Going Offline stops tracking. A prominent disclosure appears before the system permission prompt.
+
+Support: support@kbi.services / +971 50 249 1034

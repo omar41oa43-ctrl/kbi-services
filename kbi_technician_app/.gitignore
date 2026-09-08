@@ -35,7 +35,7 @@ migrate_working_dir/
 /android/key.properties
 *.jks
 *.keystore
-/ios/Runner/GoogleService-Info.plist
+*.p12
 /android/app/google-services.json
 node_modules/
 

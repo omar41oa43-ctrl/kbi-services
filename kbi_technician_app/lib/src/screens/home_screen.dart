@@ -136,9 +136,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               bottomNavigationBar: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.98),
+                  color: kbiSurfaceRaised.withValues(alpha: 0.98),
                   border: const Border(
-                    top: BorderSide(color: Color(0xFFE5E7EB), width: 0.7),
+                    top: BorderSide(color: kbiSeparator, width: 0.7),
                   ),
                   boxShadow: [
                     BoxShadow(
@@ -362,8 +362,8 @@ class _NavigationGlass extends StatelessWidget {
     return LiquidGlassSurface(
       borderRadius: BorderRadius.circular(26),
       blur: 30,
-      tint: Colors.white.withValues(alpha: 0.9),
-      borderColor: Colors.white,
+      tint: kbiSurfaceRaised.withValues(alpha: 0.92),
+      borderColor: kbiSeparator,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       child: navigationContent,
     );
@@ -434,7 +434,9 @@ class _NavigationItem extends StatelessWidget {
                           selected ? selectedIcon : icon,
                           key: ValueKey(selected),
                           size: 22,
-                          color: selected ? kbiBlue : const Color(0xFF94A3B8),
+                          color: selected
+                              ? kbiBlue
+                              : kbiWhite.withValues(alpha: 0.56),
                         ),
                       ),
                       if (badgeCount > 0)
@@ -450,14 +452,14 @@ class _NavigationItem extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: kbiBlue,
                               borderRadius: BorderRadius.circular(999),
-                              border:
-                                  Border.all(color: Colors.white, width: 1.5),
+                              border: Border.all(
+                                  color: kbiSurfaceRaised, width: 1.5),
                             ),
                             child: Text(
                               badgeCount > 99 ? '99+' : '$badgeCount',
                               textAlign: TextAlign.center,
                               style: const TextStyle(
-                                color: Colors.white,
+                                color: kbiBlack,
                                 fontSize: 8.5,
                                 height: 1.2,
                                 fontWeight: FontWeight.w800,
@@ -473,7 +475,8 @@ class _NavigationItem extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: selected ? kbiBlue : const Color(0xFF94A3B8),
+                      color:
+                          selected ? kbiBlue : kbiWhite.withValues(alpha: 0.56),
                       fontSize: 11,
                       height: 1.1,
                       fontWeight: selected ? FontWeight.w800 : FontWeight.w500,

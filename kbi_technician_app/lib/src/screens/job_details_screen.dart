@@ -10,6 +10,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../config/app_config.dart';
 import '../models/service_request.dart';
 import '../services/storage_service.dart';
 import '../services/technician_service.dart';
@@ -206,7 +207,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
         : _text('After-Repair Quality Photo', 'صورة جودة ما بعد الصيانة');
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: kbiSurfaceRaised,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -230,7 +231,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F172A),
+                  color: kbiLabel,
                 ),
               ),
               const SizedBox(height: 16),
@@ -247,7 +248,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
                     _text('Capture a clear photo with the device camera',
                         'التقط صورة واضحة باستخدام كاميرا الجهاز'),
                     style: const TextStyle(
-                        fontSize: 12, color: Color(0xFF64748B))),
+                        fontSize: 12, color: kbiSecondaryLabel)),
                 onTap: () => Navigator.pop(ctx, ImageSource.camera),
               ),
               ListTile(
@@ -264,7 +265,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
                     _text('Select an existing photo from your library',
                         'اختر صورة موجودة من المعرض'),
                     style: const TextStyle(
-                        fontSize: 12, color: Color(0xFF64748B))),
+                        fontSize: 12, color: kbiSecondaryLabel)),
                 onTap: () => Navigator.pop(ctx, ImageSource.gallery),
               ),
             ],
@@ -341,6 +342,162 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
     if (await canLaunchUrl(uri)) await launchUrl(uri);
   }
 
+  Future<void> _contactOperations() async {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final message = isAr
+        ? 'أحتاج دعم العمليات للطلب $_orderReference.\nالعنوان: ${_job.address ?? 'غير متوفر'}'
+        : 'I need operations support for order $_orderReference.\nAddress: ${_job.address ?? 'Not provided'}';
+    final uri = Uri.parse(
+      'https://wa.me/${AppConfig.supportWhatsApp}?text=${Uri.encodeComponent(message)}',
+    );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  Future<void> _showJobIssueSheet() async {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final noteController = TextEditingController();
+    final categories = isAr
+        ? const [
+            'العميل غير متاح',
+            'العنوان غير صحيح',
+            'تعذر الوصول للموقع',
+            'تفاصيل الطلب غير مكتملة',
+            'مشكلة أخرى',
+          ]
+        : const [
+            'Customer unavailable',
+            'Incorrect address',
+            'Cannot access the location',
+            'Order details are incomplete',
+            'Other issue',
+          ];
+    var selectedCategory = categories.first;
+    final submitted = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: kbiWhite,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) => SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              20,
+              16,
+              20,
+              16 + MediaQuery.viewInsetsOf(context).bottom,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: kbiSeparator,
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  isAr ? 'الإبلاغ عن مشكلة' : 'Report a job issue',
+                  style: const TextStyle(
+                    color: kbiBlack,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 20,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  isAr
+                      ? 'سيظهر التقرير لفريق العمليات مع رقم الطلب.'
+                      : 'Operations will receive this report with the order reference.',
+                  style: const TextStyle(color: kbiSecondaryLabel),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  initialValue: selectedCategory,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    labelText: isAr ? 'نوع المشكلة' : 'Issue type',
+                  ),
+                  items: categories
+                      .map((category) => DropdownMenuItem(
+                            value: category,
+                            child: Text(category),
+                          ))
+                      .toList(),
+                  onChanged: (value) => setSheetState(
+                    () => selectedCategory = value ?? selectedCategory,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: noteController,
+                  minLines: 3,
+                  maxLines: 5,
+                  textInputAction: TextInputAction.newline,
+                  decoration: InputDecoration(
+                    labelText: isAr
+                        ? 'ملاحظات إضافية (اختياري)'
+                        : 'Additional details (optional)',
+                    alignLabelWithHint: true,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () => Navigator.pop(sheetContext, true),
+                    icon: const Icon(Icons.flag_rounded),
+                    label: Text(isAr ? 'إرسال للإدارة' : 'Send to operations'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (submitted == true) {
+      final note = '${isAr ? 'تقرير فني' : 'Technician issue report'}: '
+          '$selectedCategory${noteController.text.trim().isEmpty ? '' : '\n${noteController.text.trim()}'}';
+      try {
+        await TechnicianService.instance.addJobNote(
+          requestId: _job.id,
+          note: note,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(isAr
+                  ? 'تم إرسال التقرير إلى الإدارة.'
+                  : 'Your report was sent to operations.'),
+            ),
+          );
+        }
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(isAr
+                  ? 'تعذر إرسال التقرير. حاول مرة أخرى.'
+                  : 'Unable to send the report. Please try again.'),
+            ),
+          );
+        }
+      }
+    }
+    noteController.dispose();
+  }
+
   // --- ONE-TAP WHATSAPP WITH TEMPLATES ---
   void _showWhatsAppTemplatesSheet(BuildContext context) {
     final customerName = _job.customerName ?? 'Customer';
@@ -379,7 +536,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: kbiSurfaceRaised,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -424,12 +581,12 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
                             style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
-                                color: Color(0xFF0F172A)),
+                                color: kbiLabel),
                           ),
                           Text(
                             'To: $customerName ($customerPhone)',
                             style: const TextStyle(
-                                color: Color(0xFF64748B), fontSize: 12),
+                                color: kbiSecondaryLabel, fontSize: 12),
                           ),
                         ],
                       ),
@@ -437,7 +594,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
                   ],
                 ),
                 const SizedBox(height: 16),
-                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                const Divider(height: 1, color: kbiSeparator),
                 const SizedBox(height: 10),
                 ...templates.map((tpl) {
                   return Padding(
@@ -459,9 +616,9 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
                       child: Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
+                          color: kbiSurfaceMuted,
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          border: Border.all(color: kbiSeparator),
                         ),
                         child: Row(
                           children: [
@@ -474,20 +631,20 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
                                     style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 13.5,
-                                        color: Color(0xFF0F172A)),
+                                        color: kbiLabel),
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
                                     tpl['subtitle']!,
                                     style: const TextStyle(
-                                        color: Color(0xFF64748B),
+                                        color: kbiSecondaryLabel,
                                         fontSize: 11.5),
                                   ),
                                 ],
                               ),
                             ),
                             const Icon(Icons.arrow_forward_ios_rounded,
-                                size: 14, color: Color(0xFF94A3B8)),
+                                size: 14, color: kbiSecondaryLabel),
                           ],
                         ),
                       ),
@@ -607,7 +764,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: kbiSurfaceRaised,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -641,7 +798,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
                       style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
-                          color: Color(0xFF0F172A)),
+                          color: kbiLabel),
                     ),
                   ],
                 ),
@@ -649,12 +806,12 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
                 Text(
                   targetAddress,
                   style:
-                      const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+                      const TextStyle(color: kbiSecondaryLabel, fontSize: 12),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 16),
-                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                const Divider(height: 1, color: kbiSurfaceMuted),
                 const SizedBox(height: 12),
 
                 // 1. Google Maps
@@ -675,7 +832,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
                 // 2. Apple Maps
                 _buildNavOptionTile(
                   icon: Icons.explore_rounded,
-                  color: const Color(0xFF0F172A),
+                  color: kbiLabel,
                   title: _text('Apple Maps (iOS Native)', 'خرائط Apple'),
                   subtitle: _text('Turn-by-turn guidance with Siri audio',
                       'إرشادات صوتية خطوة بخطوة'),
@@ -703,7 +860,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
                 // 4. Copy Address
                 _buildNavOptionTile(
                   icon: Icons.copy_rounded,
-                  color: const Color(0xFF64748B),
+                  color: kbiSecondaryLabel,
                   title: _text('Copy Address to Clipboard', 'نسخ العنوان'),
                   subtitle: targetAddress,
                   onTap: () {
@@ -734,9 +891,9 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
+            color: kbiSurfaceMuted,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: kbiSeparator),
           ),
           child: Row(
             children: [
@@ -757,17 +914,17 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
                         style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 13.5,
-                            color: Color(0xFF0F172A))),
+                            color: kbiLabel)),
                     Text(subtitle,
                         style: const TextStyle(
-                            color: Color(0xFF64748B), fontSize: 11),
+                            color: kbiSecondaryLabel, fontSize: 11),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis),
                   ],
                 ),
               ),
               const Icon(Icons.arrow_forward_ios_rounded,
-                  size: 14, color: Color(0xFF94A3B8)),
+                  size: 14, color: kbiSecondaryLabel),
             ],
           ),
         ),
@@ -838,7 +995,7 @@ Thank you for choosing KBI Services!
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: kbiSurfaceRaised,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -876,7 +1033,7 @@ Thank you for choosing KBI Services!
                       style: TextStyle(
                           fontWeight: FontWeight.w800,
                           fontSize: 18,
-                          color: Color(0xFF0F172A)),
+                          color: kbiLabel),
                     ),
                   ],
                 ),
@@ -884,7 +1041,7 @@ Thank you for choosing KBI Services!
                 const Text(
                   'Ask the customer to scan with their camera to rate your service',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Color(0xFF64748B), fontSize: 12.5),
+                  style: TextStyle(color: kbiSecondaryLabel, fontSize: 12.5),
                 ),
                 const SizedBox(height: 20),
 
@@ -894,8 +1051,7 @@ Thank you for choosing KBI Services!
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
-                    border:
-                        Border.all(color: const Color(0xFFE2E8F0), width: 2),
+                    border: Border.all(color: kbiSeparator, width: 2),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.06),
@@ -910,11 +1066,11 @@ Thank you for choosing KBI Services!
                     size: 200.0,
                     eyeStyle: const QrEyeStyle(
                       eyeShape: QrEyeShape.square,
-                      color: Color(0xFF0F172A),
+                      color: kbiLabel,
                     ),
                     dataModuleStyle: const QrDataModuleStyle(
                       dataModuleShape: QrDataModuleShape.square,
-                      color: Color(0xFF0F172A),
+                      color: kbiLabel,
                     ),
                   ),
                 ),
@@ -925,9 +1081,9 @@ Thank you for choosing KBI Services!
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
+                    color: kbiSurfaceMuted,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: kbiSeparator),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -940,7 +1096,7 @@ Thank you for choosing KBI Services!
                         style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
-                            color: Color(0xFF1E293B)),
+                            color: kbiLabel),
                       ),
                     ],
                   ),
@@ -993,7 +1149,7 @@ Thank you for choosing KBI Services!
                             style: TextStyle(
                                 fontWeight: FontWeight.bold, fontSize: 13)),
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF0F172A),
+                          backgroundColor: kbiLabel,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12)),
                           minimumSize: const Size.fromHeight(44),
@@ -1067,6 +1223,20 @@ Thank you for choosing KBI Services!
               },
               child: Text(isAr ? 'الاتصال بالعميل' : 'Call customer'),
             ),
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(sheetContext);
+              _showJobIssueSheet();
+            },
+            child: Text(isAr ? 'الإبلاغ عن مشكلة' : 'Report a job issue'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(sheetContext);
+              _contactOperations();
+            },
+            child: Text(isAr ? 'التواصل مع العمليات' : 'Contact operations'),
+          ),
         ],
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(sheetContext),
@@ -1126,7 +1296,7 @@ Thank you for choosing KBI Services!
                 indicatorSize: TabBarIndicatorSize.tab,
                 dividerColor: Colors.transparent,
                 indicator: BoxDecoration(
-                  color: Colors.white,
+                  color: kbiSurfaceMuted,
                   borderRadius: BorderRadius.circular(9),
                   boxShadow: [
                     BoxShadow(
@@ -1176,6 +1346,7 @@ Thank you for choosing KBI Services!
     final addressText = _job.address?.trim().isNotEmpty == true
         ? _job.address!
         : _text('Address not provided', 'العنوان غير متوفر');
+    final hasLongDescription = _job.description.trim().length > 140;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -1195,9 +1366,9 @@ Thank you for choosing KBI Services!
         // Service & Fault Description Card with Prominent Assigned Price
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: kbiSurfaceRaised,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: kbiSeparator),
           ),
           padding: const EdgeInsets.all(18),
           child: Column(
@@ -1220,7 +1391,7 @@ Thank you for choosing KBI Services!
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF0F172A),
+                            color: kbiLabel,
                             height: 1.25,
                           ),
                         ),
@@ -1235,7 +1406,7 @@ Thank you for choosing KBI Services!
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF64748B),
+                              color: kbiSecondaryLabel,
                             ),
                           ),
                         ],
@@ -1282,11 +1453,51 @@ Thank you for choosing KBI Services!
               ),
               if (_job.description.isNotEmpty) ...[
                 const SizedBox(height: 12),
-                Text(
-                  _job.description,
-                  style: const TextStyle(
-                      color: Color(0xFF475569), fontSize: 13.5, height: 1.4),
-                ),
+                if (hasLongDescription)
+                  ExpansionTile(
+                    tilePadding: EdgeInsets.zero,
+                    childrenPadding: const EdgeInsets.only(bottom: 4),
+                    iconColor: kbiBrand,
+                    collapsedIconColor: kbiSecondaryLabel,
+                    leading:
+                        const Icon(Icons.description_outlined, color: kbiBrand),
+                    title: Text(
+                      _text('Service details', 'تفاصيل الخدمة'),
+                      style: const TextStyle(
+                        color: kbiBlack,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: Text(
+                      _job.description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: kbiSecondaryLabel,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                    children: [
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(
+                          _job.description,
+                          style: const TextStyle(
+                            color: kbiSecondaryLabel,
+                            fontSize: 13.5,
+                            height: 1.45,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  Text(
+                    _job.description,
+                    style: const TextStyle(
+                        color: kbiSecondaryLabel, fontSize: 13.5, height: 1.4),
+                  ),
               ],
             ],
           ),
@@ -1301,9 +1512,9 @@ Thank you for choosing KBI Services!
     final isAr = _isArabic;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: kbiSurfaceRaised,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: kbiSeparator),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF0F172A).withValues(alpha: 0.06),
@@ -1329,7 +1540,7 @@ Thank you for choosing KBI Services!
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF0F172A),
+                      color: kbiLabel,
                     ),
                   ),
                 ],
@@ -1370,14 +1581,14 @@ Thank you for choosing KBI Services!
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: kbiSurfaceMuted,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: kbiSeparator),
             ),
             child: Row(
               children: [
                 const Icon(Icons.home_work_outlined,
-                    size: 18, color: Color(0xFF64748B)),
+                    size: 18, color: kbiSecondaryLabel),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -1385,13 +1596,13 @@ Thank you for choosing KBI Services!
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF1E293B),
+                      color: kbiLabel,
                     ),
                   ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.copy_rounded,
-                      size: 18, color: Color(0xFF64748B)),
+                      size: 18, color: kbiSecondaryLabel),
                   onPressed: () => _copyAddressToClipboard(addressText),
                   tooltip: isAr ? 'نسخ العنوان' : 'Copy Address',
                   padding: EdgeInsets.zero,
@@ -1448,7 +1659,7 @@ Thank you for choosing KBI Services!
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 10, vertical: 5),
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
+                                      color: kbiSurfaceRaised,
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
                                           color: const Color(0xFFBFDBFE)),
@@ -1463,7 +1674,7 @@ Thank you for choosing KBI Services!
                                       _job.customerName?.split(' ').first ??
                                           (isAr ? 'العميل' : 'Customer'),
                                       style: const TextStyle(
-                                        color: Color(0xFF0F172A),
+                                        color: kbiLabel,
                                         fontSize: 10,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -1474,7 +1685,7 @@ Thank you for choosing KBI Services!
                                     width: 38,
                                     height: 38,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF2563EB),
+                                      color: kbiBrand,
                                       shape: BoxShape.circle,
                                       border: Border.all(
                                           color: Colors.white, width: 3),
@@ -1506,7 +1717,7 @@ Thank you for choosing KBI Services!
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [Color(0xFF0F172A), Color(0xFF172554)],
+                            colors: [kbiLabel, Color(0xFF172554)],
                           ),
                         ),
                         child: Center(
@@ -1563,7 +1774,7 @@ Thank you for choosing KBI Services!
                                     _isSatelliteMode
                                         ? Icons.map_rounded
                                         : Icons.satellite_alt_rounded,
-                                    color: const Color(0xFF2563EB),
+                                    color: kbiBrand,
                                     size: 14,
                                   ),
                                   const SizedBox(width: 4),
@@ -1574,7 +1785,7 @@ Thank you for choosing KBI Services!
                                             ? 'القمر الصناعي'
                                             : 'Satellite'),
                                     style: const TextStyle(
-                                        color: Color(0xFF0F172A),
+                                        color: kbiLabel,
                                         fontSize: 11,
                                         fontWeight: FontWeight.bold),
                                   ),
@@ -1599,7 +1810,7 @@ Thank you for choosing KBI Services!
                                 ],
                               ),
                               child: const Icon(Icons.my_location_rounded,
-                                  color: Color(0xFF2563EB), size: 16),
+                                  color: kbiBrand, size: 16),
                             ),
                           ),
                         ],
@@ -1642,9 +1853,9 @@ Thank you for choosing KBI Services!
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: kbiSurfaceRaised,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: kbiSeparator),
       ),
       child: Column(
         children: [
@@ -1652,13 +1863,13 @@ Thank you for choosing KBI Services!
             children: [
               CircleAvatar(
                 radius: 22,
-                backgroundColor: const Color(0xFFF1F5F9),
+                backgroundColor: kbiSurfaceMuted,
                 child: Text(
                   customerName.isNotEmpty
                       ? customerName.substring(0, 1).toUpperCase()
                       : 'C',
                   style: const TextStyle(
-                      color: Color(0xFF0F172A),
+                      color: kbiLabel,
                       fontWeight: FontWeight.bold,
                       fontSize: 16),
                 ),
@@ -1673,13 +1884,13 @@ Thank you for choosing KBI Services!
                       style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
-                          color: Color(0xFF0F172A)),
+                          color: kbiLabel),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       customerPhone,
                       style: const TextStyle(
-                          color: Color(0xFF64748B), fontSize: 12),
+                          color: kbiSecondaryLabel, fontSize: 12),
                     ),
                   ],
                 ),
@@ -1687,7 +1898,7 @@ Thank you for choosing KBI Services!
             ],
           ),
           const SizedBox(height: 14),
-          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+          const Divider(height: 1, color: kbiSurfaceMuted),
           const SizedBox(height: 12),
           // 3 Action Buttons Row: Call, WhatsApp Templates, GPS Directions
           Row(
@@ -1766,9 +1977,9 @@ Thank you for choosing KBI Services!
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: kbiSurfaceRaised,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: kbiSeparator),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1784,7 +1995,7 @@ Thank you for choosing KBI Services!
                     style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
-                        color: Color(0xFF0F172A)),
+                        color: kbiLabel),
                   ),
                 ],
               ),
@@ -1794,10 +2005,10 @@ Thank you for choosing KBI Services!
                   'Verify device components before opening and after reassembly.',
                   'تحقق من مكونات الجهاز قبل الفتح وبعد إعادة التجميع.',
                 ),
-                style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+                style: const TextStyle(color: kbiSecondaryLabel, fontSize: 12),
               ),
               const SizedBox(height: 14),
-              const Divider(height: 1, color: Color(0xFFF1F5F9)),
+              const Divider(height: 1, color: kbiSurfaceMuted),
               const SizedBox(height: 10),
               ..._checklist.keys.map((key) {
                 final status = _checklist[key] ?? 'PASS';
@@ -1811,7 +2022,7 @@ Thank you for choosing KBI Services!
                           style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF1E293B)),
+                              color: kbiLabel),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -1826,7 +2037,7 @@ Thank you for choosing KBI Services!
                               const Color(0xFFEF4444), status == 'FAIL'),
                           const SizedBox(width: 4),
                           _buildQaChip(key, 'NA', _text('N/A', 'لا ينطبق'),
-                              const Color(0xFF94A3B8), status == 'NA'),
+                              kbiSecondaryLabel, status == 'NA'),
                         ],
                       ),
                     ],
@@ -1878,9 +2089,9 @@ Thank you for choosing KBI Services!
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: kbiSurfaceRaised,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: kbiSeparator),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1898,7 +2109,7 @@ Thank you for choosing KBI Services!
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
-                          color: Color(0xFF0F172A),
+                          color: kbiLabel,
                         ),
                       ),
                     ],
@@ -1938,7 +2149,7 @@ Thank you for choosing KBI Services!
                   'Select spare parts from inventory to deduct stock and attach to this order.',
                   'اختر قطع الغيار من المخزون لإضافتها إلى الطلب وخصم الكمية.',
                 ),
-                style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+                style: const TextStyle(color: kbiSecondaryLabel, fontSize: 12),
               ),
               const SizedBox(height: 12),
               if (usedParts.isEmpty)
@@ -1946,21 +2157,21 @@ Thank you for choosing KBI Services!
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
+                    color: kbiSurfaceMuted,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: kbiSeparator),
                   ),
                   child: Column(
                     children: [
                       const Icon(CupertinoIcons.cube_box,
-                          color: Color(0xFF94A3B8), size: 28),
+                          color: kbiSecondaryLabel, size: 28),
                       const SizedBox(height: 6),
                       Text(
                         _text('No parts allocated yet', 'لم تُضف قطع غيار بعد'),
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF64748B),
+                          color: kbiSecondaryLabel,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -1971,7 +2182,7 @@ Thank you for choosing KBI Services!
                         ),
                         style: const TextStyle(
                           fontSize: 11,
-                          color: Color(0xFF94A3B8),
+                          color: kbiSecondaryLabel,
                         ),
                       ),
                     ],
@@ -1993,9 +2204,9 @@ Thank you for choosing KBI Services!
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
+                        color: kbiSurfaceMuted,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        border: Border.all(color: kbiSeparator),
                       ),
                       child: Row(
                         children: [
@@ -2020,7 +2231,7 @@ Thank you for choosing KBI Services!
                                   style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
-                                    color: Color(0xFF0F172A),
+                                    color: kbiLabel,
                                   ),
                                 ),
                                 if (sku.isNotEmpty)
@@ -2028,7 +2239,7 @@ Thank you for choosing KBI Services!
                                     'SKU: $sku',
                                     style: const TextStyle(
                                       fontSize: 11,
-                                      color: Color(0xFF64748B),
+                                      color: kbiSecondaryLabel,
                                       fontFamily: 'monospace',
                                     ),
                                   ),
@@ -2041,7 +2252,7 @@ Thank you for choosing KBI Services!
                               style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w800,
-                                color: Color(0xFF0F172A),
+                                color: kbiLabel,
                               ),
                             ),
                         ],
@@ -2141,9 +2352,9 @@ Thank you for choosing KBI Services!
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: kbiSurfaceRaised,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: kbiSeparator),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2155,7 +2366,7 @@ Thank you for choosing KBI Services!
                   style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
-                      color: Color(0xFF0F172A))),
+                      color: kbiLabel)),
               IconButton(
                 onPressed: onAdd,
                 tooltip: _text('Add Photo (Camera / Gallery)',
@@ -2174,7 +2385,7 @@ Thank you for choosing KBI Services!
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 22),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                  color: kbiSurfaceMuted,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                       color: const Color(0xFFCBD5E1), style: BorderStyle.solid),
@@ -2197,7 +2408,7 @@ Thank you for choosing KBI Services!
                       _text('Tap to choose Camera or Photo Gallery',
                           'اضغط لاختيار الكاميرا أو معرض الصور'),
                       style: const TextStyle(
-                          fontSize: 11, color: Color(0xFF64748B)),
+                          fontSize: 11, color: kbiSecondaryLabel),
                     ),
                   ],
                 ),
@@ -2260,7 +2471,7 @@ Thank you for choosing KBI Services!
                     width: 84,
                     height: 84,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
+                      color: kbiSurfaceMuted,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                           color: const Color(0xFF0284C7), width: 1.2),
@@ -2324,6 +2535,10 @@ Thank you for choosing KBI Services!
       ),
     ];
     final ready = missing.isEmpty;
+    final foregroundColor =
+        ready ? const Color(0xFF14532D) : const Color(0xFF1F2937);
+    final secondaryTextColor =
+        ready ? const Color(0xFF166534) : const Color(0xFF4B2E05);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -2351,8 +2566,8 @@ Thank you for choosing KBI Services!
                   ready
                       ? _text('Closeout ready', 'الطلب جاهز للإنهاء')
                       : _text('Closeout checklist', 'قائمة إنهاء الطلب'),
-                  style: const TextStyle(
-                    color: Color(0xFF0F172A),
+                  style: TextStyle(
+                    color: foregroundColor,
                     fontWeight: FontWeight.w800,
                     fontSize: 15,
                   ),
@@ -2377,7 +2592,7 @@ Thank you for choosing KBI Services!
                     'اكتملت مستندات الطلب. يمكنك إنهاء أمر العمل بعد إتمام الصيانة.')
                 : _text('Complete these items before closing the work order.',
                     'أكمل هذه العناصر قبل إغلاق أمر العمل.'),
-            style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+            style: TextStyle(color: secondaryTextColor, fontSize: 12),
           ),
           const SizedBox(height: 10),
           ...requirements.map((item) => InkWell(
@@ -2402,7 +2617,7 @@ Thank you for choosing KBI Services!
                         child: Text(
                           item.label,
                           style: TextStyle(
-                            color: const Color(0xFF334155),
+                            color: foregroundColor,
                             fontWeight:
                                 item.done ? FontWeight.w600 : FontWeight.w700,
                             fontSize: 12.5,
@@ -2410,8 +2625,8 @@ Thank you for choosing KBI Services!
                         ),
                       ),
                       if (!item.done)
-                        const Icon(Icons.chevron_right_rounded,
-                            color: Color(0xFF94A3B8), size: 18),
+                        Icon(Icons.chevron_right_rounded,
+                            color: foregroundColor, size: 18),
                     ],
                   ),
                 ),
@@ -2432,9 +2647,9 @@ Thank you for choosing KBI Services!
         Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: kbiSurfaceRaised,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: kbiSeparator),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2451,7 +2666,7 @@ Thank you for choosing KBI Services!
                           style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 15,
-                              color: Color(0xFF0F172A))),
+                              color: kbiLabel)),
                     ],
                   ),
                   TextButton.icon(
@@ -2486,7 +2701,7 @@ Thank you for choosing KBI Services!
               _buildInvoiceRow(
                   _text('OEM Replacement Parts', 'قطع الغيار الأصلية'),
                   'AED ${(amount * 0.6).toStringAsFixed(2)}'),
-              const Divider(height: 20, color: Color(0xFFF1F5F9)),
+              const Divider(height: 20, color: kbiSurfaceMuted),
               _buildInvoiceRow(
                   _text('Total Amount Due', 'إجمالي المبلغ المستحق'),
                   'AED ${amount.toStringAsFixed(2)}',
@@ -2500,9 +2715,9 @@ Thank you for choosing KBI Services!
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: kbiSurfaceRaised,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: kbiSeparator),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2511,7 +2726,7 @@ Thank you for choosing KBI Services!
                   style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
-                      color: Color(0xFF0F172A))),
+                      color: kbiLabel)),
               const SizedBox(height: 10),
               Wrap(
                 spacing: 8,
@@ -2534,9 +2749,9 @@ Thank you for choosing KBI Services!
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: kbiSurfaceRaised,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: kbiSeparator),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2558,7 +2773,7 @@ Thank you for choosing KBI Services!
                             style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13.5,
-                                color: Color(0xFF0F172A)),
+                                color: kbiLabel),
                           ),
                         ),
                       ],
@@ -2606,7 +2821,7 @@ Thank you for choosing KBI Services!
                   height: 160,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
+                    color: kbiSurfaceMuted,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: _signatureCaptured
@@ -2647,13 +2862,13 @@ Thank you for choosing KBI Services!
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               const Icon(Icons.edit_outlined,
-                                  color: Color(0xFF94A3B8), size: 18),
+                                  color: kbiSecondaryLabel, size: 18),
                               const SizedBox(width: 6),
                               Text(
                                 _text('Sign with finger above',
                                     'وقّع بإصبعك في المساحة أعلاه'),
                                 style: const TextStyle(
-                                  color: Color(0xFF94A3B8),
+                                  color: kbiSecondaryLabel,
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -2676,7 +2891,7 @@ Thank you for choosing KBI Services!
                 style: TextStyle(
                   color: _signatureCaptured
                       ? const Color(0xFF10B981)
-                      : const Color(0xFF94A3B8),
+                      : kbiSecondaryLabel,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
@@ -2690,9 +2905,9 @@ Thank you for choosing KBI Services!
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: kbiSurfaceRaised,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: kbiSeparator),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2708,7 +2923,7 @@ Thank you for choosing KBI Services!
                     style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
-                        color: Color(0xFF0F172A)),
+                        color: kbiLabel),
                   ),
                 ],
               ),
@@ -2718,7 +2933,7 @@ Thank you for choosing KBI Services!
                   'Show your personal QR code on-site so customer can rate your service and tip.',
                   'اعرض رمزك للعميل ليقيّم الخدمة بعد إنجازها.',
                 ),
-                style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+                style: const TextStyle(color: kbiSecondaryLabel, fontSize: 12),
               ),
               const SizedBox(height: 12),
               FilledButton.icon(
@@ -2751,9 +2966,7 @@ Thank you for choosing KBI Services!
             _text('Send Official WhatsApp Warranty Receipt',
                 'إرسال إيصال الضمان عبر واتساب'),
             style: const TextStyle(
-                color: Color(0xFF0F172A),
-                fontWeight: FontWeight.bold,
-                fontSize: 13),
+                color: kbiLabel, fontWeight: FontWeight.bold, fontSize: 13),
           ),
           style: OutlinedButton.styleFrom(
             side: const BorderSide(color: Color(0xFF25D366)),
@@ -2777,11 +2990,10 @@ Thank you for choosing KBI Services!
         decoration: BoxDecoration(
           color: isSelected
               ? const Color(0xFF0284C7).withValues(alpha: 0.1)
-              : const Color(0xFFF8FAFC),
+              : kbiSurfaceMuted,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color:
-                isSelected ? const Color(0xFF0284C7) : const Color(0xFFE2E8F0),
+            color: isSelected ? const Color(0xFF0284C7) : kbiSeparator,
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -2790,16 +3002,13 @@ Thank you for choosing KBI Services!
           children: [
             Icon(icon,
                 size: 15,
-                color: isSelected
-                    ? const Color(0xFF0284C7)
-                    : const Color(0xFF64748B)),
+                color:
+                    isSelected ? const Color(0xFF0284C7) : kbiSecondaryLabel),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
-                color: isSelected
-                    ? const Color(0xFF0284C7)
-                    : const Color(0xFF334155),
+                color: isSelected ? const Color(0xFF0284C7) : kbiSecondaryLabel,
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
               ),
@@ -2816,14 +3025,12 @@ Thank you for choosing KBI Services!
       children: [
         Text(label,
             style: TextStyle(
-                color:
-                    isBold ? const Color(0xFF0F172A) : const Color(0xFF64748B),
+                color: isBold ? kbiLabel : kbiSecondaryLabel,
                 fontSize: isBold ? 14 : 13,
                 fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
         Text(value,
             style: TextStyle(
-                color:
-                    isBold ? const Color(0xFF10B981) : const Color(0xFF0F172A),
+                color: isBold ? const Color(0xFF10B981) : kbiLabel,
                 fontSize: isBold ? 16 : 13,
                 fontWeight: isBold ? FontWeight.w800 : FontWeight.w600)),
       ],
@@ -3126,7 +3333,7 @@ Thank you for choosing KBI Services!
         return StatefulBuilder(
           builder: (dialogCtx, setDialogState) {
             return Dialog(
-              backgroundColor: Colors.white,
+              backgroundColor: kbiSurfaceRaised,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
               insetPadding:
@@ -3149,7 +3356,7 @@ Thank you for choosing KBI Services!
                               style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF0F172A)),
+                                  color: kbiLabel),
                             ),
                           ],
                         ),
@@ -3162,7 +3369,7 @@ Thank you for choosing KBI Services!
                     const SizedBox(height: 8),
                     const Text(
                       'Please ask the customer to sign on the canvas below using their finger.',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                      style: TextStyle(fontSize: 12, color: kbiSecondaryLabel),
                     ),
                     const SizedBox(height: 14),
                     ClipRRect(
@@ -3170,7 +3377,7 @@ Thank you for choosing KBI Services!
                       child: Container(
                         height: 280,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
+                          color: kbiSurfaceMuted,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(color: const Color(0xFFCBD5E1)),
                         ),
@@ -3209,7 +3416,7 @@ Thank you for choosing KBI Services!
                                 child: Text(
                                   '✍️ Draw signature here with finger',
                                   style: TextStyle(
-                                    color: Color(0xFF94A3B8),
+                                    color: kbiSecondaryLabel,
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -3249,7 +3456,7 @@ Thank you for choosing KBI Services!
                               Navigator.pop(dialogCtx);
                             },
                             style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFF0F172A),
+                              backgroundColor: kbiLabel,
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12)),
                               padding: const EdgeInsets.symmetric(vertical: 12),
@@ -3279,7 +3486,7 @@ class _SignaturePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF0F172A)
+      ..color = kbiLabel
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 3.2;
 

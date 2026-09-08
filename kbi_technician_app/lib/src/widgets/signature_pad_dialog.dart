@@ -1,6 +1,8 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
+import '../theme.dart';
+
 class SignaturePadDialog extends StatefulWidget {
   final String title;
   final Function(List<Offset?> points) onSave;
@@ -35,10 +37,11 @@ class _SignaturePadDialogState extends State<SignaturePadDialog> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
+                    color: kbiBrand.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.draw_rounded, color: Color(0xFF0D67E8), size: 22),
+                  child:
+                      const Icon(Icons.draw_rounded, color: kbiBrand, size: 22),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -47,7 +50,7 @@ class _SignaturePadDialogState extends State<SignaturePadDialog> {
                     style: const TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF0F172A),
+                      color: kbiBlack,
                     ),
                   ),
                 ),
@@ -60,7 +63,8 @@ class _SignaturePadDialogState extends State<SignaturePadDialog> {
             const SizedBox(height: 8),
             const Text(
               'Please ask the customer to sign inside the box below to confirm service completion.',
-              style: TextStyle(fontSize: 13, color: Color(0xFF64748B), height: 1.4),
+              style: TextStyle(
+                  fontSize: 13, color: Color(0xFF64748B), height: 1.4),
             ),
             const SizedBox(height: 16),
             Container(
@@ -73,8 +77,10 @@ class _SignaturePadDialogState extends State<SignaturePadDialog> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: GestureDetector(
-                  onPanDown: (details) => setState(() => _points.add(details.localPosition)),
-                  onPanStart: (details) => setState(() => _points.add(details.localPosition)),
+                  onPanDown: (details) =>
+                      setState(() => _points.add(details.localPosition)),
+                  onPanStart: (details) =>
+                      setState(() => _points.add(details.localPosition)),
                   onPanUpdate: (details) {
                     final localPos = details.localPosition;
                     setState(() {
@@ -100,7 +106,8 @@ class _SignaturePadDialogState extends State<SignaturePadDialog> {
                       foregroundColor: const Color(0xFF64748B),
                       side: const BorderSide(color: Color(0xFFE2E8F0)),
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                     onPressed: () => setState(() => _points.clear()),
                   ),
@@ -109,12 +116,16 @@ class _SignaturePadDialogState extends State<SignaturePadDialog> {
                 Expanded(
                   flex: 2,
                   child: ElevatedButton.icon(
-                    icon: const Icon(Icons.check_circle_outline_rounded, size: 18, color: Colors.white),
-                    label: const Text('Confirm Signature', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                    icon: const Icon(Icons.check_circle_outline_rounded,
+                        size: 18, color: Colors.white),
+                    label: const Text('Confirm Signature',
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.w700)),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0D67E8),
+                      backgroundColor: kbiBrand,
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                     onPressed: _points.isEmpty
                         ? null

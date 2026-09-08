@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' as intl;
 import '../services/technician_service.dart';
+import '../theme.dart';
 import '../utils/wallet_utils.dart';
 
 class WalletScreen extends StatefulWidget {
@@ -234,7 +235,7 @@ class _WalletScreenState extends State<WalletScreen> {
                                       Text(
                                         isAr ? 'المحفظة' : 'Wallet',
                                         style: const TextStyle(
-                                          color: Color(0xFF0F172A),
+                                          color: kbiLabel,
                                           fontSize: 26,
                                           fontWeight: FontWeight.w800,
                                           letterSpacing: -0.6,
@@ -246,7 +247,7 @@ class _WalletScreenState extends State<WalletScreen> {
                                             ? 'إدارة الأرباح وسحب المستحقات'
                                             : 'Earnings & Payout Overview',
                                         style: const TextStyle(
-                                          color: Color(0xFF64748B),
+                                          color: kbiSecondaryLabel,
                                           fontSize: 13,
                                           fontWeight: FontWeight.w500,
                                         ),
@@ -257,10 +258,9 @@ class _WalletScreenState extends State<WalletScreen> {
                                     width: 44,
                                     height: 44,
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
+                                      color: kbiSurfaceRaised,
                                       borderRadius: BorderRadius.circular(14),
-                                      border: Border.all(
-                                          color: const Color(0xFFE2E8F0)),
+                                      border: Border.all(color: kbiSeparator),
                                       boxShadow: [
                                         BoxShadow(
                                           color: Colors.black
@@ -385,7 +385,7 @@ class _WalletScreenState extends State<WalletScreen> {
                                         ? 'سجل المعاملات'
                                         : 'Transaction History',
                                     style: const TextStyle(
-                                      color: Color(0xFF0F172A),
+                                      color: kbiLabel,
                                       fontSize: 16,
                                       fontWeight: FontWeight.w800,
                                       letterSpacing: -0.3,
@@ -566,7 +566,7 @@ class _WalletScreenState extends State<WalletScreen> {
                       child: const Text(
                         'AED • UAE',
                         style: TextStyle(
-                          color: Color(0xFF94A3B8),
+                          color: kbiSecondaryLabel,
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,
                         ),
@@ -718,8 +718,8 @@ class _WalletScreenState extends State<WalletScreen> {
                           }
                         : () => _showWithdrawalDialog(context, balance, isAr),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF0F172A),
+                      backgroundColor: kbiBrand,
+                      foregroundColor: kbiBlack,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -731,7 +731,7 @@ class _WalletScreenState extends State<WalletScreen> {
                         const Icon(
                           CupertinoIcons.arrow_down_circle_fill,
                           size: 19,
-                          color: Color(0xFF0284C7),
+                          color: kbiBlack,
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -770,9 +770,9 @@ class _WalletScreenState extends State<WalletScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: kbiSurfaceRaised,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: kbiSeparator),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -801,7 +801,7 @@ class _WalletScreenState extends State<WalletScreen> {
             child: Text(
               value,
               style: const TextStyle(
-                color: Color(0xFF0F172A),
+                color: kbiLabel,
                 fontSize: 15,
                 fontWeight: FontWeight.w900,
                 letterSpacing: -0.3,
@@ -814,7 +814,7 @@ class _WalletScreenState extends State<WalletScreen> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              color: Color(0xFF64748B),
+              color: kbiSecondaryLabel,
               fontSize: 10.5,
               fontWeight: FontWeight.w600,
             ),
@@ -838,17 +838,16 @@ class _WalletScreenState extends State<WalletScreen> {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0284C7) : const Color(0xFFF1F5F9),
+          color: isSelected ? const Color(0xFF0284C7) : kbiSurfaceMuted,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color:
-                isSelected ? const Color(0xFF0284C7) : const Color(0xFFE2E8F0),
+            color: isSelected ? const Color(0xFF0284C7) : kbiSeparator,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : const Color(0xFF64748B),
+            color: isSelected ? Colors.white : kbiSecondaryLabel,
             fontSize: 11,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
           ),
@@ -887,9 +886,9 @@ class _WalletScreenState extends State<WalletScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: kbiSurfaceRaised,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
+        border: Border.all(color: kbiSurfaceMuted),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -939,7 +938,7 @@ class _WalletScreenState extends State<WalletScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: Color(0xFF0F172A),
+                    color: kbiLabel,
                     fontSize: 13.5,
                     fontWeight: FontWeight.w700,
                     letterSpacing: -0.2,
@@ -978,7 +977,7 @@ class _WalletScreenState extends State<WalletScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          color: Color(0xFF94A3B8),
+                          color: kbiSecondaryLabel,
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
                         ),
@@ -1049,7 +1048,7 @@ class _WalletScreenState extends State<WalletScreen> {
                   style: const TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F172A),
+                    color: kbiLabel,
                   ),
                 ),
               ),
@@ -1063,9 +1062,9 @@ class _WalletScreenState extends State<WalletScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                  color: kbiSurfaceMuted,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: kbiSeparator),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1074,7 +1073,7 @@ class _WalletScreenState extends State<WalletScreen> {
                       isAr ? 'الرصيد المتاح للسحب:' : 'Available to withdraw:',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: Color(0xFF64748B),
+                        color: kbiSecondaryLabel,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -1098,14 +1097,14 @@ class _WalletScreenState extends State<WalletScreen> {
                   labelText: isAr ? 'المبلغ (درهم)' : 'Amount (AED)',
                   prefixIcon: const Icon(CupertinoIcons.money_dollar, size: 18),
                   filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
+                  fillColor: kbiSurfaceMuted,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    borderSide: const BorderSide(color: kbiSeparator),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    borderSide: const BorderSide(color: kbiSeparator),
                   ),
                 ),
               ),
@@ -1117,14 +1116,14 @@ class _WalletScreenState extends State<WalletScreen> {
                   hintText: 'AE000000000000000000000',
                   prefixIcon: const Icon(CupertinoIcons.creditcard, size: 18),
                   filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
+                  fillColor: kbiSurfaceMuted,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    borderSide: const BorderSide(color: kbiSeparator),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    borderSide: const BorderSide(color: kbiSeparator),
                   ),
                 ),
               ),
@@ -1136,7 +1135,7 @@ class _WalletScreenState extends State<WalletScreen> {
               child: Text(
                 isAr ? 'إلغاء' : 'Cancel',
                 style: const TextStyle(
-                  color: Color(0xFF64748B),
+                  color: kbiSecondaryLabel,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1232,13 +1231,13 @@ class _WalletScreenState extends State<WalletScreen> {
             width: 60,
             height: 60,
             decoration: const BoxDecoration(
-              color: Color(0xFFF1F5F9),
+              color: kbiSurfaceMuted,
               shape: BoxShape.circle,
             ),
             child: const Icon(
               CupertinoIcons.tray,
               size: 28,
-              color: Color(0xFF94A3B8),
+              color: kbiSecondaryLabel,
             ),
           ),
           const SizedBox(height: 14),
@@ -1257,7 +1256,7 @@ class _WalletScreenState extends State<WalletScreen> {
                 : 'Completed repairs and payouts will appear here',
             textAlign: TextAlign.center,
             style: const TextStyle(
-              color: Color(0xFF94A3B8),
+              color: kbiSecondaryLabel,
               fontSize: 12,
             ),
           ),
@@ -1279,7 +1278,7 @@ class _WalletScreenState extends State<WalletScreen> {
             const Text(
               'Wallet data could not be loaded.',
               style: TextStyle(
-                color: Color(0xFF0F172A),
+                color: kbiLabel,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -1287,7 +1286,7 @@ class _WalletScreenState extends State<WalletScreen> {
             Text(
               '$error',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+              style: const TextStyle(color: kbiSecondaryLabel, fontSize: 12),
             ),
           ],
         ),

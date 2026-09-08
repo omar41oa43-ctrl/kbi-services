@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import '../theme.dart';
 import '../models/service_request.dart';
+import '../config/app_config.dart';
 
 class PartsInventoryScreen extends StatefulWidget {
   final Locale locale;
@@ -73,7 +74,7 @@ class _PartsInventoryScreenState extends State<PartsInventoryScreen> {
     });
 
     try {
-      final uri = Uri.parse('http://127.0.0.1:3000/api/technician/parts');
+      final uri = Uri.parse('${AppConfig.apiBaseUrl}/api/technician/parts');
       final res = await http.get(uri).timeout(const Duration(seconds: 4));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
@@ -150,7 +151,7 @@ class _PartsInventoryScreenState extends State<PartsInventoryScreen> {
     try {
       // 1. Try REST API allocate first
       try {
-        final uri = Uri.parse('http://127.0.0.1:3000/api/technician/parts');
+        final uri = Uri.parse('${AppConfig.apiBaseUrl}/api/technician/parts');
         await http.post(
           uri,
           headers: {'Content-Type': 'application/json'},

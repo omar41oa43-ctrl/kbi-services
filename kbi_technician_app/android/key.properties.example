@@ -4,5 +4,6 @@
 
 keyAlias=kbi-release
 keyPassword=YOUR_KEY_PASSWORD_HERE
-storeFile=kbi-release-key.jks
+storeFile=kbi-release-key.p12
 storePassword=YOUR_STORE_PASSWORD_HERE
+storeType=PKCS12

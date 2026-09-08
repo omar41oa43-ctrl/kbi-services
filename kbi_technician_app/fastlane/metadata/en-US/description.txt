@@ -1,0 +1,15 @@
+KBI Technician gives approved KBI field technicians one secure place to manage their working day.
+
+Use the app to:
+
+• View active, upcoming, and completed service jobs
+• Update availability and job progress
+• Navigate to assigned service areas
+• Record diagnostics, parts, notes, and service photos
+• Complete digital customer sign-off
+• Create and share professional invoices
+• Review earnings, payments, and notifications
+
+Location is used while a technician is on duty or handling an active service to provide routing, live ETA, and job-progress updates. Technicians can stop location sharing by going offline.
+
+An approved KBI technician account is required.
