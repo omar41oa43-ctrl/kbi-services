@@ -45,29 +45,6 @@ export function Navbar({ contact }: NavbarProps) {
   }, [])
 
   useEffect(() => {
-    if (process.env.NODE_ENV !== "production") return
-    if (isExcluded) return
-    const connection = (navigator as Navigator & {
-      connection?: { effectiveType?: string; saveData?: boolean }
-    }).connection
-
-    if (connection?.saveData || connection?.effectiveType?.includes("2g")) return
-
-    const routePrefix = hasArabicUrls ? "/ar" : ""
-    const routes = ["/services", "/book", "/track", "/corporate"].map((route) => `${routePrefix}${route}`)
-    const doPrefetch = () => routes.forEach((r) => router.prefetch(r))
-
-    const g = globalThis as any
-    if (typeof g.requestIdleCallback === "function") {
-      const id = g.requestIdleCallback(doPrefetch, { timeout: 3500 })
-      return () => g.cancelIdleCallback?.(id)
-    }
-
-    const id = setTimeout(doPrefetch, 1800)
-    return () => clearTimeout(id)
-  }, [router, isExcluded, hasArabicUrls])
-
-  useEffect(() => {
     if (isExcluded || isBookingPage) return
 
     const loadSupport = () => setSupportReady(true)
