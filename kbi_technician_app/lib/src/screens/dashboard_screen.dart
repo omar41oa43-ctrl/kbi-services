@@ -63,6 +63,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _isOnline = true;
   bool _canGoOnline = true;
   bool _initialAutoOnlineTriggered = false;
+  bool _isUpdatingAvailability = false;
 
   late final Stream<DocumentSnapshot<Map<String, dynamic>>> _techStream;
   late final Stream<List<DocumentSnapshot<Map<String, dynamic>>>> _jobsStream;
@@ -152,6 +153,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _setAvailabilityMode(String mode) async {
+    if (_isUpdatingAvailability) return;
     final cleanMode = mode.toLowerCase().trim();
     if (cleanMode == 'available' && !_canGoOnline) {
       if (mounted) {
@@ -172,44 +174,67 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     final isOnline = cleanMode != 'offline';
     final isAvailable = cleanMode == 'available';
+    final previousIsOnline = _isOnline;
 
     setState(() {
       _isOnline = isOnline;
+      _isUpdatingAvailability = true;
     });
 
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        if (isOnline) {
-          try {
-            if (await _ensureLocationDisclosure()) {
-              await LocationTrackingService.instance
-                  .start(requestPermission: true);
-            }
-          } catch (_) {}
-        } else {
-          try {
-            await LocationTrackingService.instance.stop();
-          } catch (_) {}
-        }
-
-        final techRef =
-            FirebaseFirestore.instance.collection('technicians').doc(user.uid);
-        await techRef.set({
-          'isOnline': isOnline,
-          'online': isOnline,
-          'isAvailable': isAvailable,
-          'available': isAvailable,
-          'availability': cleanMode,
-          'status': cleanMode == 'busy'
-              ? 'BUSY'
-              : (isAvailable ? 'AVAILABLE' : 'OFFLINE'),
-          'lastActive': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
+      if (user == null) {
+        throw StateError('No signed-in technician');
       }
-    } catch (e) {
-      debugPrint('Status update exception (handled gracefully): $e');
+
+      final techRef =
+          FirebaseFirestore.instance.collection('technicians').doc(user.uid);
+      await techRef.set({
+        'isOnline': isOnline,
+        'online': isOnline,
+        'isAvailable': isAvailable,
+        'available': isAvailable,
+        'availability': cleanMode,
+        'status': cleanMode == 'busy'
+            ? 'BUSY'
+            : (isAvailable ? 'AVAILABLE' : 'OFFLINE'),
+        'lastActive': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      // Change the local GPS service only after the availability update has
+      // reached Firestore. A failed offline request must not silently stop
+      // dispatch tracking while the server still sees the technician online.
+      if (isOnline) {
+        try {
+          if (await _ensureLocationDisclosure()) {
+            await LocationTrackingService.instance
+                .start(requestPermission: true);
+          }
+        } catch (error) {
+          debugPrint('Location tracking notice: $error');
+        }
+      } else {
+        await LocationTrackingService.instance.stop();
+      }
+    } catch (error) {
+      debugPrint('Status update exception: $error');
+      if (mounted) {
+        setState(() => _isOnline = previousIsOnline);
+        final isAr = widget.locale.languageCode == 'ar';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isAr
+                  ? 'تعذر تحديث حالتك. تحقق من الاتصال ثم حاول مرة أخرى.'
+                  : 'Could not update your status. Check your connection and try again.',
+            ),
+            backgroundColor: const Color(0xFFB91C1C),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUpdatingAvailability = false);
     }
   }
 

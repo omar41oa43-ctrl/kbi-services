@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -34,8 +36,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   late int _index;
   late List<Widget> _pages;
-  late final Stream<List<ConnectivityResult>> _connectivityStream;
-  List<ConnectivityResult> _lastConnectivity = const [ConnectivityResult.wifi];
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+  Timer? _offlineDebounce;
+  bool _showOfflineNotice = false;
   Stream<QuerySnapshot<Map<String, dynamic>>>? _notificationsStream;
 
   @override
@@ -43,9 +46,11 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _index = widget.initialIndex;
     _buildPages();
-    _connectivityStream = Connectivity().onConnectivityChanged;
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen(
+          _handleConnectivityChanged,
+        );
     Connectivity().checkConnectivity().then((res) {
-      if (mounted) setState(() => _lastConnectivity = res);
+      _handleConnectivityChanged(res);
     });
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null) {
@@ -56,6 +61,32 @@ class _HomeScreenState extends State<HomeScreen> {
           .limit(100)
           .snapshots();
     }
+  }
+
+  @override
+  void dispose() {
+    _offlineDebounce?.cancel();
+    _connectivitySubscription?.cancel();
+    super.dispose();
+  }
+
+  void _handleConnectivityChanged(List<ConnectivityResult> results) {
+    final isOffline = results.isNotEmpty &&
+        results.every((result) => result == ConnectivityResult.none);
+
+    // Wi-Fi/mobile-data handoffs can briefly report "none". Avoid showing a
+    // false offline warning unless that state remains stable.
+    _offlineDebounce?.cancel();
+    if (!isOffline) {
+      if (mounted && _showOfflineNotice) {
+        setState(() => _showOfflineNotice = false);
+      }
+      return;
+    }
+
+    _offlineDebounce = Timer(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _showOfflineNotice = true);
+    });
   }
 
   @override
@@ -168,76 +199,70 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _pageBody() {
-    return StreamBuilder<List<ConnectivityResult>>(
-      stream: _connectivityStream,
-      initialData: _lastConnectivity,
-      builder: (context, snapshot) {
-        final results = snapshot.data ?? _lastConnectivity;
-        final isOffline = results.isNotEmpty &&
-            results.every((result) => result == ConnectivityResult.none);
-        return Stack(
-          children: [
-            Positioned.fill(
-              child: IndexedStack(index: _index, children: _pages),
-            ),
-            if (isOffline)
-              PositionedDirectional(
-                bottom: 14,
-                start: 16,
-                end: 16,
-                child: Center(
-                  child: Semantics(
-                    liveRegion: true,
-                    label: widget.locale.languageCode == 'ar'
-                        ? 'أنت غير متصل. ستتم مزامنة التغييرات لاحقاً.'
-                        : 'You are offline. Changes will sync later.',
-                    child: Container(
-                      constraints: const BoxConstraints(maxWidth: 420),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 9,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xEB1C1C1E),
-                        borderRadius: BorderRadius.circular(999),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.18),
-                            blurRadius: 14,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.cloud_off_rounded,
-                            color: Colors.white,
-                            size: 15,
-                          ),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              widget.locale.languageCode == 'ar'
-                                  ? 'غير متصل • ستتم المزامنة تلقائياً'
-                                  : 'Offline • changes sync automatically',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: IndexedStack(index: _index, children: _pages),
+        ),
+        if (_showOfflineNotice)
+          PositionedDirectional(
+            top: 12,
+            start: 16,
+            end: 16,
+            child: Center(
+              child: Semantics(
+                liveRegion: true,
+                label: widget.locale.languageCode == 'ar'
+                    ? 'لا يوجد اتصال بالشبكة. ستتم إعادة المحاولة تلقائياً.'
+                    : 'No network connection. Reconnecting automatically.',
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 9,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xF2030405),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: const Color(0xFF1ECBC7).withValues(alpha: 0.35),
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.22),
+                        blurRadius: 16,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.cloud_off_rounded,
+                        color: Color(0xFF1ECBC7),
+                        size: 17,
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          widget.locale.languageCode == 'ar'
+                              ? 'لا يوجد اتصال • تتم إعادة المحاولة تلقائياً'
+                              : 'No connection • retrying automatically',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-          ],
-        );
-      },
+            ),
+          ),
+      ],
     );
   }
 }
