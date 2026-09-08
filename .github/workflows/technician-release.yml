@@ -51,10 +51,27 @@ jobs:
       - run: flutter build appbundle --release
       - run: flutter build apk --release
 
+      - name: Verify release package and signature
+        run: |
+          BUILD_TOOLS_DIR="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
+          "$BUILD_TOOLS_DIR/apksigner" verify --verbose --print-certs \
+            build/app/outputs/flutter-apk/app-release.apk | tee build/release-signature.txt
+          "$BUILD_TOOLS_DIR/aapt" dump badging \
+            build/app/outputs/flutter-apk/app-release.apk | tee build/release-badging.txt
+          grep -F "package: name='ae.kbi.kbi_technician_app' versionCode='11' versionName='1.4.4'" \
+            build/release-badging.txt
+          grep -F "targetSdkVersion:'36'" build/release-badging.txt
+          sha256sum \
+            build/app/outputs/bundle/release/app-release.aab \
+            build/app/outputs/flutter-apk/app-release.apk | tee build/release-sha256.txt
+
       - name: Prepare release files
         run: |
           cp build/app/outputs/bundle/release/app-release.aab ../kbi-technician.aab
           cp build/app/outputs/flutter-apk/app-release.apk ../kbi-technician.apk
+          cp build/release-signature.txt ../release-signature.txt
+          cp build/release-badging.txt ../release-badging.txt
+          cp build/release-sha256.txt ../release-sha256.txt
 
       - name: Upload signed Android artifacts
         uses: actions/upload-artifact@v4
@@ -63,6 +80,9 @@ jobs:
           path: |
             kbi-technician.aab
             kbi-technician.apk
+            release-signature.txt
+            release-badging.txt
+            release-sha256.txt
           if-no-files-found: error
           retention-days: 30
 
@@ -75,3 +95,6 @@ jobs:
           files: |
             kbi-technician.aab
             kbi-technician.apk
+            release-signature.txt
+            release-badging.txt
+            release-sha256.txt
