@@ -5,7 +5,7 @@
 - iOS release build succeeds with bundle ID `ae.kbi.kbiTechnicianApp` and version `1.4.4 (11)`.
 - The release build is installed on the USB iPhone and passes a force-close/relaunch test.
 - Android is configured for package `ae.kbi.kbi_technician_app`, version `1.4.4 (11)`, target API 36, and production signing.
-- A signed Android App Bundle and APK were built successfully by GitHub Actions run `34217759902`. The pipeline runs analysis, the full test suite, package checks, signature verification, and checksums before publishing artifacts.
+- A signed Android App Bundle and APK were built and verified successfully by GitHub Actions run `34218988090`. The pipeline runs analysis, the full test suite, package checks, signature verification, and checksums before publishing artifacts.
 - Firebase Android and iOS apps are registered in project `kbi2-f4f19`; both package IDs match.
 - The Firebase iOS configuration is included in the Runner target.
 - Firestore rules compile and are deployed. Account deletion is available inside Profile and requires password confirmation.
