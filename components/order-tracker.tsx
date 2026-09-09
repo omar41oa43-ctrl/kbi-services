@@ -179,8 +179,8 @@ export function OrderTracker({ initialOrderId = "" }: { initialOrderId?: string 
   return (
     <section className="relative pt-32 pb-16 min-h-screen">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] bg-cyan-600/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[30vw] h-[30vw] bg-blue-600/10 rounded-full blur-[120px]" />
+        <div className="absolute top-[-10%] left-[-10%] hidden h-[40vw] w-[40vw] rounded-full bg-cyan-600/10 blur-[120px] md:block" />
+        <div className="absolute bottom-[-10%] right-[-10%] hidden h-[30vw] w-[30vw] rounded-full bg-blue-600/10 blur-[120px] md:block" />
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10">

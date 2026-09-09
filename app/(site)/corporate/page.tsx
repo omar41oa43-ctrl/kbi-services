@@ -62,8 +62,8 @@ export default async function CorporatePage() {
       <section className="relative pt-24 md:pt-32 pb-20 overflow-hidden">
         <div className="absolute inset-0 -z-10">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
-          <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-blue-600/10 rounded-full blur-[140px]" />
-          <div className="absolute bottom-[-20%] right-[-10%] w-[40vw] h-[40vw] bg-cyan-600/10 rounded-full blur-[140px]" />
+          <div className="absolute top-[-20%] left-[-10%] hidden h-[50vw] w-[50vw] rounded-full bg-blue-600/10 blur-[140px] md:block" />
+          <div className="absolute bottom-[-20%] right-[-10%] hidden h-[40vw] w-[40vw] rounded-full bg-cyan-600/10 blur-[140px] md:block" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-radial-gradient from-transparent to-background" />
         </div>
         <div className="container mx-auto px-6 relative z-10">
