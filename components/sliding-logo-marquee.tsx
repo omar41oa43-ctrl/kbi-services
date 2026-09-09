@@ -112,7 +112,7 @@ export function SlidingLogoMarquee({
            width: 100%;
            height: ${height};
            min-height: 100px;
-           min-width: 300px;
+           min-width: min(300px, 100%);
          }
 
          @media (min-width: 600px) {
