@@ -236,25 +236,12 @@ function getFormattedDate(offsetDays: number = 0) {
   return d.toISOString().split("T")[0]
 }
 
-export function BookingForm() {
-  const { lang } = useLanguage()
-  const isAr = lang === "ar"
-  const t = useT()
-  const searchParams = useSearchParams()
-  const contact = useSiteContact()
-  const { toast } = useToast()
+const BOOKING_DRAFT_KEY = "kbi-booking-draft-v2"
+const BOOKING_ATTEMPT_KEY = "kbi-booking-attempt-v2"
+const BOOKING_DRAFT_MAX_AGE_MS = 24 * 60 * 60 * 1000
 
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
-  const [isPending, startTransition] = useTransition()
-  const [isLocating, setIsLocating] = useState(false)
-  const [showModelDetails, setShowModelDetails] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const [confirmedOrderId, setConfirmedOrderId] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
-  const submittingRef = useRef(false)
-
-  // Booking Data State
-  const [state, setState] = useState<BookingState>({
+function createInitialBookingState(): BookingState {
+  return {
     deviceId: "",
     deviceName: "",
     problem: "",
@@ -272,7 +259,75 @@ export function BookingForm() {
     phone: "",
     email: "",
     notes: "",
-  })
+  }
+}
+
+function createBookingAttemptKey() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID()
+  }
+  return `booking_${Date.now()}_${Math.random().toString(36).slice(2, 14)}`
+}
+
+export function BookingForm() {
+  const { lang } = useLanguage()
+  const isAr = lang === "ar"
+  const t = useT()
+  const searchParams = useSearchParams()
+  const contact = useSiteContact()
+  const { toast } = useToast()
+
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
+  const [isPending, startTransition] = useTransition()
+  const [isLocating, setIsLocating] = useState(false)
+  const [showModelDetails, setShowModelDetails] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [confirmedOrderId, setConfirmedOrderId] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+  const [draftReady, setDraftReady] = useState(false)
+  const submittingRef = useRef(false)
+  const bookingAttemptRef = useRef("")
+
+  // Booking Data State
+  const [state, setState] = useState<BookingState>(createInitialBookingState)
+
+  // Restore the in-progress form after refresh without keeping customer data
+  // beyond the current browser tab/session.
+  useEffect(() => {
+    try {
+      const savedAttempt = sessionStorage.getItem(BOOKING_ATTEMPT_KEY)
+      bookingAttemptRef.current = savedAttempt || createBookingAttemptKey()
+      sessionStorage.setItem(BOOKING_ATTEMPT_KEY, bookingAttemptRef.current)
+
+      const raw = sessionStorage.getItem(BOOKING_DRAFT_KEY)
+      if (raw) {
+        const draft = JSON.parse(raw) as { savedAt?: number; step?: number; state?: Partial<BookingState> }
+        const isFresh = typeof draft.savedAt === "number" && Date.now() - draft.savedAt < BOOKING_DRAFT_MAX_AGE_MS
+        if (isFresh && draft.state) {
+          setState((current) => ({ ...current, ...draft.state }))
+          const restoredStep = Math.max(1, Math.min(3, Number(draft.step) || 1)) as 1 | 2 | 3
+          setStep(restoredStep)
+          setShowModelDetails(Boolean(draft.state.brand || draft.state.model))
+        } else {
+          sessionStorage.removeItem(BOOKING_DRAFT_KEY)
+        }
+      }
+    } catch {
+      bookingAttemptRef.current = createBookingAttemptKey()
+    } finally {
+      setDraftReady(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!draftReady || step === 4) return
+    const timer = window.setTimeout(() => {
+      try {
+        sessionStorage.setItem(BOOKING_DRAFT_KEY, JSON.stringify({ state, step, savedAt: Date.now() }))
+      } catch {}
+    }, 250)
+    return () => window.clearTimeout(timer)
+  }, [draftReady, state, step])
 
   // Pre-select device from query parameters
   useEffect(() => {
@@ -468,6 +523,7 @@ export function BookingForm() {
           preferredDate: chosenDate,
           preferredTime: state.timeSlot,
           privacyConsent: true,
+          idempotencyKey: bookingAttemptRef.current || createBookingAttemptKey(),
         }
 
         const deviceEntryPayload = [
@@ -497,6 +553,10 @@ export function BookingForm() {
         const confirmedId = res.primaryOrderId || res.orderIds?.[0] || `KBI-${Date.now().toString().slice(-6)}`
         setConfirmedOrderId(confirmedId)
         setStep(4)
+        try {
+          sessionStorage.removeItem(BOOKING_DRAFT_KEY)
+          sessionStorage.removeItem(BOOKING_ATTEMPT_KEY)
+        } catch {}
         trackEvent("booking_completed", { orderId: confirmedId })
         trackEvent("Lead", { currency: "AED", value: 1 })
         window.scrollTo({ top: 60, behavior: "smooth" })

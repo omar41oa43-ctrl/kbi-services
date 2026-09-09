@@ -2,7 +2,6 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { Building2, Camera, Laptop, Network, ShieldCheck, Wrench } from "lucide-react"
 import { CorporateBookingForm } from "@/components/corporate-booking-form"
-import { LanguageProvider } from "@/components/language-provider"
 import { getSiteContact } from "@/lib/site-contact"
 
 export const metadata: Metadata = {
@@ -69,9 +68,7 @@ export default async function ArabicCorporatePage() {
             <h2 className="mb-3 text-3xl font-black">اطلب عرض دعم للشركات</h2>
             <p className="text-white/65">أرسل تفاصيل المواقع والأجهزة والخدمة المطلوبة، وسيتواصل معك فريق KBI بالبيانات التي تقدمها.</p>
           </div>
-          <LanguageProvider initialLang="ar">
-            <CorporateBookingForm />
-          </LanguageProvider>
+          <CorporateBookingForm />
         </div>
       </section>
     </main>

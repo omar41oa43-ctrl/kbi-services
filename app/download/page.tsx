@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 
 export default function DownloadAppPage() {
   const [copied, setCopied] = useState(false);
@@ -44,9 +45,12 @@ export default function DownloadAppPage() {
         {/* QR Code Card */}
         <div className="my-6 bg-slate-950/70 border border-slate-800 rounded-2xl p-5 flex flex-col items-center justify-center">
           <div className="bg-white p-3 rounded-xl shadow-md mb-3">
-            <img 
+            <Image
               src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(apkDownloadUrl)}`} 
               alt="Scan to download KBI Technician APK"
+              width={160}
+              height={160}
+              sizes="160px"
               className="w-40 h-40"
             />
           </div>

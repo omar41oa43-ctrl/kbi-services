@@ -1,0 +1,66 @@
+name: Daily Website Health Check
+
+on:
+  schedule:
+    - cron: "15 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  browser-check:
+    name: ${{ matrix.browser }} production test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - id: health
+        name: Test production site
+        continue-on-error: true
+        env:
+          SITE_URL: https://kbi.services
+        run: npm run test:e2e -- --project=${{ matrix.browser }}
+      - name: Upload failure evidence
+        if: steps.health.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-health-${{ matrix.browser }}-${{ github.run_id }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Create or update alert issue
+        if: steps.health.outcome == 'failure'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const title = `Website health check failed: ${{ matrix.browser }}`
+            const open = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100,
+            })
+            const existing = open.data.find(issue => issue.title === title)
+            const body = `Production checks failed on **${{ matrix.browser }}**.\n\nRun: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+            if (existing) {
+              await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: existing.number, body })
+            } else {
+              await github.rest.issues.create({ owner: context.repo.owner, repo: context.repo.repo, title, body })
+            }
+      - name: Fail workflow when health check fails
+        if: steps.health.outcome == 'failure'
+        run: exit 1

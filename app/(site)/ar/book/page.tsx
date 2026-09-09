@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { Suspense } from "react"
 import { BookingForm } from "@/components/booking-form"
-import { LanguageProvider } from "@/components/language-provider"
+import { BookingSkeleton } from "@/components/booking-skeleton"
 
 export const metadata: Metadata = {
   title: { absolute: "احجز فني صيانة في الإمارات | KBI Services" },
@@ -23,12 +23,10 @@ export const metadata: Metadata = {
 
 export default function ArabicBookPage() {
   return (
-    <LanguageProvider initialLang="ar">
-      <main className="min-h-screen bg-background text-foreground selection:bg-cyan-500/30 pb-16 lg:pb-0">
-        <Suspense fallback={<div className="min-h-screen pt-32 text-center text-muted-foreground">جارٍ تحميل نموذج الحجز…</div>}>
-          <BookingForm />
-        </Suspense>
-      </main>
-    </LanguageProvider>
+    <main className="min-h-screen bg-background text-foreground selection:bg-cyan-500/30 pb-16 lg:pb-0">
+      <Suspense fallback={<BookingSkeleton arabic />}>
+        <BookingForm />
+      </Suspense>
+    </main>
   )
 }

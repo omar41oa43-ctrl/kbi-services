@@ -1535,8 +1535,10 @@ html:not(.dark) .adaptive-theme-page [class*="from-white"][class*="text-transpar
     box-shadow: 0 8px 22px rgb(0 0 0 / 0.34);
   }
 
-  .home-deferred {
-    content-visibility: visible;
+  .home-deferred,
+  .deferred-section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 720px;
   }
 
   .home-deferred [class*="blur-"] {
@@ -1549,6 +1551,13 @@ html:not(.dark) .adaptive-theme-page [class*="from-white"][class*="text-transpar
   .site-shell .booking-flow .animate-ping,
   .site-shell .booking-flow .animate-pulse {
     animation: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .deferred-section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 900px;
   }
 }
 

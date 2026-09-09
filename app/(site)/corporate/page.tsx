@@ -165,7 +165,7 @@ export default async function CorporatePage() {
       </section>
 
       {/* Critical Industries */}
-      <section className="py-24 relative overflow-hidden bg-slate-50/70 dark:bg-black/80 transition-colors">
+      <section className="deferred-section py-24 relative overflow-hidden bg-slate-50/70 dark:bg-black/80 transition-colors">
         <div className="absolute inset-0 bg-gradient-to-b from-background via-cyan-950/5 dark:via-cyan-950/20 to-background pointer-events-none" />
         <div className="absolute right-0 top-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute left-0 bottom-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -218,7 +218,7 @@ export default async function CorporatePage() {
       </section>
 
       {/* Organizations we support */}
-      <section className="container mx-auto px-6 py-12 md:py-16">
+      <section className="deferred-section container mx-auto px-6 py-12 md:py-16">
         <FadeIn>
           <h2 className="text-2xl md:text-3xl font-bold mb-8 text-foreground">
             <span><T k="The entities we deal with" /></span>
@@ -247,7 +247,7 @@ export default async function CorporatePage() {
       </section>
 
       {/* Comprehensive Device Support */}
-      <section className="py-24 relative bg-slate-100/60 dark:bg-black/60 transition-colors">
+      <section className="deferred-section py-24 relative bg-slate-100/60 dark:bg-black/60 transition-colors">
         <div className="absolute inset-0 bg-slate-200/20 dark:bg-white/5 skew-y-3 transform origin-top-left -z-10" />
 
         <div className="container mx-auto px-6">
@@ -412,7 +412,7 @@ export default async function CorporatePage() {
       </section>
 
       {/* Corporate Advantages */}
-      <section className="py-20">
+      <section className="deferred-section py-20">
         <div className="container mx-auto px-6">
           <FadeIn>
             <h2 className="text-2xl md:text-3xl font-bold mb-8 text-foreground"><T k="Corporate Advantages" /></h2>
@@ -447,7 +447,7 @@ export default async function CorporatePage() {
       </section>
 
       {/* Corporate Booking Form Section */}
-      <section id="corporate-form" className="py-24 relative overflow-hidden bg-slate-50/50 dark:bg-black/60">
+      <section id="corporate-form" className="deferred-section py-24 relative overflow-hidden bg-slate-50/50 dark:bg-black/60">
         <div className="absolute inset-0 bg-gradient-to-b from-background via-cyan-950/5 dark:via-cyan-950/15 to-background pointer-events-none" />
         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute right-0 bottom-0 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
@@ -476,7 +476,7 @@ export default async function CorporatePage() {
       <CorporateContractsSection />
 
       {/* Brand Logos */}
-      <section className="container mx-auto px-6 py-12">
+      <section className="deferred-section container mx-auto px-6 py-12">
         <FadeIn>
           <h2 className="text-2xl md:text-3xl font-bold mb-6 text-foreground">
             <span><T k="Brands and platforms we support" /></span>
@@ -506,7 +506,7 @@ export default async function CorporatePage() {
       </section>
 
       {/* CTA & Contact Information Section */}
-      <section className="py-20">
+      <section className="deferred-section py-20">
         <div className="container mx-auto px-6">
           <FadeIn>
             <div className="group relative rounded-[2.5rem] overflow-hidden border border-border bg-card shadow-xl">

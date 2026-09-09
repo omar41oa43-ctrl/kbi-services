@@ -5,7 +5,7 @@ import { ChevronRight, ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import type { ReactNode } from "react"
 import { useLanguage, useT } from "@/components/language-provider"
-import { LEGACY_SLUG_MAP } from "@/lib/services-seo-data"
+import { SERVICE_SLUG_MAP } from "@/lib/service-slugs"
 
 interface ServiceCategoryProps {
   id: string
@@ -35,7 +35,7 @@ export function ServiceCategory({ id, name, icon, brands, issues, accentColor }:
   const colors = colorClasses[accentColor] || colorClasses.cyan
 
   return (
-    <section id={id} className="py-12 scroll-mt-24" suppressHydrationWarning>
+    <section id={id} className="deferred-section py-12 scroll-mt-24" suppressHydrationWarning>
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">
           <div className={`p-3 rounded-2xl ${colors.bg} ${colors.text}`}>{icon}</div>
@@ -61,7 +61,8 @@ export function ServiceCategory({ id, name, icon, brands, issues, accentColor }:
             ))}
           </div>
           <Link
-            href={`/services/${LEGACY_SLUG_MAP[id] ?? id}`}
+            href={`/services/${SERVICE_SLUG_MAP[id] ?? id}`}
+            prefetch={false}
             className={`mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-full font-bold text-sm ${colors.bg} ${colors.text} border ${colors.border} hover:bg-muted transition-colors shadow-xs`}
           >
             {(() => {

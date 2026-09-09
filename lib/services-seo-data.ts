@@ -3,6 +3,8 @@ export interface ServiceProblem {
   description: string
 }
 
+import { SERVICE_SLUG_MAP } from "@/lib/service-slugs"
+
 export interface ServiceSeoData {
   slug: string
   legacySlug?: string
@@ -988,20 +990,7 @@ export const SERVICES_BY_SLUG: Record<string, ServiceSeoData> = SERVICES_SEO_DAT
 )
 
 // Legacy slug redirection map
-export const LEGACY_SLUG_MAP: Record<string, string> = {
-  mobile: "mobile-phone-repair",
-  laptop: "laptop-repair",
-  pc: "computer-repair",
-  printer: "printer-repair",
-  tv: "tv-repair",
-  monitor: "monitor-repair",
-  tablet: "tablet-repair",
-  "apple-watch": "apple-watch-repair",
-  gaming: "gaming-console-repair",
-  networking: "network-support",
-  "tech-support": "it-support",
-  "tv-install": "tv-installation",
-}
+export const LEGACY_SLUG_MAP = SERVICE_SLUG_MAP
 
 export function getServiceBySlug(slug: string): ServiceSeoData | undefined {
   return SERVICES_BY_SLUG[slug]

@@ -1,5 +1,4 @@
 import type { Metadata } from "next"
-import { LanguageProvider } from "@/components/language-provider"
 import { OrderTracker } from "@/components/order-tracker"
 
 export const metadata: Metadata = {
@@ -22,10 +21,8 @@ export const metadata: Metadata = {
 
 export default function ArabicTrackPage() {
   return (
-    <LanguageProvider initialLang="ar">
-      <main className="min-h-screen bg-background pb-16 text-foreground selection:bg-cyan-500/30 lg:pb-0">
-        <OrderTracker />
-      </main>
-    </LanguageProvider>
+    <main className="min-h-screen bg-background pb-16 text-foreground selection:bg-cyan-500/30 lg:pb-0">
+      <OrderTracker />
+    </main>
   )
 }

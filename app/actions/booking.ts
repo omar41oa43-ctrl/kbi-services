@@ -5,6 +5,7 @@ import { Timestamp } from "firebase-admin/firestore"
 import { getNextOrderNumberAction } from "./admin-orders"
 import prisma from "@/lib/prisma"
 import { z } from "zod"
+import { createHash } from "node:crypto"
 
 const bookingSchema = z.object({
     name: z.string().trim().min(2).max(100),
@@ -25,6 +26,7 @@ const bookingSchema = z.object({
     preferredDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     preferredTime: z.string().trim().min(2).max(40),
     privacyConsent: z.boolean().optional().default(true),
+    idempotencyKey: z.string().trim().regex(/^[A-Za-z0-9_-]{16,100}$/),
 })
 
 const deviceEntrySchema = z.object({
@@ -41,7 +43,7 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
     try {
         const validated = z.object({
             formData: bookingSchema,
-            deviceEntries: z.array(deviceEntrySchema).min(1).max(10),
+            deviceEntries: z.array(deviceEntrySchema).length(1),
         }).safeParse({ formData, deviceEntries })
 
         if (!validated.success) {
@@ -53,12 +55,65 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
         const customerName = String(formData?.name || "Customer").trim() || "Customer"
         const customerPhone = String(formData?.phone || "").trim()
 
-        // Generate clean atomic unique order number
+        const idempotencyKey = formData.idempotencyKey
+        const idempotencyRef = adminDb.collection("booking_idempotency").doc(idempotencyKey)
+        const requestHash = createHash("sha256")
+            .update(JSON.stringify({ formData, deviceEntries }))
+            .digest("hex")
+        let reusedReservation = false
+
+        // A retry first reuses the order number already reserved for this
+        // browser attempt. Concurrent requests may both reserve a counter
+        // value, but only one can create the idempotency document.
         let pgOrderNumber = ""
+        const existingReservation = await idempotencyRef.get()
+        if (existingReservation.exists) {
+            const reservation = existingReservation.data()
+            pgOrderNumber = String(reservation?.orderId || "")
+            reusedReservation = Boolean(pgOrderNumber)
+
+            if (reservation?.requestHash && reservation.requestHash !== requestHash) {
+                return { error: "This booking attempt has changed. Please start a new booking." }
+            }
+
+            if (reservation?.status === "completed" && pgOrderNumber) {
+                return {
+                    success: true,
+                    orderIds: [pgOrderNumber],
+                    primaryOrderId: pgOrderNumber,
+                    deduplicated: true,
+                }
+            }
+        }
+
         try {
-            const counterRes = await getNextOrderNumberAction()
-            if (counterRes && counterRes.orderNumber) {
-                pgOrderNumber = counterRes.orderNumber
+            if (!pgOrderNumber) {
+                const counterRes = await getNextOrderNumberAction()
+                const candidateOrderNumber = counterRes?.orderNumber || ""
+
+                if (candidateOrderNumber) {
+                    try {
+                        await idempotencyRef.create({
+                            orderId: candidateOrderNumber,
+                            requestHash,
+                            status: "processing",
+                            createdAt: Timestamp.now(),
+                            updatedAt: Timestamp.now(),
+                        })
+                        pgOrderNumber = candidateOrderNumber
+                    } catch (reservationError: any) {
+                        const code = String(reservationError?.code || "")
+                        if (code !== "6" && code !== "already-exists") throw reservationError
+
+                        const winningReservation = await idempotencyRef.get()
+                        const reservation = winningReservation.data()
+                        if (reservation?.requestHash && reservation.requestHash !== requestHash) {
+                            return { error: "This booking attempt has changed. Please start a new booking." }
+                        }
+                        pgOrderNumber = String(reservation?.orderId || "")
+                        reusedReservation = Boolean(pgOrderNumber)
+                    }
+                }
             }
         } catch (counterErr) {
             console.error("Counter generation error:", counterErr)
@@ -181,7 +236,7 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
             const batch = adminDb.batch()
             batch.set(adminDb.collection("orders").doc(orderId), payload, { merge: true })
             batch.set(adminDb.collection("bookings").doc(orderId), bookingPayload, { merge: true })
-            batch.set(adminDb.collection("customer_timeline").doc(), {
+            batch.set(adminDb.collection("customer_timeline").doc(orderId), {
                     bookingId: orderId,
                     orderId,
                     status: "pending",
@@ -190,7 +245,7 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
                     timestamp: now,
                 })
 
-            batch.set(adminDb.collection("service_requests").doc(), {
+            batch.set(adminDb.collection("service_requests").doc(orderId), {
                     type: String(entry?.deviceName || "Device"),
                     description: `${entry?.brandName || ""} ${entry?.model || ""} - ${(entry?.issues || []).join(", ")}`.trim(),
                     country: "UAE",
@@ -212,7 +267,7 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
                     orderId,
                 })
 
-            batch.set(adminDb.collection("notifications").doc(), {
+            batch.set(adminDb.collection("notifications").doc(`order-created-${orderId}`), {
                     type: "order_created",
                     title: "New Order",
                     message: `New order ${orderId} from ${customerName}`,
@@ -222,12 +277,24 @@ export async function createBookingAction(formData: any, deviceEntries: any[]) {
                     read: false,
                     createdAt: now,
                 })
+            batch.set(idempotencyRef, {
+                    orderId,
+                    requestHash,
+                    status: "completed",
+                    completedAt: now,
+                    updatedAt: now,
+                }, { merge: true })
             bookingWrites.push(batch.commit())
         }
 
         await Promise.all([customerSync, ...bookingWrites])
 
-        return { success: true, orderIds: [publicTrackingCode], primaryOrderId: publicTrackingCode }
+        return {
+            success: true,
+            orderIds: [publicTrackingCode],
+            primaryOrderId: publicTrackingCode,
+            deduplicated: reusedReservation,
+        }
 
     } catch (error: any) {
         console.error("Error in createBookingAction:", error)

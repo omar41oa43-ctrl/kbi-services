@@ -113,4 +113,6 @@ key.properties
 scripts/testers.txt
 
 
-
+# Local end-to-end test artifacts
+test-results/
+playwright-report/
