@@ -39,7 +39,17 @@ Future<void> main() async {
   };
 
   try {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    if (Firebase.apps.isEmpty) {
+      try {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+      } on FirebaseException catch (error) {
+        // Integration runners can restore the native default app before the
+        // Dart registry is hydrated. That state is already usable.
+        if (error.code != 'duplicate-app') rethrow;
+      }
+    }
     if (_useEmulator) {
       await _connectToEmulators();
     }

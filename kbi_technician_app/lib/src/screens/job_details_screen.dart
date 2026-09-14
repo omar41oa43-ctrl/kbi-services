@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
@@ -36,6 +37,15 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
   bool _isUpdating = false;
   bool _isSatelliteMode = false;
   final fmap.MapController _mapController = fmap.MapController();
+
+  /// Live listener for the order document. Keeps the local status in sync with
+  /// the server so the offer/Accept/Reject action bar can never advertise a
+  /// decision that the server has already recorded.
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _orderSub;
+  bool _isRefreshingJob = false;
+  // Safety latch for legacy API deployments that return a 409 without the
+  // latest status. Never leave an unusable offer action bar on screen.
+  bool _decisionAlreadyRecorded = false;
 
   // Diagnostics & Checklist state: Map<ItemName, Status> where Status is 'PASS', 'FAIL', or 'NA'
   final Map<String, String> _checklist = {
@@ -94,81 +104,122 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
     _job = widget.job;
     _tabController = TabController(length: 3, vsync: this);
     _loadPreferredNavigationApp();
+    _startOrderListener();
   }
 
   @override
   void dispose() {
+    _orderSub?.cancel();
     _tabController.dispose();
     super.dispose();
+  }
+
+  /// Begin streaming the order document. The job may live in `orders`,
+  /// `bookings`, or (legacy) `service_requests`; try the primary first and
+  /// fall back to the mirror collection on the first non-existent read.
+  void _startOrderListener() {
+    final docId = _job.id;
+    if (docId.isEmpty) return;
+    final primary = _job.collectionName ?? 'orders';
+    _attachOrderListener(primary);
+  }
+
+  void _attachOrderListener(String collection) {
+    _orderSub?.cancel();
+    final docId = _job.id;
+    final ref = FirebaseFirestore.instance.collection(collection).doc(docId);
+    _orderSub = ref.snapshots().listen(
+      (snap) {
+        if (!snap.exists) {
+          // Mirror likely lives in the other collection. Switch the listener.
+          final fallback = collection == 'orders' ? 'bookings' : 'orders';
+          if (fallback == collection) return;
+          _attachOrderListener(fallback);
+          return;
+        }
+        if (!mounted) return;
+        final fresh = ServiceRequestModel.fromDoc(snap);
+        if (_sameStatus(fresh.status, _job.status) &&
+            _job.collectionName == collection) {
+          // Avoid rebuilding on no-op echoes.
+          return;
+        }
+        setState(() {
+          _job = fresh.copyWith(collectionName: collection);
+          // A stale mirror can still report Assigned after a 409. Keep the
+          // safety latch until we observe a non-offer workflow status.
+          if (!_isOfferStatus(fresh.status)) _decisionAlreadyRecorded = false;
+        });
+      },
+      onError: (Object error) {
+        debugPrint('Order listener error ($collection): $error');
+      },
+    );
+  }
+
+  bool _sameStatus(String a, String b) =>
+      a.trim().toLowerCase() == b.trim().toLowerCase();
+
+  bool _isOfferStatus(String status) => const {
+        'assigned',
+        'pending',
+        'pending acceptance',
+        'offered',
+        'awaiting acceptance',
+      }.contains(normalizeJobStatus(status));
+
+  /// Force a one-shot re-read of the order from Firestore. Called when the
+  /// decision API reports the assignment has already been answered so the
+  /// action bar reflects the real server-side state without a manual reload.
+  Future<void> _refreshJobFromFirestore() async {
+    if (_isRefreshingJob) return;
+    _isRefreshingJob = true;
+    try {
+      final docId = _job.id;
+      for (final coll in const ['orders', 'bookings', 'service_requests']) {
+        final snap =
+            await FirebaseFirestore.instance.collection(coll).doc(docId).get();
+        if (!snap.exists) continue;
+        if (!mounted) return;
+        setState(() {
+          _job =
+              ServiceRequestModel.fromDoc(snap).copyWith(collectionName: coll);
+          if (!_isOfferStatus(_job.status)) _decisionAlreadyRecorded = false;
+        });
+        return;
+      }
+    } catch (e) {
+      debugPrint('Refresh job from Firestore failed: $e');
+    } finally {
+      _isRefreshingJob = false;
+    }
   }
 
   Future<void> _updateJobStatus(String nextStatus) async {
     setState(() => _isUpdating = true);
     try {
       final docId = _job.id;
-      final coll = _job.collectionName ?? 'orders';
-      final isDone = nextStatus.toLowerCase() == 'completed' ||
-          nextStatus.toLowerCase() == 'cancelled';
       final isAccepted = nextStatus.toLowerCase() == 'accepted';
 
-      final updatePayload = <String, dynamic>{
-        'status': nextStatus,
+      // Keep this payload JSON-safe because it is sent through the API.
+      // Server-owned fields (status and timestamps) are added by the endpoint.
+      final workflowData = <String, dynamic>{
         'checklist': _checklist,
         'beforePhotos': _beforePhotos,
         'afterPhotos': _afterPhotos,
         'hasSignature': _signatureCaptured,
         'paymentMethod': _selectedPaymentMethod,
-        'updatedAt': FieldValue.serverTimestamp(),
       };
-      if (isAccepted) {
-        updatePayload['acceptedAt'] = FieldValue.serverTimestamp();
-      }
-      if (isDone) {
-        updatePayload['completedAt'] = FieldValue.serverTimestamp();
-      }
 
-      // Save the workflow state through the authenticated server function so
-      // every mirrored order stays in sync and the admin receives the
-      // technician's accept/reject decision exactly once.
+      // Persist status and screen-specific workflow fields together through
+      // the authenticated server endpoint. Firestore rules deliberately block
+      // direct technician writes to order mirrors and technician documents.
       await TechnicianService.instance.updateJobStatus(
         requestId: docId,
         status: nextStatus,
         notes: isAccepted ? 'Job accepted by technician.' : null,
+        workflowData: workflowData,
       );
-
-      // Save screen-specific closeout fields to the primary mirror.
-      try {
-        await FirebaseFirestore.instance.collection(coll).doc(docId).set(
-              updatePayload,
-              SetOptions(merge: true),
-            );
-      } catch (err) {
-        debugPrint(
-            'Primary collection update failed ($coll), trying fallback: $err');
-        final otherColl = coll == 'orders' ? 'bookings' : 'orders';
-        await FirebaseFirestore.instance.collection(otherColl).doc(docId).set(
-              updatePayload,
-              SetOptions(merge: true),
-            );
-      }
-
-      // 2. Safely sync technician active status
-      final uid = TechnicianService.instance.uid;
-      if (uid != null) {
-        try {
-          await FirebaseFirestore.instance
-              .collection('technicians')
-              .doc(uid)
-              .set({
-            'currentJob': isDone ? null : docId,
-            'currentOrder': isDone ? null : docId,
-            'status': isDone ? 'AVAILABLE' : 'ON_JOB',
-            'updatedAt': FieldValue.serverTimestamp(),
-          }, SetOptions(merge: true));
-        } catch (techErr) {
-          debugPrint('Technician doc active status update notice: $techErr');
-        }
-      }
 
       setState(() {
         _job = _job.copyWith(status: nextStatus);
@@ -188,17 +239,51 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
         );
       }
     } catch (e) {
-      if (mounted) {
+      if (!mounted) return;
+      final alreadyAnswered = _isAlreadyAnsweredError(e);
+      if (alreadyAnswered) {
+        final serverStatus =
+            e is JobDecisionAlreadyRecordedException ? e.currentStatus : null;
+        // Prefer the authoritative status returned by the endpoint. This
+        // changes the action bar immediately even when Firestore listeners are
+        // intentionally blocked by the technician's document-level rules.
+        setState(() {
+          _decisionAlreadyRecorded = true;
+          if (serverStatus != null && serverStatus.isNotEmpty) {
+            _job = _job.copyWith(status: serverStatus);
+          }
+        });
+        await _refreshJobFromFirestore();
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: Colors.redAccent,
-            content: Text('Failed to update status: $e'),
+            backgroundColor: const Color(0xFF0EA5E9),
+            duration: const Duration(seconds: 3),
+            content: Text(_text(
+              'This order was already handled. The latest status is now shown.',
+              'تم التعامل مع هذا الطلب مسبقاً. تظهر الآن أحدث حالة.',
+            )),
           ),
         );
+        return;
       }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.redAccent,
+          content: Text('Failed to update status: $e'),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _isUpdating = false);
     }
+  }
+
+  bool _isAlreadyAnsweredError(Object error) {
+    if (error is JobDecisionAlreadyRecordedException) return true;
+    final raw = error.toString().toLowerCase();
+    return raw.contains('already been answered') ||
+        raw.contains('already answered') ||
+        raw.contains('failed-precondition');
   }
 
   Future<void> _pickPhoto(bool isBefore) async {
@@ -1321,7 +1406,9 @@ Thank you for choosing KBI Services!
             ),
           ),
         ),
-        bottomNavigationBar: nextAction != null && nextStatusKey != null
+        bottomNavigationBar: !_decisionAlreadyRecorded &&
+                nextAction != null &&
+                nextStatusKey != null
             ? _buildPrimaryActionBar(nextAction, nextStatusKey)
             : null,
         body: TabBarView(

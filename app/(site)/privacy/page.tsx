@@ -24,7 +24,7 @@ const policySections = [
   },
   {
     title: "2. Information we collect",
-    body: "We may collect your name, phone and WhatsApp number, service address, selected location, device type, brand, model, reported fault, booking preferences, communications, quotation and payment records, warranty details, service photos, signatures, and order-status history. If you choose Detect Location, the browser may provide coordinates after you grant permission. We also receive basic security and analytics data such as IP address, device/browser type, page interactions, and cookie preferences.",
+    body: "We may collect your name, phone and WhatsApp number, service address, selected location, device type, brand, model, reported fault, booking preferences, communications, quotation and payment records, warranty details, service photos, signatures, and order-status history. For KBI Technician users, this may also include identity or trade documents submitted for approval, profile and vehicle details, service skills and areas, device and push-notification tokens, and precise GPS coordinates while the technician chooses to be online or is handling an active service. We also receive basic security and analytics data such as IP address, device/browser type, page interactions, and cookie preferences.",
   },
   {
     title: "3. Why we use it",
@@ -44,7 +44,7 @@ const policySections = [
   },
   {
     title: "7. Retention",
-    body: "Booking, invoice, warranty, complaint, and security records are retained only for operational, warranty, accounting, dispute, fraud-prevention, and legal requirements. Retention periods vary by record type. When information is no longer needed, we delete or anonymize it where reasonably possible.",
+    body: "Booking, invoice, warranty, complaint, technician approval, and security records are retained only for operational, warranty, accounting, dispute, fraud-prevention, and legal requirements. Account holders can request deletion in the app or at kbi.services/account-deletion. Profile, registration, authentication, and device-token data are deleted after ownership is verified; transaction or work records may be retained only where accounting, dispute, fraud-prevention, or UAE legal obligations require it. When information is no longer needed, we delete or anonymize it where reasonably possible.",
   },
   {
     title: "8. Security and international processing",
@@ -57,6 +57,10 @@ const policySections = [
   {
     title: "10. Children, updates, and complaints",
     body: "Our services are not directed to children acting without a parent or guardian. We may update this policy and will publish the effective date. Contact us first with privacy questions or complaints; you may also contact the competent UAE data-protection authority where applicable.",
+  },
+  {
+    title: "11. KBI Technician location and device permissions",
+    body: "The KBI Technician app uses precise location to support dispatch, navigation, live ETA, technician safety, and job-progress visibility. Background location is collected only while the technician has chosen an online/on-duty state or is handling an active service, including when the app is not visible. Going Offline stops active tracking. Camera and photo access are used only when the technician chooses to capture or upload profile, registration, diagnostic, completion, or invoice evidence. Push tokens are used to deliver assignment and service notifications. Firebase and Google Cloud provide authentication, database, storage, functions, and messaging infrastructure for these features.",
   },
 ]
 
@@ -72,7 +76,7 @@ export default async function PrivacyPolicyPage() {
           </div>
           <h1 className="text-3xl font-extrabold text-white sm:text-5xl">Privacy Policy</h1>
           <p className="mx-auto mt-4 max-w-2xl text-slate-400">A plain-language explanation of how information is handled when you use KBI websites, booking tools, tracking, communications, and repair services.</p>
-          <p className="mt-3 text-xs text-slate-500">Effective 27 August 2026 · United Arab Emirates</p>
+          <p className="mt-3 text-xs text-slate-500">Effective 9 September 2026 · United Arab Emirates</p>
         </header>
 
         <div className="mb-6 grid gap-4 sm:grid-cols-3">
@@ -102,6 +106,7 @@ export default async function PrivacyPolicyPage() {
             <a className="inline-flex items-center gap-2 hover:text-cyan-300" href={`mailto:${contact.email}`}><Mail className="h-4 w-4" />{contact.email}</a>
             <a className="inline-flex items-center gap-2 hover:text-cyan-300" href={`tel:${contact.phone}`}><Phone className="h-4 w-4" />{contact.phoneDisplay}</a>
             <Link className="hover:text-cyan-300" href="/terms">Terms &amp; Conditions</Link>
+            <Link className="hover:text-cyan-300" href="/account-deletion">Delete an account</Link>
           </div>
         </aside>
       </div>

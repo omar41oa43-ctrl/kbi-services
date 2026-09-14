@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../config/app_config.dart';
+import '../services/technician_service.dart';
 
 class SubscriptionRequiredScreen extends StatefulWidget {
   final Locale locale;
@@ -24,27 +24,7 @@ class _SubscriptionRequiredScreenState
   Future<void> _requestActivation() async {
     setState(() => _requesting = true);
     try {
-      try {
-        await FirebaseFunctions.instance
-            .httpsCallable('technicianRequestActivation')
-            .call({'channel': 'app'});
-      } on FirebaseFunctionsException catch (error) {
-        if (!{'not-found', 'unavailable', 'internal'}.contains(error.code)) {
-          rethrow;
-        }
-        final uid = FirebaseAuth.instance.currentUser?.uid;
-        if (uid == null) throw StateError('Your session expired.');
-        await FirebaseFirestore.instance
-            .collection('activation_requests')
-            .doc(uid)
-            .set({
-          'userId': uid,
-          'status': 'pending',
-          'channel': 'app',
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
-      }
+      await TechnicianService.instance.requestActivation();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

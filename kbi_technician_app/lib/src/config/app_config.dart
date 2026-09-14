@@ -36,6 +36,11 @@ abstract final class AppConfig {
     defaultValue: 'https://kbi.services/privacy',
   );
 
+  static const accountDeletionUrl = String.fromEnvironment(
+    'ACCOUNT_DELETION_URL',
+    defaultValue: 'https://kbi.services/account-deletion',
+  );
+
   static const termsUrl = String.fromEnvironment(
     'TERMS_URL',
     defaultValue: 'https://kbi.services/terms',

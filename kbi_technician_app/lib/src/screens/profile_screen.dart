@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
@@ -324,29 +323,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         EmailAuthProvider.credential(email: email, password: password),
       );
 
-      final technicianFiles =
-          FirebaseStorage.instance.ref().child('technicians/${user.uid}');
-      try {
-        await _deleteStorageTree(technicianFiles);
-      } catch (error) {
-        // Account deletion must remain available even when Storage is not
-        // provisioned or temporarily unavailable. Firestore and Auth are the
-        // authoritative account records and are deleted below.
-        debugPrint('Storage cleanup notice during account deletion: $error');
-      }
-
-      final firestore = FirebaseFirestore.instance;
-      final batch = firestore.batch();
-      for (final collection in const [
-        'users',
-        'technicians',
-        'technician_requests',
-        'activation_requests',
-      ]) {
-        batch.delete(firestore.collection(collection).doc(user.uid));
-      }
-      await batch.commit();
-      await user.delete();
+      await TechnicianService.instance.deleteAccount();
+      await FirebaseAuth.instance.signOut();
     } on FirebaseAuthException catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -363,18 +341,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Account deletion failed: $error')),
       );
-    }
-  }
-
-  Future<void> _deleteStorageTree(Reference directory) async {
-    try {
-      final result = await directory.listAll();
-      await Future.wait(result.items.map((item) => item.delete()));
-      for (final prefix in result.prefixes) {
-        await _deleteStorageTree(prefix);
-      }
-    } on FirebaseException catch (error) {
-      if (error.code != 'object-not-found') rethrow;
     }
   }
 

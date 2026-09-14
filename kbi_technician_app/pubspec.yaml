@@ -25,7 +25,6 @@ dependencies:
   file_picker: ^11.0.3
   url_launcher: ^6.3.2
   qr_flutter: ^4.1.0
-  local_auth: ^2.3.0
   flutter_secure_storage: ^9.2.4
   # Pinned below the JNI-based Android implementation because Flutter 3.44's
   # macOS test runner currently crashes while copying that native test asset.
@@ -42,6 +41,7 @@ dev_dependencies:
   integration_test:
     sdk: flutter
   flutter_lints: ^3.0.2
+  flutter_launcher_icons: ^0.14.4
 
 dependency_overrides:
   # 2.4.27 introduces a JNI native asset that crashes Flutter 3.44's macOS
@@ -64,3 +64,12 @@ flutter:
     - assets/images/kbi_logo.png
     - assets/images/kbi_icon.png
     - assets/images/
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: assets/images/kbi_icon.png
+  adaptive_icon_background: "#030405"
+  adaptive_icon_foreground: assets/images/kbi_icon.png
+  adaptive_icon_monochrome: assets/images/kbi_icon.png
+  min_sdk_android: 21

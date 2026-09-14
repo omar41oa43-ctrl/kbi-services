@@ -37,6 +37,13 @@ export async function GET() {
           ? `${process.env.FIREBASE_ADMIN_PROJECT_ID}.firebasestorage.app`
           : null);
       if (bucketName) {
+        const bucket = getStorage().bucket(bucketName);
+        await Promise.race([
+          bucket.getMetadata(),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Storage health check timed out")), 5_000)
+          ),
+        ]);
         storageOk = true;
       }
     } catch (error) {

@@ -3,3 +3,9 @@
 
 // Code signing team for physical-device builds (automatic signing).
 DEVELOPMENT_TEAM = PQUS4YTNNP
+
+// Flutter 3.44 passes the universal "arm64 x86_64" pair to a single
+// `lipo -verify_arch`, which Xcode 27 rejects, failing the simulator build.
+// This machine is Apple Silicon and the simulator runs arm64 natively, so drop
+// the unused x86_64 slice and keep a single architecture to verify.
+EXCLUDED_ARCHS[sdk=iphonesimulator*] = $(inherited) x86_64

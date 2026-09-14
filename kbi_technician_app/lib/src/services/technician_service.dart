@@ -9,6 +9,16 @@ import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../utils/job_utils.dart';
 
+class JobDecisionAlreadyRecordedException implements Exception {
+  const JobDecisionAlreadyRecordedException(this.currentStatus);
+
+  /// The normalized server-side workflow status returned with HTTP 409.
+  final String? currentStatus;
+
+  @override
+  String toString() => 'JobDecisionAlreadyRecordedException($currentStatus)';
+}
+
 class TechnicianService {
   static final TechnicianService instance = TechnicianService._();
   TechnicianService._();
@@ -59,60 +69,40 @@ class TechnicianService {
     required String requestId,
     required String status,
     String? notes,
+    Map<String, dynamic>? workflowData,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception("User not logged in");
-    final normalizedStatus = status.toLowerCase().replaceAll('_', ' ');
-    try {
-      final token = await user.getIdToken();
-      final response = await http
-          .post(
-            Uri.parse(
-                '${AppConfig.apiBaseUrl}/api/technician/jobs/${Uri.encodeComponent(requestId)}/decision'),
-            headers: {
-              'Authorization': 'Bearer $token',
-              'Content-Type': 'application/json',
-            },
-            body: jsonEncode({'status': status, 'notes': notes}),
-          )
-          .timeout(const Duration(seconds: 15));
-      final responseBody = response.body.isNotEmpty
-          ? jsonDecode(response.body) as Map<String, dynamic>
-          : const <String, dynamic>{};
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw Exception(responseBody['error'] ?? 'Unable to update order');
-      }
-    } catch (e) {
-      if (normalizedStatus == 'accepted' || normalizedStatus == 'rejected') {
-        // Decisions must go through the authenticated API so authorization,
-        // mirrored updates and the admin notification succeed together.
-        rethrow;
-      }
-      debugPrint('Order API notice: $e. Using direct Firestore update.');
-      final isAccepted = status.toLowerCase() == 'accepted';
-      final isDone = status.toLowerCase() == 'completed' ||
-          status.toLowerCase() == 'cancelled';
-      final payload = <String, dynamic>{
-        'status': status,
-        if (notes != null && notes.isNotEmpty) 'technicianNotes': notes,
-        if (isAccepted) 'acceptedAt': FieldValue.serverTimestamp(),
-        if (isDone) 'completedAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      };
-
-      try {
-        await FirebaseFirestore.instance
-            .collection('orders')
-            .doc(requestId)
-            .set(payload, SetOptions(merge: true));
-      } catch (_) {}
-
-      try {
-        await FirebaseFirestore.instance
-            .collection('bookings')
-            .doc(requestId)
-            .set(payload, SetOptions(merge: true));
-      } catch (_) {}
+    final token = await user.getIdToken();
+    final response = await http
+        .post(
+          Uri.parse(
+              '${AppConfig.apiBaseUrl}/api/technician/jobs/${Uri.encodeComponent(requestId)}/decision'),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'status': status,
+            'notes': notes,
+            if (workflowData != null) 'workflowData': workflowData,
+          }),
+        )
+        .timeout(const Duration(seconds: 15));
+    final responseBody = response.body.isNotEmpty
+        ? jsonDecode(response.body) as Map<String, dynamic>
+        : const <String, dynamic>{};
+    if (response.statusCode == 409) {
+      final rawStatus = responseBody['currentStatus'];
+      throw JobDecisionAlreadyRecordedException(
+        rawStatus is String && rawStatus.trim().isNotEmpty
+            ? rawStatus.trim()
+            : null,
+      );
+    }
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(responseBody['error'] ??
+          'Unable to update order (${response.statusCode})');
     }
   }
 
@@ -123,70 +113,70 @@ class TechnicianService {
     required String paymentMethod,
     required List<String> photos,
   }) async {
-    if (uid == null) throw Exception("User not logged in");
-    try {
-      await FirebaseFunctions.instance
-          .httpsCallable('technicianCompleteJob')
-          .call({
-        'bookingId': requestId,
+    await _authorizedRequest(
+      path: '/api/technician/jobs/${Uri.encodeComponent(requestId)}/complete',
+      body: {
         'finalPrice': finalPrice,
         'notes': notes,
         'paymentMethod': paymentMethod,
         'photos': photos,
-      });
-    } catch (error) {
-      debugPrint(
-        'Complete-job cloud function notice: $error. Using Firestore fallback.',
-      );
-      final payload = <String, dynamic>{
-        'status': 'Completed',
-        'finalPrice': finalPrice,
-        'finalAmount': finalPrice,
-        'completionNotes': notes,
-        'paymentMethod': paymentMethod,
-        'completionPhotos': photos,
-        'completedAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      };
-      Object? lastError;
-      var updated = false;
-      for (final collection in const ['orders', 'bookings']) {
-        try {
-          await FirebaseFirestore.instance
-              .collection(collection)
-              .doc(requestId)
-              .update(payload);
-          updated = true;
-        } catch (fallbackError) {
-          lastError = fallbackError;
-        }
-      }
-      if (!updated) {
-        throw Exception('Could not save job completion: $lastError');
-      }
-    }
+      },
+    );
   }
 
   Future<void> addJobNote(
       {required String requestId, required String note}) async {
-    if (uid == null) throw Exception("User not logged in");
-    try {
-      await FirebaseFunctions.instance
-          .httpsCallable('technicianAddJobNote')
-          .call({
-        'bookingId': requestId,
-        'note': note,
-      });
-    } catch (_) {
-      try {
-        await FirebaseFirestore.instance
-            .collection('orders')
-            .doc(requestId)
-            .set({
-          'technicianNotes': note,
-          'updatedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
-      } catch (_) {}
+    await _authorizedRequest(
+      path: '/api/technician/jobs/${Uri.encodeComponent(requestId)}/notes',
+      body: {'note': note},
+    );
+  }
+
+  Future<void> requestActivation() => _authorizedRequest(
+        path: '/api/technician/activation',
+        body: const {'channel': 'app'},
+      );
+
+  Future<void> deleteAccount() => _authorizedRequest(
+        path: '/api/technician/account',
+        method: 'DELETE',
+      );
+
+  Future<void> updateNotificationToken({
+    required String? token,
+    required bool enabled,
+  }) =>
+      _authorizedRequest(
+        path: '/api/technician/fcm-token',
+        body: {'token': token, 'enabled': enabled},
+      );
+
+  Future<void> _authorizedRequest({
+    required String path,
+    String method = 'POST',
+    Map<String, dynamic>? body,
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('User not logged in');
+    final token = await user.getIdToken();
+    final uri = Uri.parse('${AppConfig.apiBaseUrl}$path');
+    final headers = {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    };
+    final response = method == 'DELETE'
+        ? await http
+            .delete(uri, headers: headers)
+            .timeout(const Duration(seconds: 20))
+        : await http
+            .post(uri, headers: headers, body: jsonEncode(body ?? const {}))
+            .timeout(const Duration(seconds: 20));
+    final decoded = response.body.isEmpty
+        ? const <String, dynamic>{}
+        : jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+          decoded['error'] ?? 'Request failed (${response.statusCode})');
     }
   }
 

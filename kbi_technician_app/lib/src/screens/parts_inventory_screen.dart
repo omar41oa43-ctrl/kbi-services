@@ -98,9 +98,7 @@ class _PartsInventoryScreenState extends State<PartsInventoryScreen> {
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> _getPartsStream() {
-    return FirebaseFirestore.instance
-        .collection('parts')
-        .snapshots();
+    return FirebaseFirestore.instance.collection('parts').snapshots();
   }
 
   Future<void> _usePart(Map<String, dynamic> part, String partId) async {
@@ -113,8 +111,8 @@ class _PartsInventoryScreenState extends State<PartsInventoryScreen> {
         SnackBar(
           content: Text(
             isAr
-              ? 'هذه القطعة غير متوفرة في المخزون حالياً'
-              : 'This part is currently out of stock',
+                ? 'هذه القطعة غير متوفرة في المخزون حالياً'
+                : 'This part is currently out of stock',
           ),
           backgroundColor: kbiRed,
         ),
@@ -152,21 +150,24 @@ class _PartsInventoryScreenState extends State<PartsInventoryScreen> {
       // 1. Try REST API allocate first
       try {
         final uri = Uri.parse('${AppConfig.apiBaseUrl}/api/technician/parts');
-        await http.post(
-          uri,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'partId': partId,
-            'orderId': widget.activeJob?.id,
-            'quantity': 1,
-          }),
-        ).timeout(const Duration(seconds: 3));
+        await http
+            .post(
+              uri,
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode({
+                'partId': partId,
+                'orderId': widget.activeJob?.id,
+                'quantity': 1,
+              }),
+            )
+            .timeout(const Duration(seconds: 3));
       } catch (_) {}
 
       // 2. Direct Firestore Transaction fallback/sync
       try {
         await FirebaseFirestore.instance.runTransaction((transaction) async {
-          final partRef = FirebaseFirestore.instance.collection('parts').doc(partId);
+          final partRef =
+              FirebaseFirestore.instance.collection('parts').doc(partId);
           final snapshot = await transaction.get(partRef);
           if (!snapshot.exists) return;
 
@@ -293,7 +294,8 @@ class _PartsInventoryScreenState extends State<PartsInventoryScreen> {
                     ],
                   ),
                   child: TextField(
-                    onChanged: (val) => setState(() => _searchQuery = val.trim()),
+                    onChanged: (val) =>
+                        setState(() => _searchQuery = val.trim()),
                     decoration: InputDecoration(
                       hintText: isAr
                           ? 'بحث بالاسم، رمز SKU أو الجهاز...'
@@ -303,8 +305,8 @@ class _PartsInventoryScreenState extends State<PartsInventoryScreen> {
                       prefixIcon: const Icon(Icons.search_rounded,
                           color: kbiSecondaryLabel, size: 20),
                       border: InputBorder.none,
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
                     ),
                   ),
                 ),
@@ -335,7 +337,8 @@ class _PartsInventoryScreenState extends State<PartsInventoryScreen> {
                             color: _showOnlyInStock ? kbiBlue : kbiSeparator,
                           ),
                         ),
-                        onSelected: (val) => setState(() => _showOnlyInStock = val),
+                        onSelected: (val) =>
+                            setState(() => _showOnlyInStock = val),
                       ),
                       const SizedBox(width: 8),
 
@@ -360,11 +363,14 @@ class _PartsInventoryScreenState extends State<PartsInventoryScreen> {
                             items: _categories.map((c) {
                               return DropdownMenuItem<String>(
                                 value: c,
-                                child: Text(c == 'All' && isAr ? 'جميع الفئات' : c),
+                                child: Text(
+                                    c == 'All' && isAr ? 'جميع الفئات' : c),
                               );
                             }).toList(),
                             onChanged: (val) {
-                              if (val != null) setState(() => _selectedCategory = val);
+                              if (val != null) {
+                                setState(() => _selectedCategory = val);
+                              }
                             },
                           ),
                         ),
@@ -392,11 +398,14 @@ class _PartsInventoryScreenState extends State<PartsInventoryScreen> {
                             items: _brands.map((b) {
                               return DropdownMenuItem<String>(
                                 value: b,
-                                child: Text(b == 'All' && isAr ? 'جميع الماركات' : b),
+                                child: Text(
+                                    b == 'All' && isAr ? 'جميع الماركات' : b),
                               );
                             }).toList(),
                             onChanged: (val) {
-                              if (val != null) setState(() => _selectedBrand = val);
+                              if (val != null) {
+                                setState(() => _selectedBrand = val);
+                              }
                             },
                           ),
                         ),
@@ -416,10 +425,14 @@ class _PartsInventoryScreenState extends State<PartsInventoryScreen> {
                 List<Map<String, dynamic>> rawList = [];
 
                 if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
-                  rawList = snapshot.data!.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
+                  rawList = snapshot.data!.docs
+                      .map((doc) => {'id': doc.id, ...doc.data()})
+                      .toList();
                 } else if (_apiParts.isNotEmpty) {
                   rawList = _apiParts;
-                } else if (snapshot.hasError && !_isLoadingApi && _apiParts.isEmpty) {
+                } else if (snapshot.hasError &&
+                    !_isLoadingApi &&
+                    _apiParts.isEmpty) {
                   return Center(
                     child: Padding(
                       padding: const EdgeInsets.all(24),
@@ -427,10 +440,13 @@ class _PartsInventoryScreenState extends State<PartsInventoryScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(CupertinoIcons.exclamationmark_triangle_fill,
-                              size: 44, color: kbiOrange.withValues(alpha: 0.8)),
+                              size: 44,
+                              color: kbiOrange.withValues(alpha: 0.8)),
                           const SizedBox(height: 12),
                           Text(
-                            isAr ? 'تعذر تحميل قطع الغيار' : 'Failed to load parts',
+                            isAr
+                                ? 'تعذر تحميل قطع الغيار'
+                                : 'Failed to load parts',
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
@@ -440,11 +456,16 @@ class _PartsInventoryScreenState extends State<PartsInventoryScreen> {
                           const SizedBox(height: 12),
                           CupertinoButton(
                             color: kbiBlue,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
                             borderRadius: BorderRadius.circular(8),
                             onPressed: _fetchPartsFromApi,
-                            child: Text(isAr ? 'إعادة المحاولة' : 'Retry Loading',
-                                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                            child: Text(
+                                isAr ? 'إعادة المحاولة' : 'Retry Loading',
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),
@@ -460,15 +481,20 @@ class _PartsInventoryScreenState extends State<PartsInventoryScreen> {
                   final brand = (data['brand'] ?? '').toString();
                   final category = (data['category'] ?? '').toString();
                   final devices = (data['compatibleDevices'] is List)
-                      ? (data['compatibleDevices'] as List).join(' ').toLowerCase()
-                      : (data['compatibleDevices'] ?? '').toString().toLowerCase();
+                      ? (data['compatibleDevices'] as List)
+                          .join(' ')
+                          .toLowerCase()
+                      : (data['compatibleDevices'] ?? '')
+                          .toString()
+                          .toLowerCase();
                   final qty = (data['quantity'] as num?)?.toInt() ?? 0;
 
                   // Stock check
                   if (_showOnlyInStock && qty <= 0) return false;
 
                   // Category check
-                  if (_selectedCategory != 'All' && category != _selectedCategory) {
+                  if (_selectedCategory != 'All' &&
+                      category != _selectedCategory) {
                     return false;
                   }
 
@@ -502,7 +528,8 @@ class _PartsInventoryScreenState extends State<PartsInventoryScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(CupertinoIcons.cube_box,
-                              size: 56, color: kbiSecondaryLabel.withValues(alpha: 0.4)),
+                              size: 56,
+                              color: kbiSecondaryLabel.withValues(alpha: 0.4)),
                           const SizedBox(height: 12),
                           Text(
                             isAr
@@ -606,7 +633,8 @@ class _PartsInventoryScreenState extends State<PartsInventoryScreen> {
                                               horizontal: 6, vertical: 2),
                                           decoration: BoxDecoration(
                                             color: kbiGroupedBackground,
-                                            borderRadius: BorderRadius.circular(6),
+                                            borderRadius:
+                                                BorderRadius.circular(6),
                                           ),
                                           child: Text(
                                             sku,
@@ -656,7 +684,9 @@ class _PartsInventoryScreenState extends State<PartsInventoryScreen> {
                                           const SizedBox(width: 6),
                                           Text(
                                             isOut
-                                                ? (isAr ? 'نفذت الكمية' : 'Out of Stock')
+                                                ? (isAr
+                                                    ? 'نفذت الكمية'
+                                                    : 'Out of Stock')
                                                 : isLow
                                                     ? (isAr
                                                         ? 'كمية منخفضة ($qty متبقي)'
@@ -699,7 +729,8 @@ class _PartsInventoryScreenState extends State<PartsInventoryScreen> {
                               color: isOut ? Colors.grey[200] : kbiBlue,
                               disabledColor: Colors.grey[200]!,
                               borderRadius: BorderRadius.circular(10),
-                              onPressed: isOut ? null : () => _usePart(part, partId),
+                              onPressed:
+                                  isOut ? null : () => _usePart(part, partId),
                               child: Text(
                                 isAr ? 'استخدام' : 'Use',
                                 style: TextStyle(

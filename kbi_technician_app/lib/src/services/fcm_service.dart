@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -11,6 +10,7 @@ import 'package:flutter/widgets.dart';
 import '../../firebase_options.dart';
 import '../config/app_config.dart';
 import 'location_tracking_service.dart';
+import 'technician_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -167,18 +167,11 @@ class FcmService {
       }
       await FirebaseMessaging.instance.deleteToken();
       if (uid != null) {
-        await FirebaseFirestore.instance
-            .collection('technicians')
-            .doc(uid)
-            .set({
-          'fcmToken': null,
-          'notificationsEnabled': false,
-          'updatedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
+        await TechnicianService.instance.updateNotificationToken(
+          token: null,
+          enabled: false,
+        );
       }
-      await FirebaseFunctions.instance
-          .httpsCallable('technicianUpdateFcmToken')
-          .call({'token': null, 'enabled': false});
     } catch (error) {
       debugPrint('Unable to disable notifications: $error');
     }
@@ -195,25 +188,10 @@ class FcmService {
               'Unable to join technician notification topic: $topicError');
         }
       }
-      try {
-        await FirebaseFirestore.instance
-            .collection('technicians')
-            .doc(uid)
-            .set({
-          'fcmToken': token,
-          'notificationsEnabled': true,
-          'updatedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
-      } catch (firestoreErr) {
-        debugPrint('Direct Firestore FCM save notice: $firestoreErr');
-      }
-    }
-    try {
-      await FirebaseFunctions.instance
-          .httpsCallable('technicianUpdateFcmToken')
-          .call({'token': token, 'enabled': true});
-    } catch (funcErr) {
-      debugPrint('Cloud Function technicianUpdateFcmToken notice: $funcErr');
+      await TechnicianService.instance.updateNotificationToken(
+        token: token,
+        enabled: true,
+      );
     }
   }
 

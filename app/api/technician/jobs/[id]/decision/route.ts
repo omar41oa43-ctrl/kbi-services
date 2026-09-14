@@ -23,6 +23,34 @@ const offerStatuses = new Set([
   "awaiting acceptance",
 ])
 
+// Mirrors can briefly disagree while an order is being synchronized. Prefer
+// the furthest workflow stage when returning the server's authoritative state
+// to a stale technician client.
+const statusPriority: Record<string, number> = {
+  cancelled: 70,
+  completed: 70,
+  rejected: 60,
+  "in progress": 50,
+  working: 50,
+  arrived: 40,
+  "on the way": 30,
+  "en route": 30,
+  accepted: 20,
+  assigned: 10,
+  pending: 10,
+  "pending acceptance": 10,
+  offered: 10,
+  "awaiting acceptance": 10,
+}
+
+function latestMirroredStatus(statuses: string[]) {
+  return statuses.reduce((latest, candidate) =>
+    (statusPriority[candidate] ?? 0) > (statusPriority[latest] ?? 0)
+      ? candidate
+      : latest,
+  "")
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -38,6 +66,10 @@ export async function POST(
   const normalizedStatus = String(body?.status || "").trim().toLowerCase().replaceAll("_", " ")
   const status = canonicalStatuses[normalizedStatus]
   const notes = String(body?.notes || "").trim().slice(0, 500)
+  const rawWorkflowData = body?.workflowData
+  const workflowData = rawWorkflowData && typeof rawWorkflowData === "object" && !Array.isArray(rawWorkflowData)
+    ? rawWorkflowData as Record<string, unknown>
+    : null
   if (!workOrderId || !status) {
     return NextResponse.json({ success: false, error: "Invalid order decision" }, { status: 400 })
   }
@@ -55,6 +87,7 @@ export async function POST(
   const technicianName = String(
     tech?.full_name || tech?.name || user?.full_name || user?.name || user?.displayName || identity.email || "Technician",
   ).trim()
+  let currentStatus = ""
 
   try {
     let alreadySaved = false
@@ -80,12 +113,21 @@ export async function POST(
       orderReference = String(
         representative?.orderNumber || representative?.trackingCode || representative?.orderId || workOrderId,
       )
-      const previousStatus = String(representative?.status || "").toLowerCase().replaceAll("_", " ")
-      if (previousStatus === normalizedStatus) {
-        alreadySaved = true
-        return
-      }
-      if (["accepted", "rejected"].includes(normalizedStatus) && !offerStatuses.has(previousStatus)) {
+      // One work order can be mirrored in several collections. Never base an
+      // offer decision only on the first mirror: it may have an older status
+      // than another mirror and falsely reject an idempotent Accept/Reject.
+      const mirrorStatuses = existing.map((snapshot) =>
+        String(snapshot.data()?.status || "").toLowerCase().replaceAll("_", " "),
+      )
+      currentStatus = latestMirroredStatus(mirrorStatuses)
+      const alreadySavedStatus = mirrorStatuses.includes(normalizedStatus)
+      const hasPendingOffer = mirrorStatuses.some((value) => offerStatuses.has(value))
+      const hasOtherDecision = mirrorStatuses.some(
+        (value) => ["accepted", "rejected"].includes(value) && value !== normalizedStatus,
+      )
+      alreadySaved = alreadySavedStatus
+      if (["accepted", "rejected"].includes(normalizedStatus) &&
+          (hasOtherDecision || (!alreadySavedStatus && !hasPendingOffer))) {
         throw new Error("ALREADY_ANSWERED")
       }
 
@@ -94,6 +136,15 @@ export async function POST(
         status,
         technicianNotes: notes || null,
         updatedAt: now,
+      }
+      // Workflow details are written by the authenticated server endpoint;
+      // technicians are intentionally not allowed to write order documents
+      // directly under Firestore rules.
+      if (workflowData) {
+        for (const [key, value] of Object.entries(workflowData)) {
+          if (["status", "technicianDecision", "technicianDecisionAt", "acceptedAt", "rejectedAt", "completedAt", "updatedAt"].includes(key)) continue
+          payload[key] = value
+        }
       }
       if (["accepted", "rejected"].includes(normalizedStatus)) {
         payload.technicianDecision = normalizedStatus
@@ -117,7 +168,7 @@ export async function POST(
         updatedAt: now,
       }, { merge: true })
 
-      if (["accepted", "rejected"].includes(normalizedStatus)) {
+      if (["accepted", "rejected"].includes(normalizedStatus) && !alreadySaved) {
         const accepted = normalizedStatus === "accepted"
         transaction.set(
           db.collection("notifications").doc(`job_decision_${workOrderId}_${identity.uid}_${normalizedStatus}`),
@@ -140,16 +191,18 @@ export async function POST(
         )
       }
 
-      transaction.set(db.collection("audit_logs").doc(), {
-        actorUid: identity.uid,
-        actorRole: "technician",
-        action: `work_order_${normalizedStatus.replaceAll(" ", "_")}`,
-        targetCollection: "orders",
-        targetId: workOrderId,
-        orderId: workOrderId,
-        details: { technicianName, orderReference, notes: notes || null },
-        createdAt: now,
-      })
+      if (!alreadySaved) {
+        transaction.set(db.collection("audit_logs").doc(), {
+          actorUid: identity.uid,
+          actorRole: "technician",
+          action: `work_order_${normalizedStatus.replaceAll(" ", "_")}`,
+          targetCollection: "orders",
+          targetId: workOrderId,
+          orderId: workOrderId,
+          details: { technicianName, orderReference, notes: notes || null },
+          createdAt: now,
+        })
+      }
     })
 
     return NextResponse.json({ success: true, status: normalizedStatus, alreadySaved })
@@ -162,7 +215,14 @@ export async function POST(
       return NextResponse.json({ success: false, error: "This order is not assigned to you" }, { status: 403 })
     }
     if (code === "ALREADY_ANSWERED") {
-      return NextResponse.json({ success: false, error: "This assignment has already been answered" }, { status: 409 })
+      return NextResponse.json(
+        {
+          success: false,
+          error: "This assignment has already been answered",
+          currentStatus: currentStatus || null,
+        },
+        { status: 409 },
+      )
     }
     console.error("Technician decision error:", error)
     return NextResponse.json({ success: false, error: "Unable to save decision" }, { status: 500 })

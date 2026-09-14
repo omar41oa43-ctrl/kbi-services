@@ -66,12 +66,9 @@ class MyAssignedJobsScreen extends StatelessWidget {
 
             // Map and group jobs by status
             final pendingJobs = <DocumentSnapshot<Map<String, dynamic>>>[];
-            final inProgressJobs =
-                <DocumentSnapshot<Map<String, dynamic>>>[];
-            final scheduledJobs =
-                <DocumentSnapshot<Map<String, dynamic>>>[];
-            final completedJobs =
-                <DocumentSnapshot<Map<String, dynamic>>>[];
+            final inProgressJobs = <DocumentSnapshot<Map<String, dynamic>>>[];
+            final scheduledJobs = <DocumentSnapshot<Map<String, dynamic>>>[];
+            final completedJobs = <DocumentSnapshot<Map<String, dynamic>>>[];
 
             for (final doc in docs) {
               final data = doc.data();

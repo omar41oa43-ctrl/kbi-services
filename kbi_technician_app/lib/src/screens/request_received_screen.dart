@@ -32,9 +32,11 @@ class RequestReceivedScreen extends StatelessWidget {
         ? const [Color(0xFF0B0F19), Color(0xFF111827)]
         : const [Color(0xFFF8FAFC), Color(0xFFF1F5F9)];
     final cardBg = isDark ? const Color(0xFF161E2E) : Colors.white;
-    final cardBorder = isDark ? const Color(0xFF1F293D) : const Color(0xFFE2E8F0);
+    final cardBorder =
+        isDark ? const Color(0xFF1F293D) : const Color(0xFFE2E8F0);
     final textPrimary = isDark ? Colors.white : const Color(0xFF0F172A);
-    final textSecondary = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final textSecondary =
+        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
     return Directionality(
       textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
@@ -54,7 +56,8 @@ class RequestReceivedScreen extends StatelessWidget {
               children: [
                 // Top Minimal Header
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -109,18 +112,21 @@ class RequestReceivedScreen extends StatelessWidget {
                 Expanded(
                   child: Center(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 16),
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 460),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 32),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 26, vertical: 32),
                           decoration: BoxDecoration(
                             color: cardBg,
                             borderRadius: BorderRadius.circular(28),
                             border: Border.all(color: cardBorder, width: 1.2),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+                                color: Colors.black
+                                    .withValues(alpha: isDark ? 0.3 : 0.05),
                                 blurRadius: 24,
                                 offset: const Offset(0, 10),
                               ),
@@ -134,7 +140,8 @@ class RequestReceivedScreen extends StatelessWidget {
                                 width: 84,
                                 height: 84,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF18CBCB).withValues(alpha: 0.12),
+                                  color: const Color(0xFF18CBCB)
+                                      .withValues(alpha: 0.12),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Center(
@@ -206,14 +213,16 @@ class RequestReceivedScreen extends StatelessWidget {
                               // Highlight Banner: Confirmation via WhatsApp or SMS
                               Container(
                                 width: double.infinity,
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 14),
                                 decoration: BoxDecoration(
                                   color: isDark
                                       ? const Color(0xFF0F2D2D)
                                       : const Color(0xFFF0FDFA),
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: const Color(0xFF18CBCB).withValues(alpha: 0.35),
+                                    color: const Color(0xFF18CBCB)
+                                        .withValues(alpha: 0.35),
                                     width: 1,
                                   ),
                                 ),
@@ -222,7 +231,8 @@ class RequestReceivedScreen extends StatelessWidget {
                                     Container(
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF18CBCB).withValues(alpha: 0.15),
+                                        color: const Color(0xFF18CBCB)
+                                            .withValues(alpha: 0.15),
                                         shape: BoxShape.circle,
                                       ),
                                       child: const Icon(
@@ -254,12 +264,14 @@ class RequestReceivedScreen extends StatelessWidget {
                               const SizedBox(height: 20),
 
                               // Flow Step Visualizer
-                              _buildFlowSteps(isDark, textPrimary, textSecondary),
+                              _buildFlowSteps(
+                                  isDark, textPrimary, textSecondary),
                               const SizedBox(height: 24),
 
                               // Closing Thank you message
                               Text(
-                                _t('Thank you for choosing us.', 'شكراً لاختياركم لنا.'),
+                                _t('Thank you for choosing us.',
+                                    'شكراً لاختياركم لنا.'),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 13.5,
@@ -274,7 +286,8 @@ class RequestReceivedScreen extends StatelessWidget {
                                 width: double.infinity,
                                 height: 52,
                                 child: ElevatedButton(
-                                  onPressed: () => _handleBackToWelcome(context),
+                                  onPressed: () =>
+                                      _handleBackToWelcome(context),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFF0F172A),
                                     foregroundColor: Colors.white,
@@ -284,7 +297,8 @@ class RequestReceivedScreen extends StatelessWidget {
                                     ),
                                   ),
                                   child: Text(
-                                    _t('Back to Welcome Page', 'العودة إلى الصفحة الرئيسية'),
+                                    _t('Back to Welcome Page',
+                                        'العودة إلى الصفحة الرئيسية'),
                                     style: const TextStyle(
                                       fontSize: 15.5,
                                       fontWeight: FontWeight.w700,
@@ -346,15 +360,20 @@ class RequestReceivedScreen extends StatelessWidget {
                           color: isDone
                               ? const Color(0xFF18CBCB)
                               : (isActive
-                                  ? const Color(0xFF18CBCB).withValues(alpha: 0.2)
-                                  : (isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0))),
+                                  ? const Color(0xFF18CBCB)
+                                      .withValues(alpha: 0.2)
+                                  : (isDark
+                                      ? const Color(0xFF1E293B)
+                                      : const Color(0xFFE2E8F0))),
                           border: isActive
-                              ? Border.all(color: const Color(0xFF18CBCB), width: 2)
+                              ? Border.all(
+                                  color: const Color(0xFF18CBCB), width: 2)
                               : null,
                         ),
                         child: Center(
                           child: isDone
-                              ? const Icon(Icons.check, size: 16, color: Colors.white)
+                              ? const Icon(Icons.check,
+                                  size: 16, color: Colors.white)
                               : (isActive
                                   ? Container(
                                       width: 8,
@@ -387,7 +406,9 @@ class RequestReceivedScreen extends StatelessWidget {
                           fontWeight: (isDone || isActive)
                               ? FontWeight.w700
                               : FontWeight.w500,
-                          color: (isDone || isActive) ? textPrimary : textSecondary,
+                          color: (isDone || isActive)
+                              ? textPrimary
+                              : textSecondary,
                         ),
                       ),
                     ],
@@ -400,7 +421,9 @@ class RequestReceivedScreen extends StatelessWidget {
                     margin: const EdgeInsets.only(bottom: 16),
                     color: isDone
                         ? const Color(0xFF18CBCB)
-                        : (isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0)),
+                        : (isDark
+                            ? const Color(0xFF1E293B)
+                            : const Color(0xFFE2E8F0)),
                   ),
               ],
             ),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../models/service_request.dart';
+import '../services/technician_service.dart';
 import '../theme.dart';
 import '../utils/job_utils.dart';
 import 'invoice_form_screen.dart';
@@ -25,13 +26,8 @@ class FormsListScreen extends StatefulWidget {
 class _FormsListScreenState extends State<FormsListScreen> {
   String _searchQuery = '';
 
-  Stream<QuerySnapshot<Map<String, dynamic>>> _getOrdersStream() {
-    return FirebaseFirestore.instance
-        .collection('orders')
-        .orderBy('createdAt', descending: true)
-        .limit(100)
-        .snapshots();
-  }
+  Stream<List<DocumentSnapshot<Map<String, dynamic>>>> _getOrdersStream() =>
+      TechnicianService.instance.watchMyJobDocs();
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +91,7 @@ class _FormsListScreenState extends State<FormsListScreen> {
 
           // Orders Stream
           Expanded(
-            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            child: StreamBuilder<List<DocumentSnapshot<Map<String, dynamic>>>>(
               stream: _getOrdersStream(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
@@ -111,9 +107,9 @@ class _FormsListScreenState extends State<FormsListScreen> {
                   return const Center(child: CupertinoActivityIndicator());
                 }
 
-                final docs = snapshot.data!.docs;
+                final docs = snapshot.data!;
                 final filtered = docs.where((doc) {
-                  final data = doc.data();
+                  final data = doc.data() ?? const <String, dynamic>{};
                   final id = doc.id.toLowerCase();
                   final orderNo = (data['orderNumber'] ??
                           data['orderId'] ??
@@ -171,7 +167,7 @@ class _FormsListScreenState extends State<FormsListScreen> {
                   itemBuilder: (context, index) {
                     final doc = filtered[index];
                     final job = ServiceRequestModel.fromDoc(doc);
-                    final data = doc.data();
+                    final data = doc.data() ?? const <String, dynamic>{};
                     final orderNo = data['orderNumber'] ??
                         data['orderId'] ??
                         data['trackingCode'] ??
@@ -189,10 +185,13 @@ class _FormsListScreenState extends State<FormsListScreen> {
                         job.serviceName ??
                         '';
                     final date = jobDate(data);
-                    final total = (data['finalAmount'] ??
+                    final rawTotal = data['finalAmount'] ??
                         data['totalAmount'] ??
                         data['price'] ??
-                        0) as num;
+                        0;
+                    final total = rawTotal is num
+                        ? rawTotal
+                        : num.tryParse(rawTotal.toString()) ?? 0;
 
                     final isCurrentActive = widget.activeJob?.id == job.id;
 

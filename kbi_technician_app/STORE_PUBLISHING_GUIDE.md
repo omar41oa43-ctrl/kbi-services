@@ -32,6 +32,7 @@
 - Primary category: `Business`
 - Secondary category: `Productivity`
 - Privacy Policy URL: `https://kbi.services/privacy`
+- Account deletion URL: `https://kbi.services/account-deletion`
 - Support URL: `https://kbi.services`
 - Marketing URL: `https://kbi.services`
 - Keywords: `technician,field service,repair,jobs,dispatch,invoice,work order,maintenance`

@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../theme.dart';
@@ -36,7 +35,6 @@ class _AuthScreenState extends State<AuthScreen>
   final _password = TextEditingController();
   final _emailFocus = FocusNode();
   final _passwordFocus = FocusNode();
-  final LocalAuthentication _localAuth = LocalAuthentication();
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
   );
@@ -47,81 +45,24 @@ class _AuthScreenState extends State<AuthScreen>
   bool _loading = false;
   bool _obscurePassword = true;
   bool _rememberMe = true;
-  bool _hasBiometrics = false;
   String? _error;
 
   @override
   void initState() {
     super.initState();
     _showLoginForm = widget.initialShowLoginForm;
-    _checkBiometrics();
+    _restoreRememberedEmail();
   }
 
-  Future<void> _checkBiometrics() async {
+  Future<void> _restoreRememberedEmail() async {
     try {
-      final canAuthWithBiometrics = await _localAuth.canCheckBiometrics;
-      final canAuth =
-          canAuthWithBiometrics || await _localAuth.isDeviceSupported();
       final savedEmail = await _secureStorage.read(key: _savedEmailKey);
-      final savedPassword = await _secureStorage.read(key: _savedPasswordKey);
-      if (mounted) {
-        setState(() => _hasBiometrics = canAuth &&
-            savedEmail?.isNotEmpty == true &&
-            savedPassword?.isNotEmpty == true);
+      await _secureStorage.delete(key: _savedPasswordKey);
+      if (mounted && savedEmail?.isNotEmpty == true) {
+        setState(() => _email.text = savedEmail!);
       }
     } catch (_) {
-      // Ignore if device doesn't support biometrics
-    }
-  }
-
-  Future<void> _authenticateWithBiometrics() async {
-    try {
-      final authenticated = await _localAuth.authenticate(
-        localizedReason: widget.locale.languageCode == 'ar'
-            ? 'استخدم البصمة أو Face ID لتسجيل الدخول إلى KBI Technician'
-            : 'Use your fingerprint or Face ID to sign in to KBI Technician',
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: false,
-        ),
-      );
-      if (authenticated && mounted) {
-        final savedEmail = await _secureStorage.read(key: _savedEmailKey);
-        final savedPassword = await _secureStorage.read(key: _savedPasswordKey);
-        if (savedEmail == null || savedPassword == null) {
-          setState(() {
-            _hasBiometrics = false;
-            _error = widget.locale.languageCode == 'ar'
-                ? 'سجّل الدخول بكلمة المرور أولاً لتفعيل الدخول السريع.'
-                : 'Sign in with your password first to enable quick sign-in.';
-          });
-          return;
-        }
-        setState(() {
-          _loading = true;
-          _error = null;
-        });
-        try {
-          await FirebaseAuth.instance.signInWithEmailAndPassword(
-            email: savedEmail,
-            password: savedPassword,
-          );
-        } on FirebaseAuthException catch (error) {
-          await _clearSavedBiometricLogin();
-          if (mounted) {
-            setState(() {
-              _hasBiometrics = false;
-              _error = _friendlyLoginError(error);
-            });
-          }
-        } finally {
-          if (mounted) setState(() => _loading = false);
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _error = 'Biometric authentication was cancelled.');
-      }
+      // Remembered email is an optional convenience only.
     }
   }
 
@@ -175,10 +116,7 @@ class _AuthScreenState extends State<AuthScreen>
           key: _savedEmailKey,
           value: _email.text.trim(),
         );
-        await _secureStorage.write(
-          key: _savedPasswordKey,
-          value: _password.text,
-        );
+        await _secureStorage.delete(key: _savedPasswordKey);
       } else {
         await _clearSavedBiometricLogin();
       }
@@ -900,7 +838,7 @@ class _AuthScreenState extends State<AuthScreen>
                             const SizedBox(height: 14),
                           ],
 
-                          // CTA Button: Blue "Sign In" Capsule + Biometric Unlock Button
+                          // Primary sign-in action
                           Row(
                             children: [
                               Expanded(
@@ -937,31 +875,6 @@ class _AuthScreenState extends State<AuthScreen>
                                   ),
                                 ),
                               ),
-                              if (_hasBiometrics) ...[
-                                const SizedBox(width: 10),
-                                Container(
-                                  width: 50,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFEAF2FF),
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: const Color(0xFFB9D4FF),
-                                      width: 1.2,
-                                    ),
-                                  ),
-                                  child: IconButton(
-                                    icon: const Icon(Icons.fingerprint_rounded,
-                                        color: kbiBrand, size: 26),
-                                    tooltip: isArabic
-                                        ? 'الدخول بالبصمة أو الوجه'
-                                        : 'Sign in with Biometrics',
-                                    onPressed: _loading
-                                        ? null
-                                        : _authenticateWithBiometrics,
-                                  ),
-                                ),
-                              ],
                             ],
                           ),
                           const SizedBox(height: 12),

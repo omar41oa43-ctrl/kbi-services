@@ -78,6 +78,18 @@ test("technicians can update telemetry but not approval state", async () => {
     isOnline: true,
   }))
   await assertFails(updateDoc(doc(db, "technicians", "tech-1"), { isApproved: false }))
+  await assertFails(updateDoc(doc(db, "technicians", "tech-1"), { status: "APPROVED" }))
+})
+
+test("technicians cannot create an already approved profile", async () => {
+  const db = environment.authenticatedContext("tech-3", { role: "technician" }).firestore()
+  await assertFails(setDoc(doc(db, "technicians", "tech-3"), {
+    uid: "tech-3",
+    isApproved: true,
+    isActive: true,
+    subscriptionStatus: "active",
+    status: "APPROVED",
+  }))
 })
 
 test("technicians can only mark their own notifications as read", async () => {
@@ -108,6 +120,15 @@ test("technicians cannot query another technician's orders", async () => {
     collection(db, "orders"),
     where("technicianId", "==", "tech-2"),
   )))
+})
+
+test("technicians cannot rewrite assigned work orders directly", async () => {
+  const db = environment.authenticatedContext("tech-1", { role: "technician" }).firestore()
+  await assertFails(updateDoc(doc(db, "orders", "primary-order"), {
+    finalAmount: 1,
+    customerName: "Changed",
+    status: "Completed",
+  }))
 })
 
 test("authenticated non-admin users cannot write arbitrary collections", async () => {

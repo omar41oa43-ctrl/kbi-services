@@ -56,7 +56,9 @@ service cloud.firestore {
     function isApprovedTechnician(uid) {
       return isTechnician() && isOwner(uid)
         && exists(/databases/$(database)/documents/technicians/$(uid))
-        && get(/databases/$(database)/documents/technicians/$(uid)).data.status in ['APPROVED', 'approved']
+        && get(/databases/$(database)/documents/technicians/$(uid)).data.isApproved == true
+        && get(/databases/$(database)/documents/technicians/$(uid)).data.isActive == true
+        && get(/databases/$(database)/documents/technicians/$(uid)).data.subscriptionStatus == 'active'
         && get(/databases/$(database)/documents/technicians/$(uid)).data.isSuspended != true
         && get(/databases/$(database)/documents/technicians/$(uid)).data.isLocked != true
         && get(/databases/$(database)/documents/technicians/$(uid)).data.appAccessEnabled != false;
@@ -64,10 +66,12 @@ service cloud.firestore {
 
     function assignedToMe() {
       return signedIn() && (
-        resource.data.assignedTechnician == request.auth.uid
-        || resource.data.assignedTechnicianId == request.auth.uid
-        || resource.data.technicianId == request.auth.uid
-        || resource.data.techId == request.auth.uid
+        (resource.data.keys().hasAny(['assignedTechnician']) && resource.data.assignedTechnician == request.auth.uid)
+        || (resource.data.keys().hasAny(['assignedTechnicianId']) && resource.data.assignedTechnicianId == request.auth.uid)
+        || (resource.data.keys().hasAny(['technicianId']) && resource.data.technicianId == request.auth.uid)
+        || (resource.data.keys().hasAny(['techId']) && resource.data.techId == request.auth.uid)
+        // Keep the direct membership predicates visible to Firestore's query
+        // authorization engine so array-contains assignment feeds are valid.
         || request.auth.uid in resource.data.assignedTechnicians
         || request.auth.uid in resource.data.technicianIds
       );
@@ -75,19 +79,19 @@ service cloud.firestore {
 
     function belongsToMe() {
       return signedIn() && (
-        resource.data.userId == request.auth.uid
-        || resource.data.customerId == request.auth.uid
-        || resource.data.customerUid == request.auth.uid
-        || resource.data.companyId == request.auth.uid
+        (resource.data.keys().hasAny(['userId']) && resource.data.userId == request.auth.uid)
+        || (resource.data.keys().hasAny(['customerId']) && resource.data.customerId == request.auth.uid)
+        || (resource.data.keys().hasAny(['customerUid']) && resource.data.customerUid == request.auth.uid)
+        || (resource.data.keys().hasAny(['companyId']) && resource.data.companyId == request.auth.uid)
       );
     }
 
     function newRecordBelongsToMe() {
       return signedIn() && (
-        request.resource.data.userId == request.auth.uid
-        || request.resource.data.customerId == request.auth.uid
-        || request.resource.data.customerUid == request.auth.uid
-        || request.resource.data.companyId == request.auth.uid
+        (request.resource.data.keys().hasAny(['userId']) && request.resource.data.userId == request.auth.uid)
+        || (request.resource.data.keys().hasAny(['customerId']) && request.resource.data.customerId == request.auth.uid)
+        || (request.resource.data.keys().hasAny(['customerUid']) && request.resource.data.customerUid == request.auth.uid)
+        || (request.resource.data.keys().hasAny(['companyId']) && request.resource.data.companyId == request.auth.uid)
       );
     }
 
@@ -97,7 +101,7 @@ service cloud.firestore {
         && request.resource.data.role == 'technician';
       allow update: if isOwner(uid)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'email', 'full_name', 'name', 'phone', 'profile_photo', 'updatedAt', 'role', 'fcmToken', 'fcmTokens'
+          'email', 'full_name', 'name', 'phone', 'profile_photo', 'updatedAt', 'fcmToken', 'fcmTokens'
         ]);
       allow delete: if isAdmin();
     }
@@ -105,13 +109,21 @@ service cloud.firestore {
     match /technician_requests/{uid} {
       allow read: if isOwner(uid) || isAdmin();
       allow create, update: if isOwner(uid)
-        && request.resource.data.userId == request.auth.uid;
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status in ['draft', 'pending'];
       allow delete: if isAdmin();
     }
 
     match /technicians/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      allow create: if (isOwner(uid) || isAdmin());
+      allow create: if isAdmin() || (
+        isOwner(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.isApproved == false
+        && request.resource.data.isActive == false
+        && request.resource.data.subscriptionStatus == 'inactive'
+        && request.resource.data.status in ['pending', 'draft']
+      );
       allow update: if isOwner(uid)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'uid', 'email', 'full_name', 'name', 'phone', 'whatsapp', 'profile_photo', 'language',
@@ -127,21 +139,28 @@ service cloud.firestore {
         ])
         && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
           'isApproved', 'subscriptionStatus'
-        ]);
+        ])
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status'])
+          || request.resource.data.status in [
+            'AVAILABLE', 'available', 'ONLINE', 'online', 'OFFLINE', 'offline',
+            'BUSY', 'busy', 'ON_JOB', 'on_job'
+          ]);
       allow delete: if isAdmin();
     }
 
     match /bookings/{bookingId} {
       allow read: if isDispatcher() || isSupport() || assignedToMe() || belongsToMe();
       allow create: if isDispatcher() || isSupport() || newRecordBelongsToMe();
-      allow update: if isDispatcher() || isSupport() || assignedToMe();
+      // Technician mutations go through verified Admin SDK endpoints so a
+      // client cannot rewrite prices, customer details, or assignments.
+      allow update: if isDispatcher() || isSupport();
       allow delete: if isAdmin();
     }
 
     match /orders/{orderId} {
       allow read: if isDispatcher() || isSupport() || assignedToMe() || belongsToMe();
       allow create: if isDispatcher() || isSupport() || newRecordBelongsToMe();
-      allow update: if isDispatcher() || isSupport() || assignedToMe();
+      allow update: if isDispatcher() || isSupport();
       allow delete: if isAdmin();
     }
 

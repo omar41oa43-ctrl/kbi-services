@@ -18,6 +18,11 @@ service firebase.storage {
         && request.resource.contentType.matches('image/.*');
     }
 
+    function safeTechnicianFile() {
+      return request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('(image/(jpeg|png)|application/pdf)');
+    }
+
     match /company/{fileName} {
       allow read: if true;
       allow write: if isAdmin() && request.resource.size < 25 * 1024 * 1024;
@@ -30,17 +35,10 @@ service firebase.storage {
 
     match /technicians/{uid}/{allPaths=**} {
       allow read: if (signedIn() && request.auth.uid == uid) || isAdmin();
-      allow write: if (signedIn() && request.auth.uid == uid)
-        && request.resource.size < 15 * 1024 * 1024;
-    }
-
-    match /orders/{orderId}/{allPaths=**} {
-      allow read: if signedIn();
-      allow write: if signedIn() && request.resource.size < 15 * 1024 * 1024;
-    }
-
-    match /registration/{allPaths=**} {
-      allow read, write: if signedIn() && request.resource.size < 15 * 1024 * 1024;
+      allow create, update: if signedIn()
+        && request.auth.uid == uid
+        && safeTechnicianFile();
+      allow delete: if (signedIn() && request.auth.uid == uid) || isAdmin();
     }
 
     match /{allPaths=**} {

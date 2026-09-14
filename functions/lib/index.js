@@ -33,9 +33,11 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.technicianRespondToOffer = exports.technicianUpdateJob = exports.technicianUpdateFcmToken = exports.technicianUpdateLocation = exports.updateTechnicianStatus = exports.registerTechnician = exports.expireSubscriptions = exports.assignmentTimeout = exports.serviceRequestStatusUpdated = exports.technicianRequestCreated = exports.serviceRequestCreated = void 0;
+exports.technicianRespondToOffer = exports.technicianUpdateJob = exports.technicianDeleteAccount = exports.technicianRequestActivation = exports.technicianAddJobNote = exports.technicianCompleteJob = exports.technicianUpdateFcmToken = exports.technicianUpdateLocation = exports.updateTechnicianStatus = exports.registerTechnician = exports.expireSubscriptions = exports.assignmentTimeout = exports.serviceRequestStatusUpdated = exports.technicianRequestCreated = exports.serviceRequestCreated = void 0;
 const admin = __importStar(require("firebase-admin"));
+const auth_1 = require("firebase-admin/auth");
 const firestore_1 = require("firebase-admin/firestore");
+const storage_1 = require("firebase-admin/storage");
 const https_1 = require("firebase-functions/v2/https");
 const firestore_2 = require("firebase-functions/v2/firestore");
 const scheduler_1 = require("firebase-functions/v2/scheduler");
@@ -190,13 +192,182 @@ exports.technicianUpdateFcmToken = (0, https_1.onCall)(async (request) => {
     const uid = request.auth?.uid;
     if (!uid)
         throw new https_1.HttpsError("unauthenticated", "Login required");
+    const enabled = request.data?.enabled !== false;
     const token = String(request.data?.token || "").trim();
-    if (!token)
+    if (enabled && !token)
         throw new https_1.HttpsError("invalid-argument", "token required");
     const db = (0, firestore_1.getFirestore)();
     const now = firestore_1.Timestamp.now();
-    await db.collection("technicians").doc(uid).set({ fcmToken: token, updatedAt: now }, { merge: true });
+    await db.collection("technicians").doc(uid).set({
+        fcmToken: enabled ? token : null,
+        notificationsEnabled: enabled,
+        updatedAt: now,
+    }, { merge: true });
     return { ok: true };
+});
+function assignedTo(uid, data) {
+    const singular = [data?.assignedTechnician, data?.assignedTechnicianId, data?.technicianId, data?.techId]
+        .map((value) => String(value || ""));
+    const plural = [data?.assignedTechnicians, data?.technicianIds]
+        .flatMap((value) => Array.isArray(value) ? value : [])
+        .map((value) => String(value || ""));
+    return singular.includes(uid) || plural.includes(uid);
+}
+function workOrderRefs(bookingId) {
+    const db = (0, firestore_1.getFirestore)();
+    return ["bookings", "orders", "service_requests"].map((collection) => db.collection(collection).doc(bookingId));
+}
+exports.technicianCompleteJob = (0, https_1.onCall)(async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid)
+        throw new https_1.HttpsError("unauthenticated", "Login required");
+    const bookingId = String(request.data?.bookingId || "").trim();
+    const finalPrice = Number(request.data?.finalPrice);
+    const notes = String(request.data?.notes || "").trim().slice(0, 2000);
+    const paymentMethod = String(request.data?.paymentMethod || "").trim().slice(0, 80);
+    const rawPhotos = Array.isArray(request.data?.photos) ? request.data.photos : [];
+    const photos = rawPhotos.map((value) => String(value || "").trim()).filter(Boolean).slice(0, 12);
+    if (!bookingId || !Number.isFinite(finalPrice) || finalPrice < 0 || finalPrice > 1_000_000) {
+        throw new https_1.HttpsError("invalid-argument", "Valid bookingId and finalPrice are required");
+    }
+    const db = (0, firestore_1.getFirestore)();
+    const refs = workOrderRefs(bookingId);
+    const now = firestore_1.Timestamp.now();
+    await db.runTransaction(async (transaction) => {
+        const snapshots = await Promise.all(refs.map((ref) => transaction.get(ref)));
+        const existing = snapshots.filter((snapshot) => snapshot.exists);
+        if (existing.length === 0)
+            throw new https_1.HttpsError("not-found", "Work order not found");
+        if (!existing.some((snapshot) => assignedTo(uid, snapshot.data()))) {
+            throw new https_1.HttpsError("permission-denied", "This work order is not assigned to you");
+        }
+        const terminal = new Set(["completed", "cancelled", "rejected"]);
+        const status = String(existing[0].data()?.status || "").toLowerCase().replaceAll("_", " ");
+        if (terminal.has(status) && status !== "completed") {
+            throw new https_1.HttpsError("failed-precondition", "This work order can no longer be completed");
+        }
+        const payload = {
+            status: "Completed",
+            finalPrice,
+            finalAmount: finalPrice,
+            completionNotes: notes,
+            paymentMethod,
+            completionPhotos: photos,
+            completedAt: now,
+            updatedAt: now,
+        };
+        snapshots.forEach((snapshot, index) => {
+            if (snapshot.exists)
+                transaction.set(refs[index], payload, { merge: true });
+        });
+        transaction.set(db.collection("technicians").doc(uid), {
+            currentJob: null,
+            currentOrder: null,
+            activeJob: null,
+            activeOrderId: null,
+            activeJobs: firestore_1.FieldValue.arrayRemove(bookingId),
+            status: "AVAILABLE",
+            available: true,
+            updatedAt: now,
+        }, { merge: true });
+        transaction.set(db.collection("notifications").doc(`job_completed_${bookingId}_${uid}`), {
+            type: "job_completed",
+            title: "تم إكمال الطلب",
+            message: `تم إكمال الطلب ${bookingId} بقيمة ${finalPrice.toFixed(2)} AED`,
+            role: "admin",
+            technicianId: uid,
+            workOrderId: bookingId,
+            status: "completed",
+            link: "/admin/orders",
+            read: false,
+            createdAt: now,
+        }, { merge: true });
+    });
+    await (0, audit_1.writeAuditLog)({
+        actorUid: uid,
+        actorRole: "technician",
+        action: "work_order_completed",
+        targetCollection: "orders",
+        targetId: bookingId,
+        orderId: bookingId,
+        details: { finalPrice, paymentMethod, photoCount: photos.length },
+    });
+    return { ok: true, status: "completed" };
+});
+exports.technicianAddJobNote = (0, https_1.onCall)(async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid)
+        throw new https_1.HttpsError("unauthenticated", "Login required");
+    const bookingId = String(request.data?.bookingId || "").trim();
+    const note = String(request.data?.note || "").trim().slice(0, 2000);
+    if (!bookingId || !note)
+        throw new https_1.HttpsError("invalid-argument", "bookingId and note are required");
+    const db = (0, firestore_1.getFirestore)();
+    const refs = workOrderRefs(bookingId);
+    await db.runTransaction(async (transaction) => {
+        const snapshots = await Promise.all(refs.map((ref) => transaction.get(ref)));
+        const existing = snapshots.filter((snapshot) => snapshot.exists);
+        if (existing.length === 0)
+            throw new https_1.HttpsError("not-found", "Work order not found");
+        if (!existing.some((snapshot) => assignedTo(uid, snapshot.data()))) {
+            throw new https_1.HttpsError("permission-denied", "This work order is not assigned to you");
+        }
+        const payload = { technicianNotes: note, updatedAt: firestore_1.Timestamp.now() };
+        snapshots.forEach((snapshot, index) => {
+            if (snapshot.exists)
+                transaction.set(refs[index], payload, { merge: true });
+        });
+    });
+    return { ok: true };
+});
+exports.technicianRequestActivation = (0, https_1.onCall)(async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid)
+        throw new https_1.HttpsError("unauthenticated", "Login required");
+    const channel = String(request.data?.channel || "app").trim().slice(0, 30) || "app";
+    const db = (0, firestore_1.getFirestore)();
+    const now = firestore_1.Timestamp.now();
+    const ref = db.collection("activation_requests").doc(uid);
+    await ref.set({ userId: uid, status: "pending", channel, createdAt: now, updatedAt: now }, { merge: true });
+    await Promise.allSettled([
+        (0, audit_1.writeAuditLog)({
+            actorUid: uid,
+            actorRole: "technician",
+            action: "technician_activation_requested",
+            targetCollection: "activation_requests",
+            targetId: uid,
+        }),
+        (0, notifications_1.sendToTopic)({
+            topic: "admins",
+            title: "Technician activation request",
+            body: "A technician requested account activation.",
+            data: { technicianId: uid, type: "activation_request" },
+        }),
+    ]);
+    return { ok: true };
+});
+exports.technicianDeleteAccount = (0, https_1.onCall)(async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid)
+        throw new https_1.HttpsError("unauthenticated", "Login required");
+    const db = (0, firestore_1.getFirestore)();
+    const ownedDocuments = ["users", "technicians", "technician_requests", "activation_requests"]
+        .map((collection) => db.collection(collection).doc(uid));
+    try {
+        await Promise.all(ownedDocuments.map((document) => db.recursiveDelete(document)));
+        try {
+            await (0, storage_1.getStorage)().bucket().deleteFiles({ prefix: `technicians/${uid}/`, force: true });
+        }
+        catch (storageError) {
+            console.warn("Storage cleanup skipped during account deletion", { uid, storageError });
+        }
+        await (0, auth_1.getAuth)().deleteUser(uid);
+        return { deleted: true };
+    }
+    catch (error) {
+        console.error("Technician account deletion failed", { uid, error });
+        throw new https_1.HttpsError("internal", "We could not delete the account. Please contact KBI support.");
+    }
 });
 /**
  * Persist a technician's work-order decision on the server. Legacy admin
@@ -257,16 +428,17 @@ exports.technicianUpdateJob = (0, https_1.onCall)(async (request) => {
         }
         const representative = existing[0].data();
         orderReference = String(representative?.orderNumber || representative?.trackingCode || representative?.orderId || bookingId);
-        const existingStatus = String(representative?.status || "").toLowerCase().replaceAll("_", " ");
-        if (existingStatus === normalizedStatus) {
-            decisionAlreadySaved = true;
-            return;
-        }
-        if (["accepted", "rejected"].includes(normalizedStatus)) {
-            const offerStatuses = new Set(["assigned", "pending", "pending acceptance", "offered", "awaiting acceptance"]);
-            if (!offerStatuses.has(existingStatus)) {
-                throw new https_1.HttpsError("failed-precondition", "This assignment has already been answered");
-            }
+        // A work order may be mirrored across collections. Evaluate every mirror
+        // so a stale first document cannot reject an idempotent decision.
+        const mirrorStatuses = existing.map((snapshot) => String(snapshot.data()?.status || "").toLowerCase().replaceAll("_", " "));
+        const alreadySavedStatus = mirrorStatuses.includes(normalizedStatus);
+        const offerStatuses = new Set(["assigned", "pending", "pending acceptance", "offered", "awaiting acceptance"]);
+        const hasPendingOffer = mirrorStatuses.some((value) => offerStatuses.has(value));
+        const hasOtherDecision = mirrorStatuses.some((value) => ["accepted", "rejected"].includes(value) && value !== normalizedStatus);
+        decisionAlreadySaved = alreadySavedStatus;
+        if (["accepted", "rejected"].includes(normalizedStatus) &&
+            (hasOtherDecision || (!alreadySavedStatus && !hasPendingOffer))) {
+            throw new https_1.HttpsError("failed-precondition", "This assignment has already been answered");
         }
         const now = firestore_1.Timestamp.now();
         const payload = {
@@ -296,7 +468,7 @@ exports.technicianUpdateJob = (0, https_1.onCall)(async (request) => {
             available: jobFinished,
             updatedAt: now,
         }, { merge: true });
-        if (["accepted", "rejected"].includes(normalizedStatus)) {
+        if (["accepted", "rejected"].includes(normalizedStatus) && !decisionAlreadySaved) {
             const accepted = normalizedStatus === "accepted";
             const notificationId = `job_decision_${bookingId}_${uid}_${normalizedStatus}`;
             transaction.set(db.collection("notifications").doc(notificationId), {

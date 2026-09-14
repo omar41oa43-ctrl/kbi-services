@@ -1,6 +1,24 @@
+// `deploymentId` drives Next.js skew protection, and Next.js validates it
+// against the `x-deployment-id` header the Vercel edge sends. Two rules follow:
+//
+//   1. It must be unique per deployment. Falling back to the git commit SHA
+//      made every redeploy of an already-deployed commit fail with
+//      "A deployment with the user-configured deploymentId ... already exists".
+//   2. It must match what the edge sends. Overriding it with an arbitrary value
+//      (e.g. `NEXT_DEPLOYMENT_ID=foo`) makes Next.js reject *every* server
+//      request, so all API routes return 500 while static pages still work.
+//
+// VERCEL_DEPLOYMENT_ID is Vercel's own per-deployment id, so it satisfies both.
+const rawDeploymentId =
+  process.env.VERCEL_DEPLOYMENT_ID ||
+  process.env.NEXT_DEPLOYMENT_ID ||
+  process.env.VERCEL_GIT_COMMIT_SHA ||
+  process.env.VERCEL_URL
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  deploymentId: rawDeploymentId?.slice(0, 32),
   serverExternalPackages: ['firebase-admin', 'jwks-rsa', 'jose'],
   images: {
     unoptimized: false,

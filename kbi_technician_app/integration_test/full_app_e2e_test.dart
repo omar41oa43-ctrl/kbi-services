@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:kbi_technician_app/main.dart' as app;
+import 'package:shared_preferences/shared_preferences.dart';
 
 const _email = 'tech@kbi.test';
 const _password = 'Test1234!';
@@ -21,6 +22,25 @@ List<String> _visibleText() => find
     .where((s) => s.trim().isNotEmpty)
     .toList();
 
+Future<void> _closeOptionalLocationDisclosure(WidgetTester tester) async {
+  for (final label in const ['Not now', 'ليس الآن']) {
+    final action = find.widgetWithText(TextButton, label);
+    if (action.evaluate().isNotEmpty) {
+      debugPrint('ACTION: Closing optional location disclosure');
+      await tester.tap(action.first);
+      await _settle(tester, seconds: 1);
+      // Two dashboard rebuilds can race during a fresh-session launch. Close
+      // a second disclosure too if it was queued before the first dismissed.
+      final repeated = find.widgetWithText(TextButton, label);
+      if (repeated.evaluate().isNotEmpty) {
+        await tester.tap(repeated.first);
+        await _settle(tester, seconds: 1);
+      }
+      return;
+    }
+  }
+}
+
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -28,6 +48,11 @@ void main() {
       'Full End-to-End Test Suite: All functions, buttons, tabs, and workflows',
       (tester) async {
     debugPrint('=== [STEP 1] LAUNCHING TECHNICIAN APP ===');
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setBool(
+      'background_location_disclosure_accepted',
+      true,
+    );
     final testOnError = FlutterError.onError;
     await app.main();
     FlutterError.onError = testOnError;
@@ -74,20 +99,24 @@ void main() {
       debugPrint('=== [STEP 2] SESSION PERSISTED OR ON DASHBOARD ===');
     }
 
-    // Verify main navigation is visible
-    expect(find.byType(NavigationBar), findsOneWidget,
-        reason: 'Bottom NavigationBar must be present on HomeScreen');
+    // A fresh install can show the required background-location disclosure.
+    // Close it for this navigation test; permission behavior is covered by the
+    // platform configuration checks and should not block unrelated controls.
+    await _closeOptionalLocationDisclosure(tester);
+
+    // Verify the custom production navigation is visible. The app uses a
+    // branded navigation surface rather than Flutter's stock NavigationBar.
+    expect(find.text('Home'), findsWidgets,
+        reason: 'Home navigation action must be present');
+    expect(find.text('Orders'), findsWidgets,
+        reason: 'Orders navigation action must be present');
     debugPrint('VISIBLE: ${_visibleText().take(15).join(" | ")}');
 
     // ==========================================
     // 2. TEST TAB 0: HOME / DASHBOARD SCREEN
     // ==========================================
     debugPrint('=== [STEP 3] TESTING HOME & TOP CONTROLS ===');
-    final navBarFinder = find.byType(NavigationBar);
-    expect(navBarFinder, findsOneWidget);
-    final navBar = tester.widget<NavigationBar>(navBarFinder.first);
-
-    navBar.onDestinationSelected?.call(0);
+    await tester.tap(find.byKey(const ValueKey('main-nav-0')));
     await _settle(tester, seconds: 3);
 
     // Test Availability Switcher Pills (Available / Busy / Offline)
@@ -139,13 +168,13 @@ void main() {
     // 3. TEST TAB 1: ORDERS / JOBS SCREEN
     // ==========================================
     debugPrint('=== [STEP 4] TESTING ORDERS SCREEN & FILTERS ===');
-    navBar.onDestinationSelected?.call(1);
+    await tester.tap(find.byKey(const ValueKey('main-nav-1')));
     await _settle(tester, seconds: 4);
 
     // Test Filter Chips
-    final filterChips = ['All', 'Pending', 'In Progress', 'Completed'];
+    final filterChips = ['Active', 'Today', 'Upcoming', 'Completed'];
     for (final chip in filterChips) {
-      final chipFinder = find.textContaining(chip);
+      final chipFinder = find.text(chip);
       if (chipFinder.evaluate().isNotEmpty) {
         debugPrint('ACTION: Tapping Filter Chip [$chip]');
         await tester.tap(chipFinder.first, warnIfMissed: false);
@@ -153,10 +182,10 @@ void main() {
       }
     }
 
-    // Reset back to All
-    final allChip = find.textContaining('All');
-    if (allChip.evaluate().isNotEmpty) {
-      await tester.tap(allChip.first, warnIfMissed: false);
+    // Reset to the default active queue.
+    final activeChip = find.text('Active');
+    if (activeChip.evaluate().isNotEmpty) {
+      await tester.tap(activeChip.first, warnIfMissed: false);
       await _settle(tester, seconds: 2);
     }
 
@@ -164,25 +193,25 @@ void main() {
     // 4. TEST TAB 2: WALLET & EARNINGS SCREEN
     // ==========================================
     debugPrint('=== [STEP 5] TESTING WALLET & EARNINGS SCREEN ===');
-    navBar.onDestinationSelected?.call(2);
+    await tester.tap(find.byKey(const ValueKey('main-nav-2')));
     await _settle(tester, seconds: 3);
 
-    expect(find.text('Wallet & Earnings'), findsWidgets,
+    expect(find.text('Wallet'), findsWidgets,
         reason: 'Wallet header should be rendered');
-    expect(find.textContaining('WALLET BALANCE'), findsWidgets,
-        reason: 'Wallet balance card should be present');
-    expect(find.textContaining('TRANSACTION HISTORY'), findsWidgets,
+    expect(find.textContaining('Earnings & Payout'), findsWidgets,
+        reason: 'Wallet overview should be present');
+    expect(find.text('Transaction History'), findsWidgets,
         reason: 'Transaction history section should be present');
 
     // ==========================================
     // 5. TEST TAB 3: NOTIFICATIONS / ALERTS SCREEN
     // ==========================================
     debugPrint('=== [STEP 6] TESTING ALERTS & NOTIFICATIONS TABS ===');
-    navBar.onDestinationSelected?.call(3);
+    await tester.tap(find.byKey(const ValueKey('main-nav-3')));
     await _settle(tester, seconds: 3);
 
-    expect(find.text('Alerts'), findsWidgets,
-        reason: 'Alerts screen header should be rendered');
+    expect(find.text('Inbox'), findsWidgets,
+        reason: 'Inbox screen header should be rendered');
 
     // Test sub-tabs: Jobs, Payments, System
     for (final subTab in ['Jobs', 'Payments', 'System']) {
@@ -198,7 +227,7 @@ void main() {
     // 6. TEST TAB 4: PROFILE SCREEN & CONTROLS
     // ==========================================
     debugPrint('=== [STEP 7] TESTING PROFILE SCREEN & CONTROLS ===');
-    navBar.onDestinationSelected?.call(4);
+    await tester.tap(find.byKey(const ValueKey('main-nav-4')));
     await _settle(tester, seconds: 3);
 
     // Profile options & toggles
@@ -217,7 +246,7 @@ void main() {
 
     // Return to Home tab
     debugPrint('=== [STEP 8] RETURNING TO HOME DASHBOARD ===');
-    navBar.onDestinationSelected?.call(0);
+    await tester.tap(find.text('Home').last, warnIfMissed: false);
     await _settle(tester, seconds: 3);
 
     debugPrint(

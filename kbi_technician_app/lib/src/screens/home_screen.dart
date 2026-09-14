@@ -6,7 +6,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 
+import '../config/app_config.dart';
 import '../theme.dart';
 import '../widgets/liquid_glass.dart';
 import 'dashboard_screen.dart';
@@ -84,9 +86,24 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    _offlineDebounce = Timer(const Duration(seconds: 2), () {
-      if (mounted) setState(() => _showOfflineNotice = true);
+    _offlineDebounce = Timer(const Duration(seconds: 2), () async {
+      // Some Android/iOS versions briefly report `none` during a network
+      // handoff even though HTTPS is reachable. Confirm with the KBI endpoint
+      // before showing a disruptive offline banner.
+      final reachable = await _canReachKbi();
+      if (mounted && !reachable) setState(() => _showOfflineNotice = true);
     });
+  }
+
+  Future<bool> _canReachKbi() async {
+    try {
+      final response = await http
+          .get(Uri.parse('${AppConfig.apiBaseUrl}/api/health/firebase'))
+          .timeout(const Duration(seconds: 4));
+      return response.statusCode >= 100;
+    } catch (_) {
+      return false;
+    }
   }
 
   @override
@@ -320,6 +337,7 @@ class _NavigationGlass extends StatelessWidget {
     final children = List.generate(destinations.length, (index) {
       final destination = destinations[index];
       return _NavigationItem(
+        key: ValueKey('main-nav-$index'),
         selected: selectedIndex == index,
         icon: destination.icon,
         selectedIcon: destination.selectedIcon,
@@ -405,6 +423,7 @@ class _NavigationItem extends StatelessWidget {
   final VoidCallback onTap;
 
   const _NavigationItem({
+    super.key,
     required this.selected,
     required this.icon,
     required this.selectedIcon,

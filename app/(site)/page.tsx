@@ -29,7 +29,10 @@ export const metadata: Metadata = {
   },
 }
 
-export const dynamic = "force-static"
+// The home page is the highest-traffic entry point and must never pair cached
+// HTML from an earlier deployment with newer client chunks.
+export const dynamic = "force-dynamic"
+export const revalidate = 0
 
 export default async function Home() {
   const contact = await getSiteContact()
