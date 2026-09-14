@@ -37,6 +37,10 @@ jobs:
           flutter-version: "3.44.1"
           channel: stable
           cache: true
+      - name: Configure Firebase for Android build
+        env:
+          FIREBASE_ANDROID_CONFIG: ${{ secrets.FIREBASE_ANDROID_CONFIG }}
+        run: printf '%s' "$FIREBASE_ANDROID_CONFIG" | base64 --decode > android/app/google-services.json
       - run: flutter pub get
       - run: dart format --output=none --set-exit-if-changed lib test
       - run: flutter analyze
