@@ -54,12 +54,21 @@ android {
         release {
             if (hasReleaseSigning) {
                 signingConfig = signingConfigs.getByName("release")
-            } else {
-                throw GradleException(
-                    "Missing android/key.properties. A Google Play release must use the production signing key."
-                )
             }
         }
+    }
+}
+
+// Keep local/CI debug builds usable without distributing the production key,
+// while still refusing every release task unless real signing is configured.
+gradle.taskGraph.whenReady {
+    val requestsRelease = allTasks.any {
+        it.path.contains("Release", ignoreCase = true)
+    }
+    if (requestsRelease && !hasReleaseSigning) {
+        throw GradleException(
+            "Missing android/key.properties. A Google Play release must use the production signing key."
+        )
     }
 }
 
