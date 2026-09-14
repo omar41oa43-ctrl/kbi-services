@@ -29,7 +29,6 @@ dependencies:
   # Pinned below the JNI-based Android implementation because Flutter 3.44's
   # macOS test runner currently crashes while copying that native test asset.
   shared_preferences: 2.3.5
-  battery_plus: 6.2.3
   connectivity_plus: 6.1.5
   image_picker: ^1.2.3
   http: ^1.2.0
