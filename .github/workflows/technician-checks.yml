@@ -78,4 +78,4 @@ jobs:
         working-directory: functions
       - run: npm run build
         working-directory: functions
-      - run: npm run test:rules
+      - run: npx --yes firebase-tools@15.20.0 emulators:exec --only firestore "node --test scripts/firestore-rules.test.mjs"
