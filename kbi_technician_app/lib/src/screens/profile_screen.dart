@@ -371,7 +371,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xF2FFFFFF),
+      backgroundColor: kbiSurface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -395,7 +395,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           width: 40,
                           height: 4,
                           decoration: const BoxDecoration(
-                            color: Colors.black12,
+                            color: kbiSecondaryLabel,
                             borderRadius: BorderRadius.all(Radius.circular(24)),
                           ),
                         ),
@@ -422,13 +422,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                               child: CircleAvatar(
                                 radius: 50,
-                                backgroundColor: const Color(0xF2FFFFFF),
+                                backgroundColor: kbiSurfaceMuted,
                                 backgroundImage:
                                     _safeImageProvider(newProfilePhotoUrl),
                                 child: _safeImageProvider(newProfilePhotoUrl) ==
                                         null
                                     ? const Icon(Icons.person,
-                                        size: 54, color: Colors.black12)
+                                        size: 54, color: kbiSecondaryLabel)
                                     : null,
                               ),
                             ),
@@ -503,17 +503,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         decoration: const InputDecoration(
                           labelText: 'Vehicle Type',
                           labelStyle:
-                              TextStyle(color: Colors.black54, fontSize: 13),
+                              TextStyle(color: kbiSecondaryLabel, fontSize: 13),
                           prefixIcon: Icon(Icons.directions_car_outlined,
-                              color: Colors.black54, size: 18),
+                              color: kbiSecondaryLabel, size: 18),
                           filled: true,
-                          fillColor: Color(0xF2FFFFFF),
+                          fillColor: kbiSurfaceMuted,
                           border: OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.all(Radius.circular(24)),
                               borderSide: BorderSide.none),
                         ),
-                        dropdownColor: const Color(0xF2FFFFFF),
+                        dropdownColor: kbiSurfaceRaised,
                         style: const TextStyle(color: kbiLabel, fontSize: 14),
                         items: const [
                           DropdownMenuItem(value: 'Car', child: Text('🚗 Car')),
@@ -564,18 +564,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             label: Text(skill,
                                 style: const TextStyle(fontSize: 12)),
                             selected: isSel,
-                            selectedColor:
-                                const Color(0xFF111318).withValues(alpha: 0.3),
-                            checkmarkColor: kbiLabel,
-                            backgroundColor: const Color(0xF2FFFFFF),
+                            selectedColor: kbiBrand.withValues(alpha: 0.2),
+                            checkmarkColor: kbiBrand,
+                            backgroundColor: kbiSurfaceMuted,
                             shape: RoundedRectangleBorder(
                                 borderRadius:
                                     const BorderRadius.all(Radius.circular(24)),
                                 side: BorderSide(
-                                    color: isSel
-                                        ? kbiLabel
-                                        : const Color(0xF2FFFFFF)
-                                            .withValues(alpha: 0.05))),
+                                    color: isSel ? kbiBrand : kbiSeparator)),
                             onSelected: (selected) {
                               setModalState(() {
                                 if (selected) {
@@ -605,18 +601,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             label: Text(area,
                                 style: const TextStyle(fontSize: 12)),
                             selected: isSel,
-                            selectedColor:
-                                const Color(0xFF111318).withValues(alpha: 0.3),
-                            checkmarkColor: kbiLabel,
-                            backgroundColor: const Color(0xF2FFFFFF),
+                            selectedColor: kbiBrand.withValues(alpha: 0.2),
+                            checkmarkColor: kbiBrand,
+                            backgroundColor: kbiSurfaceMuted,
                             shape: RoundedRectangleBorder(
                                 borderRadius:
                                     const BorderRadius.all(Radius.circular(24)),
                                 side: BorderSide(
-                                    color: isSel
-                                        ? kbiLabel
-                                        : const Color(0xF2FFFFFF)
-                                            .withValues(alpha: 0.05))),
+                                    color: isSel ? kbiBrand : kbiSeparator)),
                             onSelected: (selected) {
                               setModalState(() {
                                 if (selected) {
@@ -676,15 +668,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             }
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black,
-                            shadowColor: Colors.black,
+                            backgroundColor: kbiBrand,
+                            foregroundColor: kbiBlack,
+                            shadowColor: kbiBrand,
                             shape: const RoundedRectangleBorder(
                                 borderRadius:
                                     BorderRadius.all(Radius.circular(24))),
                           ),
                           child: const Text('Save Changes',
                               style: TextStyle(
-                                  color: kbiLabel,
+                                  color: kbiBlack,
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold)),
                         ),
@@ -715,10 +708,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         style: const TextStyle(color: kbiLabel, fontSize: 14),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: const TextStyle(color: Colors.black54, fontSize: 13),
-          prefixIcon: Icon(icon, color: Colors.black54, size: 18),
+          labelStyle: const TextStyle(color: kbiSecondaryLabel, fontSize: 13),
+          prefixIcon: Icon(icon, color: kbiSecondaryLabel, size: 18),
           filled: true,
-          fillColor: const Color(0xF2FFFFFF),
+          fillColor: kbiSurfaceMuted,
           border: const OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(24)),
               borderSide: BorderSide.none),
@@ -735,17 +728,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: const Color(0xF2FFFFFF),
+          backgroundColor: kbiSurfaceRaised,
           shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(24))),
           title: const Text('Log Out', style: TextStyle(color: kbiLabel)),
           content: const Text('Are you sure you want to log out?',
-              style: TextStyle(color: Colors.black)),
+              style: TextStyle(color: kbiSecondaryLabel)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child:
-                  const Text('Cancel', style: TextStyle(color: Colors.black54)),
+              child: const Text('Cancel',
+                  style: TextStyle(color: kbiSecondaryLabel)),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -769,7 +762,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: const Color(0xF2FFFFFF),
+          backgroundColor: kbiSurfaceRaised,
           shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(24))),
           title:
@@ -778,7 +771,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text('Enter a new password (min. 6 characters):',
-                  style: TextStyle(color: Colors.black)),
+                  style: TextStyle(color: kbiSecondaryLabel)),
               const SizedBox(height: 12),
               TextField(
                 controller: passController,
@@ -787,7 +780,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 decoration: const InputDecoration(
                   labelText: 'New Password',
                   filled: true,
-                  fillColor: Color(0xF2FFFFFF),
+                  fillColor: kbiSurfaceMuted,
                 ),
               ),
             ],
@@ -795,8 +788,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child:
-                  const Text('Cancel', style: TextStyle(color: Colors.black54)),
+              child: const Text('Cancel',
+                  style: TextStyle(color: kbiSecondaryLabel)),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -1521,7 +1514,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: skills.isEmpty
           ? const Text('No specialized skills configured.',
-              style: TextStyle(color: Colors.black54, fontSize: 13))
+              style: TextStyle(color: kbiSecondaryLabel, fontSize: 13))
           : Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -1529,7 +1522,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 return Chip(
                   label: Text(
                     skill,
-                    style: const TextStyle(color: Colors.black, fontSize: 12.5),
+                    style: const TextStyle(color: kbiLabel, fontSize: 12.5),
                   ),
                   backgroundColor: kbiSurfaceMuted,
                   side: const BorderSide(color: kbiSeparator),

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../models/service_request.dart';
 import '../services/technician_service.dart';
+import '../theme.dart';
 import '../utils/job_utils.dart';
 import 'job_details_screen.dart';
 
@@ -13,26 +14,26 @@ class MyAssignedJobsScreen extends StatelessWidget {
     return DefaultTabController(
       length: 4,
       child: Scaffold(
-        backgroundColor: const Color(0xF2FFFFFF),
+        backgroundColor: kbiBlack,
         appBar: AppBar(
-          backgroundColor: const Color(0xF2FFFFFF),
+          backgroundColor: kbiBlack,
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: Colors.black, size: 20),
+                color: kbiLabel, size: 20),
             onPressed: () => Navigator.pop(context),
           ),
           title: const Text(
             'My Assigned Jobs',
             style: TextStyle(
-                color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
+                color: kbiLabel, fontWeight: FontWeight.bold, fontSize: 18),
           ),
           centerTitle: true,
           bottom: const TabBar(
             isScrollable: true,
-            indicatorColor: Color(0xFF111318),
-            labelColor: Color(0xFF111318),
-            unselectedLabelColor: Colors.black45,
+            indicatorColor: kbiBrand,
+            labelColor: kbiBrand,
+            unselectedLabelColor: kbiSecondaryLabel,
             indicatorWeight: 3,
             tabs: [
               Tab(text: 'Pending'),
@@ -47,7 +48,7 @@ class MyAssignedJobsScreen extends StatelessWidget {
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(
-                  child: CircularProgressIndicator(color: Color(0xFF111318)));
+                  child: CircularProgressIndicator(color: kbiBrand));
             }
             if (snapshot.hasError) {
               return Center(
@@ -56,7 +57,7 @@ class MyAssignedJobsScreen extends StatelessWidget {
                   child: Text(
                     'Assigned jobs could not be loaded.\n${snapshot.error}',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.black54),
+                    style: const TextStyle(color: kbiSecondaryLabel),
                   ),
                 ),
               );
@@ -117,11 +118,11 @@ class MyAssignedJobsScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.assignment_outlined,
-                size: 48, color: Colors.black12),
+                size: 48, color: kbiSecondaryLabel),
             const SizedBox(height: 12),
             Text(
               emptyMessage,
-              style: const TextStyle(color: Colors.black45, fontSize: 14),
+              style: const TextStyle(color: kbiSecondaryLabel, fontSize: 14),
             ),
           ],
         ),
@@ -164,10 +165,10 @@ class MyAssignedJobsScreen extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: const Color(0xFF111318),
+            color: kbiSurfaceRaised,
             borderRadius: const BorderRadius.all(Radius.circular(24)),
             border: Border.all(
-              color: Colors.transparent,
+              color: kbiSeparator,
               width: 1.2,
             ),
             boxShadow: const [
@@ -188,7 +189,7 @@ class MyAssignedJobsScreen extends StatelessWidget {
                   Text(
                     jobId,
                     style: const TextStyle(
-                        color: Color(0xFF111318),
+                        color: kbiBrand,
                         fontWeight: FontWeight.bold,
                         fontSize: 15),
                   ),
@@ -196,16 +197,15 @@ class MyAssignedJobsScreen extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF111318).withValues(alpha: 0.08),
+                      color: kbiSurfaceMuted,
                       borderRadius: const BorderRadius.all(Radius.circular(24)),
-                      border: Border.all(
-                          color:
-                              const Color(0xFF111318).withValues(alpha: 0.2)),
+                      border:
+                          Border.all(color: kbiBrand.withValues(alpha: 0.35)),
                     ),
                     child: Text(
                       status.toUpperCase(),
                       style: const TextStyle(
-                          color: Color(0xFF111318),
+                          color: kbiBrand,
                           fontSize: 10,
                           fontWeight: FontWeight.bold),
                     ),
@@ -266,8 +266,8 @@ class MyAssignedJobsScreen extends StatelessWidget {
                       style:
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF111318),
-                    foregroundColor: Colors.white,
+                    backgroundColor: kbiBrand,
+                    foregroundColor: kbiBlack,
                     shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(Radius.circular(24))),
                     elevation: 0,
@@ -287,19 +287,17 @@ class MyAssignedJobsScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.black38, size: 16),
+          Icon(icon, color: kbiSecondaryLabel, size: 16),
           const SizedBox(width: 8),
           Text(
             '$label: ',
-            style: const TextStyle(color: Colors.black38, fontSize: 12.5),
+            style: const TextStyle(color: kbiSecondaryLabel, fontSize: 12.5),
           ),
           Expanded(
             child: Text(
               value,
               style: const TextStyle(
-                  color: Colors.black87,
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w500),
+                  color: kbiLabel, fontSize: 12.5, fontWeight: FontWeight.w500),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),

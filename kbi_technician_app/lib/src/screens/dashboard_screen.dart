@@ -394,15 +394,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     earningsToday += double.tryParse(amt) ?? 0;
                   }
                 }
-                // Recent Completed Activity
-                final recentCompletedDocs = myJobs.where((d) {
-                  final data = d.data();
-                  if (data == null) return false;
-                  return normalizeJobStatus(data['status']) == 'completed';
-                }).toList()
-                  ..sort((a, b) => (jobDate(b.data() ?? {}) ?? DateTime.now())
-                      .compareTo(jobDate(a.data() ?? {}) ?? DateTime.now()));
-
                 final currentStatusMode = !_isOnline
                     ? 'offline'
                     : (rawStatus == 'busy' ? 'busy' : 'available');
@@ -448,13 +439,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               completedJobs: completedTodayJobs.length,
                               earningsToday: earningsToday,
                               activeJobs: activeTodayJobs.length,
-                              isAr: isAr,
-                            ),
-                            const SizedBox(height: 24),
-
-                            // 6. Recent Activity
-                            _buildRecentActivity(
-                              completedDocs: recentCompletedDocs,
                               isAr: isAr,
                             ),
                           ],
@@ -1734,149 +1718,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ==========================================
-  // 7. RECENT ACTIVITY
-  // ==========================================
-  Widget _buildRecentActivity({
-    required List<DocumentSnapshot<Map<String, dynamic>>> completedDocs,
-    required bool isAr,
-  }) {
-    final topDoc = completedDocs.isNotEmpty ? completedDocs.first : null;
-    final topData = topDoc?.data() ?? <String, dynamic>{};
-    final String ordNum = compactOrderReference(
-      topData,
-      documentId: topDoc?.id ?? 'recent-order',
-    );
-    final String service =
-        (topData['service'] ?? topData['serviceType'] ?? 'Screen Replacement')
-            .toString();
-    final String address =
-        _extractGeneralArea(topData['address']?.toString() ?? 'Al Reem Island');
-    final num amt = topData['finalAmount'] ??
-        topData['totalAmount'] ??
-        topData['price'] ??
-        250;
-
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              isAr ? 'النشاط الأخير' : 'Recent Activity',
-              style: const TextStyle(
-                color: kbiLabel,
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.3,
-              ),
-            ),
-            GestureDetector(
-              onTap: () => widget.onNavigate?.call(1),
-              child: Text(
-                isAr ? 'عرض الكل' : 'View all',
-                style: const TextStyle(
-                  color: kbiBrand,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: kbiSurfaceRaised,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: kbiSeparator),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              // Green Check Circle
-              Container(
-                width: 42,
-                height: 42,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF22C55E),
-                  shape: BoxShape.circle,
-                ),
-                child: const Center(
-                  child:
-                      Icon(Icons.check_rounded, color: Colors.white, size: 22),
-                ),
-              ),
-              const SizedBox(width: 14),
-
-              // Title + Specs + Date
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '$ordNum ${isAr ? 'مكتمل' : 'Completed'}',
-                      style: const TextStyle(
-                        color: kbiLabel,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '$service  •  $address',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: kbiSecondaryLabel,
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      isAr ? 'اليوم، 09:15 ص' : 'Today, 09:15 AM',
-                      style: const TextStyle(
-                        color: kbiSecondaryLabel,
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Price + Chevron
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'AED ${amt.toInt()}',
-                    style: const TextStyle(
-                      color: Color(0xFF16A34A),
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(CupertinoIcons.chevron_forward,
-                      size: 14, color: kbiSecondaryLabel),
-                ],
               ),
             ],
           ),

@@ -208,7 +208,7 @@ class _TechnicianGateState extends State<_TechnicianGate> {
         }
         if (snap.connectionState == ConnectionState.waiting && !snap.hasData) {
           return const Scaffold(
-            backgroundColor: Color(0xFF0F172A),
+            backgroundColor: kbiBlack,
             body: Center(
               child: CircularProgressIndicator(color: kbiBrand),
             ),

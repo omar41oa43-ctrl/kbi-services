@@ -235,7 +235,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                         style: TextButton.styleFrom(
                                           foregroundColor: kbiBlue,
                                           disabledForegroundColor:
-                                              Colors.black12,
+                                              kbiSecondaryLabel,
                                         ),
                                       ),
                               ],
@@ -432,11 +432,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(Icons.notifications_off_outlined,
-              size: 48, color: Colors.black12),
+              size: 48, color: kbiSecondaryLabel),
           const SizedBox(height: 16),
           Text(
             message,
-            style: const TextStyle(color: Colors.black54, fontSize: 13),
+            style: const TextStyle(color: kbiSecondaryLabel, fontSize: 13),
             textAlign: TextAlign.center,
           ),
         ],

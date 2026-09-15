@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../services/technician_service.dart';
+import '../theme.dart';
 
 class EarningsScreen extends StatelessWidget {
   const EarningsScreen({super.key});
@@ -34,7 +35,7 @@ class EarningsScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text('Total',
-                            style: TextStyle(color: Colors.black87)),
+                            style: TextStyle(color: kbiSecondaryLabel)),
                         const SizedBox(height: 6),
                         Text('AED ${total.toStringAsFixed(2)}',
                             style: Theme.of(context).textTheme.headlineMedium),

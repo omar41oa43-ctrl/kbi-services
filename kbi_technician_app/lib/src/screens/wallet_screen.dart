@@ -1244,7 +1244,7 @@ class _WalletScreenState extends State<WalletScreen> {
           Text(
             isAr ? 'لا يوجد سجل معاملات بعد' : 'No transaction history yet',
             style: const TextStyle(
-              color: Color(0xFF475569),
+              color: kbiLabel,
               fontSize: 14,
               fontWeight: FontWeight.w700,
             ),

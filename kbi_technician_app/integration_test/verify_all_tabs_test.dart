@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -19,7 +20,8 @@ Future<void> _settle(WidgetTester tester, {int seconds = 4}) async {
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('Comprehensive Tab & Feature Verification with Artifact Screenshots',
+  testWidgets(
+      'Comprehensive Tab & Feature Verification with Artifact Screenshots',
       (tester) async {
     debugPrint('=== STEP 1: LAUNCHING APP ===');
     final testOnError = FlutterError.onError;
@@ -61,6 +63,12 @@ void main() {
       await _settle(tester, seconds: 7);
     }
 
+    expect(
+      FirebaseAuth.instance.currentUser,
+      isNotNull,
+      reason: 'A valid technician session is required to verify app tabs.',
+    );
+
     debugPrint('=== STEP 3: DASHBOARD SCREEN ===');
     await _settle(tester, seconds: 3);
     final dashBytes = await binding.takeScreenshot('01_dashboard');
@@ -68,6 +76,8 @@ void main() {
 
     // Test NavigationBar tabs
     final navBarFinder = find.byType(NavigationBar);
+    expect(navBarFinder, findsOneWidget,
+        reason: 'Dashboard navigation must be visible after sign-in.');
     if (navBarFinder.evaluate().isNotEmpty) {
       final navBar = tester.widget<NavigationBar>(navBarFinder.first);
 
@@ -90,7 +100,8 @@ void main() {
       navBar.onDestinationSelected?.call(3);
       await _settle(tester, seconds: 4);
       final notifBytes = await binding.takeScreenshot('04_notifications');
-      await File('$_artifactDir/tab_04_notifications.png').writeAsBytes(notifBytes);
+      await File('$_artifactDir/tab_04_notifications.png')
+          .writeAsBytes(notifBytes);
 
       // Tab 4: Profile
       debugPrint('=== STEP 7: PROFILE TAB ===');

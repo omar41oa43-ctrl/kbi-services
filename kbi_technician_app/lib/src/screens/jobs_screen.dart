@@ -911,16 +911,15 @@ class _JobsScreenState extends State<JobsScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.history_rounded, color: Colors.black54, size: 16),
+            const Icon(Icons.history_rounded,
+                color: kbiSecondaryLabel, size: 16),
             const SizedBox(width: 6),
             Text(
               isAr
                   ? 'حالة الطلب: ${localizedJobStatusLabel(status, isArabic: true)}'
                   : 'Order Status: ${status.toUpperCase()}',
               style: const TextStyle(
-                  color: Colors.black87,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold),
+                  color: kbiLabel, fontSize: 11, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -2450,7 +2449,7 @@ class _JobsScreenState extends State<JobsScreen> {
                     ? 'ستظهر الطلبات الجديدة هنا تلقائيًا عند إسنادها إليك.'
                     : 'New assignments from dispatch will appear here automatically.',
                 style: const TextStyle(
-                    color: Colors.black54, fontSize: 13, height: 1.4),
+                    color: kbiSecondaryLabel, fontSize: 13, height: 1.4),
                 textAlign: TextAlign.center),
             const SizedBox(height: 24),
             ElevatedButton.icon(
@@ -2501,7 +2500,7 @@ class _JobsScreenState extends State<JobsScreen> {
             Text(
               isAr ? 'تحقق من الاتصال ثم حاول مرة أخرى.' : '$error',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.black87, fontSize: 12),
+              style: const TextStyle(color: kbiSecondaryLabel, fontSize: 12),
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
