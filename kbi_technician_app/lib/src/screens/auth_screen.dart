@@ -273,7 +273,7 @@ class _AuthScreenState extends State<AuthScreen>
     return Directionality(
       textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: const Color(0xFF0F172A),
+        backgroundColor: kbiBlack,
         body: Stack(
           fit: StackFit.expand,
           children: [
@@ -305,46 +305,27 @@ class _AuthScreenState extends State<AuthScreen>
 
   Widget _buildTechnicianBackground() {
     return LayoutBuilder(
-      builder: (context, constraints) {
-        final targetHeight = constraints.maxHeight * 0.60;
-        final widthForTargetHeight = targetHeight * 1.35;
-        final imageWidth = widthForTargetHeight > constraints.maxWidth
-            ? widthForTargetHeight
-            : constraints.maxWidth;
-        final imageHeight = imageWidth / 1.35;
-        final imageTopOffset = constraints.maxHeight < 650 ? 10.0 : 26.0;
-
-        return ColoredBox(
-          color: const Color(0xFFF1F3F6),
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: Transform.translate(
-              offset: Offset(0, imageTopOffset),
-              child: OverflowBox(
+      builder: (context, constraints) => ColoredBox(
+        color: kbiBlack,
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: SizedBox(
+            width: constraints.maxWidth,
+            height: constraints.maxHeight * 0.64,
+            child: Image.asset(
+              'assets/images/technician-login-hero-dark-v3.png',
+              fit: BoxFit.cover,
+              alignment: const Alignment(0.12, -0.78),
+              filterQuality: FilterQuality.high,
+              errorBuilder: (_, __, ___) => Image.asset(
+                'assets/images/technician-login-bg-v2.png',
+                fit: BoxFit.cover,
                 alignment: Alignment.topCenter,
-                minWidth: imageWidth,
-                maxWidth: imageWidth,
-                minHeight: imageHeight,
-                maxHeight: imageHeight,
-                child: Image.asset(
-                  'assets/images/kbi_welcome_technician.png',
-                  width: imageWidth,
-                  height: imageHeight,
-                  fit: BoxFit.contain,
-                  alignment: Alignment.topCenter,
-                  errorBuilder: (_, __, ___) => Image.asset(
-                    'assets/images/technician-login-bg-v2.png',
-                    width: imageWidth,
-                    height: imageHeight,
-                    fit: BoxFit.contain,
-                    alignment: Alignment.topCenter,
-                  ),
-                ),
               ),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -562,12 +543,12 @@ class _AuthScreenState extends State<AuthScreen>
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.transparent,
-                  Colors.white.withValues(alpha: 0.10),
-                  Colors.white.withValues(alpha: 0.84),
-                  const Color(0xFFF6F8FC),
+                  kbiBlack.withValues(alpha: 0.08),
+                  kbiBlack.withValues(alpha: 0.28),
+                  kbiBlack.withValues(alpha: 0.88),
+                  kbiBlack,
                 ],
-                stops: const [0, 0.25, 0.46, 1],
+                stops: const [0, 0.28, 0.55, 1],
               ),
             ),
           ),
@@ -598,21 +579,20 @@ class _AuthScreenState extends State<AuthScreen>
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.92),
+                          color: kbiSurfaceRaised.withValues(alpha: 0.92),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: Colors.white,
+                            color: kbiSeparator,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF0F172A)
-                                  .withValues(alpha: 0.10),
+                              color: Colors.black.withValues(alpha: 0.38),
                               blurRadius: 18,
                               offset: const Offset(0, 6),
                             ),
                           ],
                         ),
-                        child: const _KbiWordmark(size: 19),
+                        child: const _KbiWordmark(size: 19, dark: true),
                       ),
                       const Spacer(),
                       _buildGlassIconButton(
@@ -635,20 +615,19 @@ class _AuthScreenState extends State<AuthScreen>
                 child: SingleChildScrollView(
                   keyboardDismissBehavior:
                       ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: const EdgeInsets.fromLTRB(18, 175, 18, 16),
+                  padding: const EdgeInsets.fromLTRB(18, 170, 18, 16),
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 430),
                     child: Container(
                       key: const Key('technician-login-form'),
                       padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.96),
+                        color: kbiSurfaceRaised.withValues(alpha: 0.96),
                         borderRadius: BorderRadius.circular(28),
-                        border: Border.all(color: Colors.white),
+                        border: Border.all(color: kbiSeparator),
                         boxShadow: [
                           BoxShadow(
-                            color:
-                                const Color(0xFF0F172A).withValues(alpha: 0.12),
+                            color: Colors.black.withValues(alpha: 0.48),
                             blurRadius: 32,
                             offset: const Offset(0, 14),
                           ),
@@ -663,7 +642,7 @@ class _AuthScreenState extends State<AuthScreen>
                             isArabic ? 'مرحباً بعودتك' : 'Welcome back',
                             textAlign: TextAlign.start,
                             style: const TextStyle(
-                              color: Color(0xFF111827),
+                              color: kbiLabel,
                               fontSize: 28,
                               fontWeight: FontWeight.w900,
                               letterSpacing: -0.9,
@@ -676,7 +655,7 @@ class _AuthScreenState extends State<AuthScreen>
                                 : 'Access your dispatch board and live jobs.',
                             textAlign: TextAlign.start,
                             style: const TextStyle(
-                              color: Color(0xFF64748B),
+                              color: kbiSecondaryLabel,
                               fontSize: 13,
                             ),
                           ),
@@ -715,7 +694,7 @@ class _AuthScreenState extends State<AuthScreen>
                                 _obscurePassword
                                     ? Icons.visibility_off_outlined
                                     : Icons.visibility_outlined,
-                                color: const Color(0xFF64748B),
+                                color: kbiSecondaryLabel,
                                 size: 19,
                               ),
                               onPressed: () => setState(
@@ -759,7 +738,7 @@ class _AuthScreenState extends State<AuthScreen>
                                             border: Border.all(
                                               color: _rememberMe
                                                   ? kbiBrand
-                                                  : const Color(0xFFCBD5E1),
+                                                  : kbiSecondaryLabel,
                                               width: 1.5,
                                             ),
                                           ),
@@ -775,7 +754,7 @@ class _AuthScreenState extends State<AuthScreen>
                                         Text(
                                           isArabic ? 'تذكرني' : 'Remember me',
                                           style: const TextStyle(
-                                            color: Color(0xFF475569),
+                                            color: kbiSecondaryLabel,
                                             fontSize: 12.5,
                                           ),
                                         ),
@@ -827,7 +806,7 @@ class _AuthScreenState extends State<AuthScreen>
                                     child: Text(
                                       _error!,
                                       style: const TextStyle(
-                                        color: Color(0xFFB42318),
+                                        color: kbiLabel,
                                         fontSize: 12,
                                       ),
                                     ),
@@ -848,7 +827,7 @@ class _AuthScreenState extends State<AuthScreen>
                                     onPressed: _loading ? null : _submit,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: kbiBrand,
-                                      foregroundColor: Colors.white,
+                                      foregroundColor: kbiBlack,
                                       elevation: 0,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(16),
@@ -859,7 +838,7 @@ class _AuthScreenState extends State<AuthScreen>
                                             dimension: 20,
                                             child: CircularProgressIndicator(
                                               strokeWidth: 2.2,
-                                              color: Colors.white,
+                                              color: kbiBlack,
                                             ),
                                           )
                                         : Text(
@@ -887,7 +866,7 @@ class _AuthScreenState extends State<AuthScreen>
                               Text(
                                 isArabic ? 'فني جديد؟ ' : 'New technician? ',
                                 style: const TextStyle(
-                                  color: Color(0xFF64748B),
+                                  color: kbiSecondaryLabel,
                                   fontSize: 13,
                                 ),
                               ),
@@ -920,10 +899,10 @@ class _AuthScreenState extends State<AuthScreen>
                               vertical: 10,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF8FAFC),
+                              color: kbiSurfaceMuted,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: const Color(0xFFE2E8F0),
+                                color: kbiSeparator,
                               ),
                             ),
                             child: Column(
@@ -934,7 +913,7 @@ class _AuthScreenState extends State<AuthScreen>
                                     const Icon(
                                       Icons.headset_mic_outlined,
                                       size: 14,
-                                      color: Color(0xFF64748B),
+                                      color: kbiSecondaryLabel,
                                     ),
                                     const SizedBox(width: 6),
                                     Expanded(
@@ -946,7 +925,7 @@ class _AuthScreenState extends State<AuthScreen>
                                         overflow: TextOverflow.ellipsis,
                                         textAlign: TextAlign.center,
                                         style: const TextStyle(
-                                          color: Color(0xFF64748B),
+                                          color: kbiSecondaryLabel,
                                           fontSize: 11.5,
                                           fontWeight: FontWeight.w700,
                                         ),
@@ -974,11 +953,12 @@ class _AuthScreenState extends State<AuthScreen>
                                           padding: const EdgeInsets.symmetric(
                                               vertical: 7),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFFF0FDF4),
+                                            color: kbiBlack.withValues(
+                                                alpha: 0.42),
                                             borderRadius:
                                                 BorderRadius.circular(10),
                                             border: Border.all(
-                                              color: const Color(0xFFDCFCE7),
+                                              color: kbiSeparator,
                                             ),
                                           ),
                                           child: const Row(
@@ -988,7 +968,7 @@ class _AuthScreenState extends State<AuthScreen>
                                               Icon(
                                                 Icons
                                                     .chat_bubble_outline_rounded,
-                                                color: Color(0xFF22C55E),
+                                                color: kbiBrand,
                                                 size: 14,
                                               ),
                                               SizedBox(width: 5),
@@ -999,7 +979,7 @@ class _AuthScreenState extends State<AuthScreen>
                                                   overflow:
                                                       TextOverflow.ellipsis,
                                                   style: TextStyle(
-                                                    color: Color(0xFF15803D),
+                                                    color: kbiLabel,
                                                     fontSize: 11.5,
                                                     fontWeight: FontWeight.w800,
                                                   ),
@@ -1029,11 +1009,12 @@ class _AuthScreenState extends State<AuthScreen>
                                           padding: const EdgeInsets.symmetric(
                                               vertical: 7),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFFEFF6FF),
+                                            color: kbiBlack.withValues(
+                                                alpha: 0.42),
                                             borderRadius:
                                                 BorderRadius.circular(10),
                                             border: Border.all(
-                                              color: const Color(0xFFDBEAFE),
+                                              color: kbiSeparator,
                                             ),
                                           ),
                                           child: const Row(
@@ -1101,7 +1082,7 @@ class _AuthScreenState extends State<AuthScreen>
         Text(
           label,
           style: const TextStyle(
-            color: Color(0xFF334155),
+            color: kbiLabel,
             fontSize: 12.5,
             fontWeight: FontWeight.w700,
           ),
@@ -1111,10 +1092,10 @@ class _AuthScreenState extends State<AuthScreen>
           duration: const Duration(milliseconds: 160),
           height: 52,
           decoration: BoxDecoration(
-            color: const Color(0xFFF5F7FA),
+            color: kbiSurfaceMuted,
             borderRadius: BorderRadius.circular(15),
             border: Border.all(
-              color: focusNode.hasFocus ? kbiBrand : const Color(0xFFDCE3EC),
+              color: focusNode.hasFocus ? kbiBrand : kbiSeparator,
               width: focusNode.hasFocus ? 1.5 : 1.1,
             ),
           ),
@@ -1136,7 +1117,7 @@ class _AuthScreenState extends State<AuthScreen>
                           ? const [AutofillHints.password]
                           : null,
                   style: const TextStyle(
-                    color: Color(0xFF111827),
+                    color: kbiLabel,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -1151,7 +1132,7 @@ class _AuthScreenState extends State<AuthScreen>
                     contentPadding: const EdgeInsets.symmetric(vertical: 15),
                     hintText: hintText,
                     hintStyle: const TextStyle(
-                      color: Color(0xFF94A3B8),
+                      color: kbiSecondaryLabel,
                       fontSize: 13.5,
                     ),
                   ),
@@ -1180,12 +1161,12 @@ class _AuthScreenState extends State<AuthScreen>
         padding: EdgeInsets.symmetric(
             horizontal: text != null ? 14 : 10, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.92),
+          color: kbiSurfaceRaised.withValues(alpha: 0.92),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white),
+          border: Border.all(color: kbiSeparator),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF0F172A).withValues(alpha: 0.10),
+              color: Colors.black.withValues(alpha: 0.38),
               blurRadius: 18,
               offset: const Offset(0, 6),
             ),
@@ -1193,7 +1174,7 @@ class _AuthScreenState extends State<AuthScreen>
         ),
         child: Center(
           child: icon != null
-              ? Icon(icon, color: const Color(0xFF334155), size: 18)
+              ? Icon(icon, color: kbiLabel, size: 18)
               : Text(
                   text!,
                   style: const TextStyle(
@@ -1211,8 +1192,9 @@ class _AuthScreenState extends State<AuthScreen>
 // --- KBI WORDMARK ---
 class _KbiWordmark extends StatelessWidget {
   final double size;
+  final bool dark;
 
-  const _KbiWordmark({this.size = 26});
+  const _KbiWordmark({this.size = 26, this.dark = false});
 
   @override
   Widget build(BuildContext context) {
@@ -1221,7 +1203,7 @@ class _KbiWordmark extends StatelessWidget {
       child: RichText(
         text: TextSpan(
           style: TextStyle(
-            color: const Color(0xFF111318),
+            color: dark ? kbiLabel : const Color(0xFF111318),
             fontSize: size,
             fontWeight: FontWeight.w900,
             letterSpacing: -1.2,
