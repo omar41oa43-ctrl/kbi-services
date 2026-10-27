@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kbi_technician_app/src/screens/auth_screen.dart';
@@ -11,6 +12,19 @@ import 'package:kbi_technician_app/src/screens/request_received_screen.dart';
 import 'package:kbi_technician_app/src/theme.dart';
 
 void main() {
+  setUpAll(() async {
+    const output = String.fromEnvironment('REVIEW_SCREENSHOTS');
+    if (output.isNotEmpty && Platform.isMacOS) {
+      final textFont = FontLoader('Roboto')
+        ..addFont(Future.value(ByteData.sublistView(
+            File('/System/Library/Fonts/Supplemental/Arial Unicode.ttf')
+                .readAsBytesSync())));
+      final iconFont = FontLoader('MaterialIcons')
+        ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
+      await textFont.load();
+      await iconFont.load();
+    }
+  });
   test('primary and secondary text meet WCAG AA on every app surface', () {
     for (final surface in [
       kbiBlack,
@@ -74,11 +88,13 @@ void main() {
         const output = String.fromEnvironment('REVIEW_SCREENSHOTS');
         if (output.isNotEmpty) {
           await tester.runAsync(() async {
-            final render = boundary.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+            final render = boundary.currentContext!.findRenderObject()!
+                as RenderRepaintBoundary;
             final image = await render.toImage(pixelRatio: 2);
             final data = await image.toByteData(format: ui.ImageByteFormat.png);
             await Directory(output).create(recursive: true);
-            await File('$output/$screen-$language.png').writeAsBytes(data!.buffer.asUint8List());
+            await File('$output/$screen-$language.png')
+                .writeAsBytes(data!.buffer.asUint8List());
             image.dispose();
           });
         }
