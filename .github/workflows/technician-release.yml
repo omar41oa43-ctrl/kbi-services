@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: kbi_technician_app
+        working-directory: "last kbi app"
 
     steps:
       - uses: actions/checkout@v5
@@ -79,7 +79,7 @@ jobs:
           fi
           "$BUILD_TOOLS_DIR/aapt" dump badging \
             build/app/outputs/flutter-apk/app-release.apk | tee build/release-badging.txt
-          grep -F "package: name='ae.kbi.kbi_technician_app' versionCode='11' versionName='1.4.4'" \
+          grep -F "package: name='ae.kbi.kbi_technician_app' versionCode='12' versionName='1.4.5'" \
             build/release-badging.txt
           grep -F "targetSdkVersion:'36'" build/release-badging.txt
           sha256sum \

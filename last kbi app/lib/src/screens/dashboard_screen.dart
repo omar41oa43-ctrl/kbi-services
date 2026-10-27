@@ -1,0 +1,1791 @@
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart' as fmap;
+import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart' as latlng;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../models/service_request.dart';
+import '../services/location_tracking_service.dart';
+import '../services/technician_service.dart';
+import '../theme.dart';
+import '../utils/job_utils.dart';
+import '../widgets/stable_profile_image.dart';
+import 'job_details_screen.dart';
+import 'notifications_screen.dart';
+
+class DashboardScreen extends StatefulWidget {
+  final Locale locale;
+  final void Function(Locale) onLocaleChanged;
+  final ValueChanged<int>? onNavigate;
+
+  const DashboardScreen({
+    super.key,
+    required this.onLocaleChanged,
+    required this.locale,
+    this.onNavigate,
+  });
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen>
+    with WidgetsBindingObserver {
+  bool _isOnline = true;
+  bool _canGoOnline = true;
+  bool _initialAutoOnlineTriggered = false;
+  bool _isUpdatingAvailability = false;
+
+  late final Stream<DocumentSnapshot<Map<String, dynamic>>> _techStream;
+  late final Stream<List<DocumentSnapshot<Map<String, dynamic>>>> _jobsStream;
+  bool _restoredLocationTracking = false;
+  Future<void>? _locationSetupFuture;
+  bool _locationIssueDialogVisible = false;
+  String? _lastRemoteCommandId;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _techStream = TechnicianService.instance.watchMyTechDoc();
+    _jobsStream = TechnicianService.instance.watchMyJobDocs();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _isOnline) {
+      unawaited(_requestLocationTracking(refresh: true));
+    }
+  }
+
+  Future<void> _restoreLocationTracking(String uid) async {
+    await _requestLocationTracking();
+  }
+
+  Future<void> _requestLocationTracking({bool refresh = false}) {
+    final current = _locationSetupFuture;
+    if (current != null) return current;
+
+    final operation = _runLocationSetup(refresh: refresh);
+    _locationSetupFuture = operation;
+    return operation.whenComplete(() {
+      if (identical(_locationSetupFuture, operation)) {
+        _locationSetupFuture = null;
+      }
+    });
+  }
+
+  Future<void> _runLocationSetup({required bool refresh}) async {
+    try {
+      if (!await _ensureLocationDisclosure()) {
+        await TechnicianService.instance.updateLocationTrackingState(
+          permissionStatus: 'not_requested',
+          servicesEnabled: true,
+          trackingActive: false,
+          issue: 'disclosureDeclined',
+        );
+        return;
+      }
+      if (refresh) {
+        await LocationTrackingService.instance.refreshNow(
+          requestPermission: true,
+        );
+      } else {
+        await LocationTrackingService.instance.start(
+          requestPermission: true,
+        );
+      }
+    } on LocationTrackingException catch (error) {
+      debugPrint('Location tracking permission notice: $error');
+      await _showLocationIssue(error.issue);
+    } catch (error) {
+      debugPrint('Could not start location tracking: $error');
+    }
+  }
+
+  Future<bool> _ensureLocationDisclosure() async {
+    const preferenceKey = 'background_location_disclosure_accepted';
+    final preferences = await SharedPreferences.getInstance();
+    if (preferences.getBool(preferenceKey) == true) return true;
+    if (!mounted) return false;
+
+    final isAr = widget.locale.languageCode == 'ar';
+    final accepted = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+            isAr ? 'السماح بتتبع الموقع GPS' : 'Allow GPS location tracking'),
+        content: Text(
+          isAr
+              ? 'يجمع تطبيق KBI Technician بيانات موقعك لمشاركة وقت الوصول المتوقع وتقدم المهمة مع فريق التوزيع والعملاء أثناء دوامك أو تنفيذ خدمة نشطة، حتى عندما يكون التطبيق في الخلفية. يمكنك إيقاف المشاركة بالتحول إلى وضع غير متصل.'
+              : 'Allow KBI Technician to use GPS so dispatch can see your live location, calculate ETA, and coordinate active jobs—even while the app is in the background. You can stop sharing by going offline.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(isAr ? 'ليس الآن' : 'Not now'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(isAr ? 'السماح بالموقع' : 'Allow location'),
+          ),
+        ],
+      ),
+    );
+    if (accepted == true) {
+      await preferences.setBool(preferenceKey, true);
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> _showLocationIssue(LocationTrackingIssue issue) async {
+    if (!mounted || _locationIssueDialogVisible) return;
+    _locationIssueDialogVisible = true;
+    final isAr = widget.locale.languageCode == 'ar';
+    final servicesOff = issue == LocationTrackingIssue.servicesDisabled;
+    final permanentlyDenied =
+        issue == LocationTrackingIssue.permissionPermanentlyDenied;
+    final title = servicesOff
+        ? (isAr ? 'خدمات الموقع متوقفة' : 'Location services are off')
+        : (isAr ? 'إذن الموقع مطلوب' : 'Location permission required');
+    final message = servicesOff
+        ? (isAr
+            ? 'شغّل خدمات الموقع في إعدادات الهاتف ليتمكن فريق التوزيع من رؤية موقعك المباشر.'
+            : 'Turn on Location Services in phone settings so dispatch can receive your live GPS position.')
+        : (isAr
+            ? 'اسمح لتطبيق KBI Technician بالوصول إلى الموقع أثناء الاستخدام ودائماً عند توفر الخيار.'
+            : 'Allow KBI Technician to access your location. Choose While Using the App, then Always when that option is available.');
+
+    try {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(isAr ? 'ليس الآن' : 'Not now'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                Navigator.pop(dialogContext);
+                if (servicesOff) {
+                  await Geolocator.openLocationSettings();
+                } else if (permanentlyDenied ||
+                    issue == LocationTrackingIssue.permissionDenied) {
+                  await Geolocator.openAppSettings();
+                }
+              },
+              child: Text(isAr ? 'فتح الإعدادات' : 'Open settings'),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      _locationIssueDialogVisible = false;
+    }
+  }
+
+  void _handlePendingLocationRequest(Map<String, dynamic>? techData) {
+    final command = techData?['pendingRemoteCommand'];
+    if (command is! Map) return;
+    final action = command['action']?.toString();
+    final commandId = (command['cmdId'] ?? command['timestamp'])?.toString();
+    if (action != 'REQUEST_LOCATION' ||
+        commandId == null ||
+        commandId == _lastRemoteCommandId) {
+      return;
+    }
+
+    _lastRemoteCommandId = commandId;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _requestLocationTracking(refresh: true);
+    });
+  }
+
+  Future<void> _setAvailabilityMode(String mode) async {
+    if (_isUpdatingAvailability) return;
+    final cleanMode = mode.toLowerCase().trim();
+    if (cleanMode == 'available' && !_canGoOnline) {
+      if (mounted) {
+        final isAr = widget.locale.languageCode == 'ar';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isAr
+                  ? 'الحساب بانتظار الموافقة أو موقوف، ولا يمكن الاتصال الآن.'
+                  : 'Account awaiting approval or suspended. Cannot go online.',
+            ),
+            backgroundColor: kbiRed,
+          ),
+        );
+      }
+      return;
+    }
+
+    final isOnline = cleanMode != 'offline';
+    final isAvailable = cleanMode == 'available';
+    final previousIsOnline = _isOnline;
+
+    setState(() {
+      _isOnline = isOnline;
+      _isUpdatingAvailability = true;
+    });
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw StateError('No signed-in technician');
+      }
+
+      final techRef =
+          FirebaseFirestore.instance.collection('technicians').doc(user.uid);
+      await techRef.set({
+        'isOnline': isOnline,
+        'online': isOnline,
+        'isAvailable': isAvailable,
+        'available': isAvailable,
+        'availability': cleanMode,
+        'status': cleanMode == 'busy'
+            ? 'BUSY'
+            : (isAvailable ? 'AVAILABLE' : 'OFFLINE'),
+        'lastActive': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      // Change the local GPS service only after the availability update has
+      // reached Firestore. A failed offline request must not silently stop
+      // dispatch tracking while the server still sees the technician online.
+      if (isOnline) {
+        try {
+          await _requestLocationTracking();
+        } catch (error) {
+          debugPrint('Location tracking notice: $error');
+        }
+      } else {
+        await LocationTrackingService.instance.stop();
+      }
+    } catch (error) {
+      debugPrint('Status update exception: $error');
+      if (mounted) {
+        setState(() => _isOnline = previousIsOnline);
+        final isAr = widget.locale.languageCode == 'ar';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isAr
+                  ? 'تعذر تحديث حالتك. تحقق من الاتصال ثم حاول مرة أخرى.'
+                  : 'Could not update your status. Check your connection and try again.',
+            ),
+            backgroundColor: kbiRed,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUpdatingAvailability = false);
+    }
+  }
+
+  String _extractGeneralArea(String? fullAddress) {
+    if (fullAddress == null || fullAddress.trim().isEmpty) {
+      return 'UAE Service Area';
+    }
+    final parts = fullAddress.split(',');
+    if (parts.length >= 2) {
+      return '${parts[0].trim()}, ${parts[1].trim()}';
+    }
+    return fullAddress.trim();
+  }
+
+  void _openNavigation(double? lat, double? lng, String address) async {
+    final hasCoords = lat != null && lng != null && (lat != 0 || lng != 0);
+    Uri uri;
+    if (hasCoords) {
+      uri = Uri.parse('https://maps.apple.com/?daddr=$lat,$lng&dirflg=d');
+      if (!await canLaunchUrl(uri)) {
+        uri = Uri.parse(
+            'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
+      }
+    } else {
+      final enc = Uri.encodeComponent(address);
+      uri = Uri.parse('https://maps.apple.com/?daddr=$enc&dirflg=d');
+    }
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    final isAr = widget.locale.languageCode == 'ar';
+
+    return Directionality(
+      textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          stream: _techStream,
+          builder: (context, techSnap) {
+            final techData = techSnap.data?.data();
+            _handlePendingLocationRequest(techData);
+            final String techName = techData?['full_name'] ??
+                techData?['name'] ??
+                user?.displayName ??
+                'Ahmed';
+            final rawStatus =
+                (techData?['status'] ?? techData?['availability'] ?? '')
+                    .toString()
+                    .toLowerCase()
+                    .trim();
+            final isExplicitlyOffline = rawStatus == 'offline' ||
+                rawStatus == 'standby' ||
+                techData?['online'] == false;
+
+            _canGoOnline = techData?['isSuspended'] != true &&
+                techData?['isLocked'] != true &&
+                techData?['appAccessEnabled'] != false;
+
+            _isOnline = _canGoOnline && !isExplicitlyOffline;
+
+            if (_canGoOnline &&
+                (rawStatus.isEmpty ||
+                    rawStatus == 'approved' ||
+                    rawStatus == 'active') &&
+                !_initialAutoOnlineTriggered) {
+              _initialAutoOnlineTriggered = true;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _setAvailabilityMode('available');
+              });
+            }
+
+            if (_isOnline && user != null && !_restoredLocationTracking) {
+              _restoredLocationTracking = true;
+              WidgetsBinding.instance.addPostFrameCallback(
+                (_) => _restoreLocationTracking(user.uid),
+              );
+            }
+
+            final String techId =
+                (techData?['employeeId'] ?? techData?['techId'] ?? 'KBI-007396')
+                    .toString();
+            final String photoUrl = (techData?['profile_photo'] ??
+                    techData?['photoUrl'] ??
+                    techData?['avatarUrl'] ??
+                    techData?['photoURL'] ??
+                    techData?['profilePhoto'] ??
+                    user?.photoURL ??
+                    '')
+                .toString();
+            return StreamBuilder<List<DocumentSnapshot<Map<String, dynamic>>>>(
+              stream: _jobsStream,
+              builder: (context, jobsSnap) {
+                final myJobs = jobsSnap.data ?? [];
+
+                // Feature a new, unaccepted dispatch before work already in
+                // progress. Within the same stage, the newest update wins.
+                final featuredJobs = myJobs.where((doc) {
+                  final data = doc.data();
+                  if (data == null) return false;
+                  return jobHomePriority(data['status']) < 3;
+                }).toList()
+                  ..sort((left, right) {
+                    final leftData = left.data() ?? <String, dynamic>{};
+                    final rightData = right.data() ?? <String, dynamic>{};
+                    final priorityComparison = jobHomePriority(
+                      leftData['status'],
+                    ).compareTo(jobHomePriority(rightData['status']));
+                    if (priorityComparison != 0) return priorityComparison;
+
+                    final leftDate = TechnicianService.extractDocDate(leftData);
+                    final rightDate =
+                        TechnicianService.extractDocDate(rightData);
+                    if (leftDate == null && rightDate == null) return 0;
+                    if (leftDate == null) return 1;
+                    if (rightDate == null) return -1;
+                    return rightDate.compareTo(leftDate);
+                  });
+                final activeJobDoc =
+                    featuredJobs.isEmpty ? null : featuredJobs.first;
+
+                final todayJobs = myJobs.where((d) {
+                  final data = d.data();
+                  return data != null &&
+                      isSameLocalDay(jobDate(data), DateTime.now());
+                }).toList();
+
+                final completedTodayJobs = todayJobs.where((d) {
+                  final data = d.data();
+                  if (data == null) return false;
+                  return isJobCompleted(data['status']);
+                }).toList();
+
+                final activeTodayJobs = todayJobs.where((d) {
+                  final data = d.data();
+                  if (data == null) return false;
+                  final s = normalizeJobStatus(data['status']);
+                  return !isJobClosed(s);
+                }).toList();
+
+                double earningsToday = 0;
+                for (final doc in completedTodayJobs) {
+                  final data = doc.data() ?? {};
+                  final amt = data['finalAmount'] ??
+                      data['totalAmount'] ??
+                      data['finalPrice'] ??
+                      data['price'] ??
+                      0;
+                  if (amt is num) {
+                    earningsToday += amt.toDouble();
+                  } else if (amt is String) {
+                    earningsToday += double.tryParse(amt) ?? 0;
+                  }
+                }
+                final currentStatusMode = !_isOnline
+                    ? 'offline'
+                    : (rawStatus == 'busy' ? 'busy' : 'available');
+                final gpsPosition =
+                    LocationTrackingService.instance.lastPosition;
+                final hasFreshGps = gpsPosition != null &&
+                    !gpsPosition.isMocked &&
+                    DateTime.now().difference(gpsPosition.timestamp).abs() <=
+                        const Duration(minutes: 2);
+
+                return SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(
+                      parent: BouncingScrollPhysics()),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 500),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(18, 16, 18, 140),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // 1. Technician header and compact availability control
+                            _buildHeader(
+                              name: techName,
+                              techId: techId,
+                              photoUrl: photoUrl,
+                              currentMode: currentStatusMode,
+                              hasFreshGps: hasFreshGps,
+                              isAr: isAr,
+                            ),
+                            const SizedBox(height: 22),
+
+                            // 4. Next Job Section Header + Card
+                            _buildNextJobSection(
+                              activeJobDoc: activeJobDoc,
+                              isAr: isAr,
+                            ),
+                            const SizedBox(height: 24),
+
+                            // 5. Today Overview Header + 3 Metric Cards
+                            _buildTodayOverview(
+                              jobsToday: todayJobs.length,
+                              completedJobs: completedTodayJobs.length,
+                              earningsToday: earningsToday,
+                              activeJobs: activeTodayJobs.length,
+                              isAr: isAr,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  // ==========================================
+  // 1. HEADER
+  // ==========================================
+  Widget _buildHeader({
+    required String name,
+    required String techId,
+    required String photoUrl,
+    required String currentMode,
+    required bool hasFreshGps,
+    required bool isAr,
+  }) {
+    final statusColor = currentMode == 'available'
+        ? kbiSuccess
+        : currentMode == 'busy'
+            ? kbiOrange
+            : const Color(0xFF94A3B8);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: kbiSurfaceRaised,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: kbiSeparator),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.36),
+            blurRadius: 22,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: kbiSurfaceMuted,
+                    ),
+                    child: ClipOval(
+                      child: StableProfileImage(
+                        source: photoUrl,
+                        width: 56,
+                        height: 56,
+                        semanticsLabel: '$name profile photo',
+                        fallback: _buildAvatarFallback(name),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: isAr ? null : 0,
+                    left: isAr ? 0 : null,
+                    bottom: 1,
+                    child: Container(
+                      width: 15,
+                      height: 15,
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: kbiSurfaceRaised, width: 3),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      isAr ? 'مرحباً بعودتك' : 'Welcome back',
+                      style: const TextStyle(
+                        color: kbiSecondaryLabel,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: kbiLabel,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    GestureDetector(
+                      onTap: () {
+                        Clipboard.setData(ClipboardData(text: techId));
+                        HapticFeedback.selectionClick();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(isAr
+                                ? 'تم نسخ المعرف: $techId'
+                                : 'Copied ID: $techId'),
+                            duration: const Duration(seconds: 1),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              techId,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: kbiSecondaryLabel,
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(Icons.copy_rounded,
+                              size: 12, color: kbiSecondaryLabel),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: kbiSurfaceMuted,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: kbiSeparator),
+                ),
+                child: IconButton(
+                  tooltip: isAr ? 'الإشعارات' : 'Notifications',
+                  icon: const Icon(CupertinoIcons.bell,
+                      size: 19, color: kbiLabel),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      CupertinoPageRoute(
+                          builder: (_) => const NotificationsScreen()),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 15),
+          SizedBox(
+            width: double.infinity,
+            child: CupertinoSlidingSegmentedControl<String>(
+              groupValue: currentMode,
+              backgroundColor: kbiBlack,
+              thumbColor: kbiSurfaceMuted,
+              padding: const EdgeInsets.all(4),
+              children: {
+                'available': _buildStatusSegment(
+                  title: isAr ? 'متصل' : 'Online',
+                  color: kbiSuccess,
+                  selected: currentMode == 'available',
+                ),
+                'busy': _buildStatusSegment(
+                  title: isAr ? 'مشغول' : 'Busy',
+                  color: kbiOrange,
+                  selected: currentMode == 'busy',
+                ),
+                'offline': _buildStatusSegment(
+                  title: isAr ? 'خارج' : 'Offline',
+                  color: const Color(0xFF94A3B8),
+                  selected: currentMode == 'offline',
+                ),
+              },
+              onValueChanged: (value) {
+                if (value == null || value == currentMode) return;
+                HapticFeedback.selectionClick();
+                _setAvailabilityMode(value);
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+            decoration: BoxDecoration(
+              color: kbiBlack,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                _buildTelemetryItem(
+                  icon: Icons.location_on_rounded,
+                  color: hasFreshGps ? kbiSuccess : kbiOrange,
+                  label: hasFreshGps
+                      ? (isAr ? 'الموقع مباشر' : 'GPS live')
+                      : (isAr ? 'بانتظار GPS' : 'Waiting for GPS'),
+                ),
+                const Spacer(),
+                _buildTelemetryItem(
+                  icon: CupertinoIcons.arrow_2_circlepath,
+                  color: hasFreshGps ? kbiBrand : const Color(0xFF94A3B8),
+                  label: hasFreshGps
+                      ? (isAr ? 'مزامن الآن' : 'Synced now')
+                      : (isAr ? 'غير مزامن' : 'Not synced'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusSegment({
+    required String title,
+    required Color color,
+    required bool selected,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 5),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: selected ? kbiLabel : kbiSecondaryLabel,
+                fontSize: 12,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTelemetryItem({
+    required IconData icon,
+    required Color color,
+    required String label,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: const TextStyle(
+            color: kbiSecondaryLabel,
+            fontSize: 10.5,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAvatarFallback(String name) {
+    return Container(
+      color: kbiSurfaceMuted,
+      alignment: Alignment.center,
+      child: Text(
+        name.isNotEmpty ? name[0].toUpperCase() : 'A',
+        style: const TextStyle(
+          color: kbiLabel,
+          fontSize: 22,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+
+  // ==========================================
+  // 4. NEXT JOB SECTION & CARD
+  // ==========================================
+  Widget _buildEmptyNextJobSection({required bool isAr}) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              isAr ? 'الطلب القادم' : 'Next Job',
+              style: const TextStyle(
+                color: kbiLabel,
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.3,
+              ),
+            ),
+            GestureDetector(
+              onTap: () => widget.onNavigate?.call(1),
+              child: Text(
+                isAr ? 'عرض الكل' : 'View all',
+                style: const TextStyle(
+                  color: kbiBrand,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(22),
+          decoration: BoxDecoration(
+            color: kbiSurfaceRaised,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: kbiSeparator),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: kbiBlue.withValues(alpha: 0.09),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: const Icon(
+                  CupertinoIcons.bell,
+                  color: kbiBlue,
+                  size: 21,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isAr ? 'جاهز لطلب جديد' : 'Ready for a new order',
+                      style: const TextStyle(
+                        color: kbiLabel,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isAr
+                          ? 'سيظهر أي طلب جديد هنا فور تعيينه لك.'
+                          : 'A new dispatch will appear here as soon as it is assigned to you.',
+                      style: const TextStyle(
+                        color: kbiSecondaryLabel,
+                        fontSize: 12,
+                        height: 1.4,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNextJobSection({
+    required DocumentSnapshot<Map<String, dynamic>>? activeJobDoc,
+    required bool isAr,
+  }) {
+    if (activeJobDoc == null) {
+      return _buildEmptyNextJobSection(isAr: isAr);
+    }
+
+    final data = activeJobDoc.data() ?? <String, dynamic>{};
+    final String orderNum = compactOrderReference(
+      data,
+      documentId: activeJobDoc.id,
+    );
+    final rawDevices = data['devices'];
+    final firstDevice =
+        rawDevices is List && rawDevices.isNotEmpty ? rawDevices.first : null;
+    final firstDeviceData =
+        firstDevice is Map ? Map<String, dynamic>.from(firstDevice) : null;
+    final fallbackDevice = [
+      firstDeviceData?['brand'],
+      firstDeviceData?['model'],
+    ]
+        .where((value) => value != null && value.toString().trim().isNotEmpty)
+        .join(' ');
+    final String device = (data['device'] ??
+            data['deviceModel'] ??
+            (fallbackDevice.isEmpty
+                ? (isAr ? 'صيانة جهاز' : 'Device repair')
+                : fallbackDevice))
+        .toString();
+    final String service = localizedJobContentLabel(
+        data['service'] ??
+            data['serviceType'] ??
+            data['issue'] ??
+            firstDeviceData?['issue'] ??
+            data['description'] ??
+            (isAr ? 'تفاصيل الخدمة قيد التحديث' : 'Service details pending'),
+        isArabic: isAr);
+    final rawAddress = data['address']?.toString();
+    final String address = rawAddress == null || rawAddress.trim().isEmpty
+        ? (isAr ? 'نطاق الخدمة داخل الإمارات' : 'UAE Service Area')
+        : _extractGeneralArea(rawAddress);
+    final rawTimeSlot = data['scheduledTime'] ?? data['timeSlot'];
+    final String? timeSlot = rawTimeSlot?.toString().trim().isNotEmpty == true
+        ? rawTimeSlot.toString().trim()
+        : null;
+    final String phone =
+        (data['customerPhone'] ?? data['phone'] ?? '').toString();
+    final String rawStatus = normalizeJobStatus(data['status']);
+    final bool isNewAssignment = jobHomePriority(rawStatus) == 0;
+    final String statusPillLabel = isNewAssignment
+        ? (isAr ? 'طلب جديد' : 'New Assignment')
+        : localizedJobStatusLabel(rawStatus, isArabic: isAr);
+    final Color statusColor = jobStatusColor(rawStatus);
+    final rawAmount = data['assignedPrice'] ??
+        data['totalAmount'] ??
+        data['price'] ??
+        data['cost'];
+    final amount = rawAmount is num
+        ? rawAmount.toDouble()
+        : double.tryParse(rawAmount?.toString() ?? '');
+
+    // -------------------------------------------------------------
+    // Extract Real Destination Location and Calculate Live Distance & ETA
+    // -------------------------------------------------------------
+    final rawLat = data['latitude'] ??
+        (data['location'] is Map ? (data['location'] as Map)['lat'] : null);
+    final rawLng = data['longitude'] ??
+        (data['location'] is Map ? (data['location'] as Map)['lng'] : null);
+    final bool hasDestination = rawLat is num && rawLng is num;
+    final double destLat = hasDestination ? rawLat.toDouble() : 25.2048;
+    final double destLng = hasDestination ? rawLng.toDouble() : 55.2708;
+    final latlng.LatLng jobPoint = latlng.LatLng(destLat, destLng);
+
+    // Get current tech position
+    final Position? techPos = LocationTrackingService.instance.lastPosition;
+    final latlng.LatLng? rawTechPoint = techPos == null
+        ? null
+        : latlng.LatLng(techPos.latitude, techPos.longitude);
+    final bool techLocationIsInServiceArea = rawTechPoint != null &&
+        rawTechPoint.latitude >= 22.5 &&
+        rawTechPoint.latitude <= 26.5 &&
+        rawTechPoint.longitude >= 51.0 &&
+        rawTechPoint.longitude <= 56.7;
+    final latlng.LatLng? techPoint =
+        techLocationIsInServiceArea ? rawTechPoint : null;
+
+    // Calculate real road distance (or geodesic fallback)
+    final double? distanceMeters = hasDestination && techPoint != null
+        ? Geolocator.distanceBetween(
+            techPoint.latitude,
+            techPoint.longitude,
+            destLat,
+            destLng,
+          )
+        : null;
+
+    // Real distance display
+    final String distanceDisplay = distanceMeters == null
+        ? (isAr ? 'غير متاحة' : 'Unavailable')
+        : distanceMeters < 1000
+            ? '${distanceMeters.round()} ${isAr ? 'م' : 'm'}'
+            : '${(distanceMeters / 1000).toStringAsFixed(1)} ${isAr ? 'كم' : 'km'}';
+
+    // Real ETA calculation: assume average city traffic speed 35 km/h
+    final int? etaMinutes = distanceMeters == null
+        ? null
+        : ((distanceMeters / 1000) / 35 * 60).round().clamp(1, 180);
+    final String etaDisplay = etaMinutes == null
+        ? (isAr ? 'غير متاح' : 'Unavailable')
+        : etaMinutes < 60
+            ? '$etaMinutes ${isAr ? 'د' : 'min'}'
+            : '${etaMinutes ~/ 60}${isAr ? 'س' : 'h'} ${etaMinutes % 60}${isAr ? 'د' : 'm'}';
+
+    // Midpoint for map camera center
+    final latlng.LatLng mapCenter = techPoint == null
+        ? jobPoint
+        : latlng.LatLng(
+            (techPoint.latitude + destLat) / 2,
+            (techPoint.longitude + destLng) / 2,
+          );
+
+    return Column(
+      children: [
+        // Section Header
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              isNewAssignment
+                  ? (isAr ? 'طلب جديد' : 'New Assignment')
+                  : (isAr ? 'الطلب القادم' : 'Next Job'),
+              style: const TextStyle(
+                color: kbiLabel,
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.3,
+              ),
+            ),
+            GestureDetector(
+              onTap: () => widget.onNavigate?.call(1),
+              child: Text(
+                isAr ? 'عرض الكل' : 'View all',
+                style: const TextStyle(
+                  color: kbiBrand,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // Main Card
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              CupertinoPageRoute(
+                builder: (_) => JobDetailsScreen(
+                    job: ServiceRequestModel.fromDoc(activeJobDoc)),
+              ),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: kbiSurfaceRaised,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: kbiSeparator),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Clear order identity and price, followed by a wide map.
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: statusColor.withValues(alpha: 0.24),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isNewAssignment
+                                ? CupertinoIcons.bell_fill
+                                : CupertinoIcons.location_north_fill,
+                            size: 12,
+                            color: statusColor,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            statusPillLabel,
+                            style: TextStyle(
+                              color: statusColor,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Spacer(),
+                    if (amount != null && amount > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: kbiBrand.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(11),
+                        ),
+                        child: Text(
+                          'AED ${amount.toStringAsFixed(0)}',
+                          textDirection: TextDirection.ltr,
+                          style: const TextStyle(
+                            color: kbiBrand,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  orderNum,
+                  textDirection: TextDirection.ltr,
+                  style: const TextStyle(
+                    color: kbiLabel,
+                    fontSize: 21,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  device,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: kbiLabel,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                Text(
+                  service,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: kbiSecondaryLabel,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  height: 150,
+                  decoration: BoxDecoration(
+                    color: kbiBlack,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: kbiSeparator),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (hasDestination)
+                          AbsorbPointer(
+                            child: fmap.FlutterMap(
+                              options: fmap.MapOptions(
+                                initialCenter: mapCenter,
+                                initialZoom: 14.5,
+                                initialCameraFit: techPoint == null
+                                    ? null
+                                    : fmap.CameraFit.coordinates(
+                                        coordinates: [techPoint, jobPoint],
+                                        padding: const EdgeInsets.fromLTRB(
+                                            44, 28, 44, 48),
+                                        maxZoom: 15,
+                                      ),
+                                interactionOptions:
+                                    const fmap.InteractionOptions(
+                                  flags: fmap.InteractiveFlag.none,
+                                ),
+                              ),
+                              children: [
+                                fmap.TileLayer(
+                                  urlTemplate:
+                                      'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
+                                  subdomains: const ['a', 'b', 'c', 'd'],
+                                  userAgentPackageName:
+                                      'ae.kbi.kbiTechnicianApp',
+                                  maxZoom: 19,
+                                ),
+                                if (techPoint != null)
+                                  fmap.PolylineLayer(
+                                    polylines: [
+                                      fmap.Polyline(
+                                        points: [techPoint, jobPoint],
+                                        color: kbiBrand,
+                                        strokeWidth: 4,
+                                        borderColor: kbiBlack,
+                                        borderStrokeWidth: 2,
+                                      ),
+                                    ],
+                                  ),
+                                fmap.MarkerLayer(
+                                  markers: [
+                                    if (techPoint != null)
+                                      fmap.Marker(
+                                        point: techPoint,
+                                        width: 28,
+                                        height: 28,
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: kbiBrand,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                                color: kbiBlack, width: 4),
+                                            boxShadow: const [
+                                              BoxShadow(
+                                                  color: Colors.black26,
+                                                  blurRadius: 8),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    fmap.Marker(
+                                      point: jobPoint,
+                                      width: 42,
+                                      height: 42,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: kbiBlack,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                              color: kbiSurfaceMuted, width: 3),
+                                          boxShadow: const [
+                                            BoxShadow(
+                                              color: Colors.black26,
+                                              blurRadius: 10,
+                                              offset: Offset(0, 4),
+                                            ),
+                                          ],
+                                        ),
+                                        child: const Icon(
+                                          CupertinoIcons.house_fill,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          )
+                        else
+                          Container(
+                            color: kbiBlack,
+                            alignment: Alignment.center,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  CupertinoIcons.location_slash,
+                                  color: kbiWhite.withValues(alpha: 0.68),
+                                  size: 28,
+                                ),
+                                const SizedBox(height: 7),
+                                Text(
+                                  isAr
+                                      ? 'بانتظار تثبيت موقع العميل'
+                                      : 'Waiting for customer location',
+                                  style: TextStyle(
+                                    color: kbiWhite.withValues(alpha: 0.76),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        Positioned(
+                          left: 10,
+                          right: 10,
+                          bottom: 9,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: kbiSurfaceRaised.withValues(alpha: 0.94),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x1A0F172A),
+                                  blurRadius: 12,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(CupertinoIcons.location_solid,
+                                    size: 14, color: kbiBrand),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    address,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: kbiLabel,
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                                if (techPoint != null) ...[
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '$distanceDisplay • $etaDisplay',
+                                    textDirection: TextDirection.ltr,
+                                    style: const TextStyle(
+                                      color: kbiBrand,
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (timeSlot != null) ...[
+                  const SizedBox(height: 11),
+                  Row(
+                    children: [
+                      const Icon(CupertinoIcons.clock,
+                          size: 14, color: kbiSecondaryLabel),
+                      const SizedBox(width: 6),
+                      Text(
+                        timeSlot,
+                        style: const TextStyle(
+                          color: kbiSecondaryLabel,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 18),
+
+                // Show only the actions that make sense for this job stage.
+                if (isNewAssignment)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => widget.onNavigate?.call(1),
+                          icon:
+                              const Icon(CupertinoIcons.list_bullet, size: 16),
+                          label: Text(isAr ? 'كل الطلبات' : 'All orders'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 12),
+                            textStyle: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        flex: 2,
+                        child: FilledButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              CupertinoPageRoute(
+                                builder: (_) => JobDetailsScreen(
+                                  job: ServiceRequestModel.fromDoc(
+                                    activeJobDoc,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(CupertinoIcons.checkmark_alt,
+                              size: 17),
+                          label:
+                              Text(isAr ? 'مراجعة وقبول' : 'Review & accept'),
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  Column(
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: () {
+                            final lat = data['latitude'] ??
+                                (data['location'] is Map
+                                    ? (data['location'] as Map)['lat']
+                                    : null);
+                            final lng = data['longitude'] ??
+                                (data['location'] is Map
+                                    ? (data['location'] as Map)['lng']
+                                    : null);
+                            _openNavigation(
+                              lat != null ? (lat as num).toDouble() : null,
+                              lng != null ? (lng as num).toDouble() : null,
+                              address,
+                            );
+                          },
+                          icon: const Icon(CupertinoIcons.paperplane_fill,
+                              size: 16),
+                          label:
+                              Text(isAr ? 'ابدأ الملاحة' : 'Start navigation'),
+                        ),
+                      ),
+                      const SizedBox(height: 9),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: phone.trim().isEmpty
+                                  ? null
+                                  : () async {
+                                      final uri = Uri.parse('tel:$phone');
+                                      if (await canLaunchUrl(uri)) {
+                                        await launchUrl(uri);
+                                      }
+                                    },
+                              icon: const Icon(CupertinoIcons.phone, size: 16),
+                              label: Text(isAr ? 'اتصال' : 'Call'),
+                            ),
+                          ),
+                          const SizedBox(width: 9),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: phone.trim().isEmpty
+                                  ? null
+                                  : () async {
+                                      final cleanPhone = phone.replaceAll(
+                                          RegExp(r'[^0-9]'), '');
+                                      final uri = Uri.parse(
+                                          'https://wa.me/$cleanPhone');
+                                      if (await canLaunchUrl(uri)) {
+                                        await launchUrl(
+                                          uri,
+                                          mode: LaunchMode.externalApplication,
+                                        );
+                                      }
+                                    },
+                              icon: const Icon(
+                                Icons.chat_bubble_outline_rounded,
+                                size: 16,
+                                color: kbiSuccess,
+                              ),
+                              label: Text(isAr ? 'واتساب' : 'WhatsApp'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ==========================================
+  // 5. TODAY OVERVIEW (3 CARDS)
+  // ==========================================
+  Widget _buildTodayOverview({
+    required int jobsToday,
+    required int completedJobs,
+    required double earningsToday,
+    required int activeJobs,
+    required bool isAr,
+  }) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              isAr ? 'نظرة عامة على اليوم' : 'Today Overview',
+              style: const TextStyle(
+                color: kbiLabel,
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.3,
+              ),
+            ),
+            GestureDetector(
+              onTap: () => widget.onNavigate?.call(2),
+              child: Text(
+                isAr ? 'عرض الكل' : 'View all',
+                style: const TextStyle(
+                  color: kbiBrand,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Card 1: Jobs Today (Blue Icon)
+              Expanded(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: kbiSurfaceRaised,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: kbiSeparator),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.02),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: kbiBrand.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(CupertinoIcons.briefcase,
+                            color: kbiBrand, size: 17),
+                      ),
+                      const SizedBox(height: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              '$jobsToday',
+                              style: const TextStyle(
+                                color: kbiLabel,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            isAr ? 'طلبات اليوم' : 'Jobs Today',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: kbiSecondaryLabel,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            isAr
+                                ? '$completedJobs مكتمل'
+                                : '$completedJobs Completed',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: kbiSecondaryLabel,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // Card 2: Earnings Today (Green Icon)
+              Expanded(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: kbiSurfaceRaised,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: kbiSeparator),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.02),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: kbiBrand.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(CupertinoIcons.creditcard,
+                            color: kbiSuccess, size: 17),
+                      ),
+                      const SizedBox(height: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              'AED ${earningsToday.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                color: kbiLabel,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            isAr ? 'أرباح اليوم' : 'Earnings Today',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: kbiSecondaryLabel,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            completedJobs > 0
+                                ? (isAr
+                                    ? 'من $completedJobs طلب مكتمل'
+                                    : 'From $completedJobs completed')
+                                : (isAr
+                                    ? 'لا توجد أرباح مسجلة'
+                                    : 'No earnings recorded'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: completedJobs > 0
+                                  ? kbiSuccess
+                                  : const Color(0xFF94A3B8),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // Card 3: Active Job (Orange Icon)
+              Expanded(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: kbiSurfaceRaised,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: kbiSeparator),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.02),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: kbiOrange.withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(CupertinoIcons.square_grid_2x2,
+                            color: kbiOrange, size: 17),
+                      ),
+                      const SizedBox(height: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              '$activeJobs',
+                              style: const TextStyle(
+                                color: kbiLabel,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            isAr ? 'طلب نشط' : 'Active Job',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: kbiSecondaryLabel,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            isAr ? 'قيد التنفيذ' : 'In Progress',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: kbiSecondaryLabel,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}

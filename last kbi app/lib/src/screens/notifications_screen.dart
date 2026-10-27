@@ -1,0 +1,471 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart' hide TextDirection;
+
+import '../theme.dart';
+import '../utils/job_utils.dart';
+
+class NotificationsScreen extends StatefulWidget {
+  const NotificationsScreen({super.key});
+
+  @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen> {
+  bool _markingAllRead = false;
+  bool _unreadOnly = false;
+  Stream<QuerySnapshot<Map<String, dynamic>>>? _notificationsStream;
+
+  bool get _isArabic =>
+      Localizations.localeOf(context).languageCode.toLowerCase() == 'ar';
+
+  @override
+  void initState() {
+    super.initState();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      _notificationsStream = FirebaseFirestore.instance
+          .collection('notifications')
+          .where('userId', isEqualTo: uid)
+          .snapshots();
+    }
+  }
+
+  Future<void> _markAllAsRead(
+      List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) async {
+    setState(() {
+      _markingAllRead = true;
+    });
+    try {
+      final unread = docs.where((d) => d.data()['isRead'] != true).toList();
+      // Keep large inboxes within Firestore's batch write limit.
+      for (var start = 0; start < unread.length; start += 400) {
+        final batch = FirebaseFirestore.instance.batch();
+        for (final d in unread.skip(start).take(400)) {
+          batch.update(d.reference, {'isRead': true});
+        }
+        await batch.commit();
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_isArabic
+              ? 'تم تحديد جميع الإشعارات كمقروءة.'
+              : 'All notifications marked as read.'),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_isArabic
+              ? 'تعذر تحديث الإشعارات. حاول مرة أخرى.'
+              : 'Could not update notifications. Please try again.'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _markingAllRead = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+
+    return Directionality(
+      textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+      child: DefaultTabController(
+        length: 3,
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            toolbarHeight: 70,
+            titleSpacing: 16,
+            actions: [
+              IconButton(
+                tooltip: _unreadOnly
+                    ? (isAr ? 'عرض الكل' : 'Show all')
+                    : (isAr ? 'غير المقروء فقط' : 'Unread only'),
+                isSelected: _unreadOnly,
+                onPressed: () => setState(() => _unreadOnly = !_unreadOnly),
+                icon: const Icon(Icons.filter_list),
+                selectedIcon: const Icon(Icons.filter_list_alt),
+              ),
+            ],
+            title: Text(
+              isAr ? 'صندوق الوارد' : 'Inbox',
+              style: Theme.of(context).textTheme.displaySmall,
+            ),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(50),
+              child: Container(
+                height: 38,
+                margin: const EdgeInsets.fromLTRB(16, 2, 16, 10),
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  color: kbiBlack,
+                  borderRadius: BorderRadius.circular(13),
+                  border: Border.all(color: kbiSeparator),
+                ),
+                child: TabBar(
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  dividerColor: Colors.transparent,
+                  indicator: BoxDecoration(
+                    color: kbiSurfaceMuted,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  labelColor: kbiLabel,
+                  unselectedLabelColor: kbiSecondaryLabel,
+                  labelStyle: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                  tabs: [
+                    Tab(text: isAr ? 'الطلبات' : 'Jobs'),
+                    Tab(text: isAr ? 'المدفوعات' : 'Payments'),
+                    Tab(text: isAr ? 'النظام' : 'System'),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          body: uid == null
+              ? Center(
+                  child: Text(isAr ? 'لم يتم تسجيل الدخول' : 'Not logged in',
+                      style: const TextStyle(color: kbiLabel)))
+              : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  stream: _notificationsStream,
+                  builder: (context, snap) {
+                    if (snap.connectionState == ConnectionState.waiting) {
+                      return ListView.separated(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: 5,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (_, __) => const SizedBox(
+                          height: 82,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: Color(0xFFE9EAED),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(20)),
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                    if (snap.hasError) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32),
+                          child: Text(
+                            isAr
+                                ? 'تعذر تحميل الإشعارات.'
+                                : 'Notifications could not be loaded.',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: kbiSecondaryLabel),
+                          ),
+                        ),
+                      );
+                    }
+                    final rawDocs = snap.data?.docs ?? [];
+                    final docs = rawDocs.where((d) {
+                      final data = d.data();
+                      final target = (data['userId'] ??
+                              data['technicianId'] ??
+                              data['recipientId'] ??
+                              '')
+                          .toString();
+                      return target.isEmpty ||
+                          target == uid ||
+                          data['broadcast'] == true;
+                    }).toList()
+                      ..sort((a, b) {
+                        final aDate = jobDate({'date': a.data()['createdAt']})
+                                ?.millisecondsSinceEpoch ??
+                            0;
+                        final bDate = jobDate({'date': b.data()['createdAt']})
+                                ?.millisecondsSinceEpoch ??
+                            0;
+                        return bDate.compareTo(aDate);
+                      });
+
+                    final unreadCount =
+                        docs.where((d) => d.data()['isRead'] != true).length;
+
+                    return Column(
+                      children: [
+                        if (docs.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            color: Colors.transparent,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  isAr
+                                      ? '$unreadCount غير مقروء'
+                                      : '$unreadCount unread',
+                                  style: const TextStyle(
+                                      color: kbiSecondaryLabel, fontSize: 12),
+                                ),
+                                _markingAllRead
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2, color: kbiBlue),
+                                      )
+                                    : TextButton.icon(
+                                        onPressed: unreadCount > 0
+                                            ? () => _markAllAsRead(docs)
+                                            : null,
+                                        icon: const Icon(
+                                            Icons.done_all_outlined,
+                                            size: 16),
+                                        label: Text(
+                                            isAr
+                                                ? 'تحديد الكل كمقروء'
+                                                : 'Mark all read',
+                                            style:
+                                                const TextStyle(fontSize: 12)),
+                                        style: TextButton.styleFrom(
+                                          foregroundColor: kbiBlue,
+                                          disabledForegroundColor:
+                                              kbiSecondaryLabel,
+                                        ),
+                                      ),
+                              ],
+                            ),
+                          ),
+                        Expanded(
+                          child: TabBarView(
+                            children: [
+                              _buildNotificationList(docs, 'job'),
+                              _buildNotificationList(docs, 'payment'),
+                              _buildNotificationList(docs, 'system'),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotificationList(
+      List<QueryDocumentSnapshot<Map<String, dynamic>>> allDocs,
+      String filterType) {
+    // Filter docs by category
+    final filtered = allDocs.where((d) {
+      final data = d.data();
+      if (_unreadOnly && data['isRead'] == true) return false;
+      final cat =
+          (data['category'] ?? data['type'] ?? '').toString().toLowerCase();
+      if (filterType == 'job') {
+        return cat.contains('job') ||
+            cat.contains('offer') ||
+            cat.contains('order') ||
+            cat.contains('dispatch') ||
+            cat.isEmpty;
+      }
+      if (filterType == 'payment') {
+        return cat.contains('pay') ||
+            cat.contains('earn') ||
+            cat.contains('payout');
+      }
+      // Unknown categories still belong in the inbox, rather than disappearing.
+      return cat.isNotEmpty &&
+          !['job', 'offer', 'order', 'dispatch', 'pay', 'earn', 'payout']
+              .any(cat.contains);
+    }).toList();
+
+    if (filtered.isEmpty) {
+      return _buildEmptyState(filterType);
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 100),
+      itemCount: filtered.length,
+      itemBuilder: (context, index) {
+        final d = filtered[index];
+        final data = d.data();
+        final isAr = _isArabic;
+        final title = _localizedNotificationTitle(
+          (data['title'] ?? (isAr ? 'إشعار' : 'Notification')).toString(),
+          isAr,
+        );
+        final body = _localizedNotificationBody(
+          (data['body'] ?? '').toString(),
+          isAr,
+        );
+        final isRead = data['isRead'] == true;
+        final timestamp = jobDate({'date': data['createdAt']});
+        final String dateStr = timestamp != null
+            ? DateFormat(isAr ? 'yyyy/MM/dd، HH:mm' : 'd MMM yyyy, HH:mm')
+                .format(timestamp.toLocal())
+            : (isAr ? 'الوقت غير متوفر' : 'Time not provided');
+
+        return _buildNotificationItem(
+            title, body, isRead, dateStr, d.reference);
+      },
+    );
+  }
+
+  String _localizedNotificationTitle(String title, bool isAr) {
+    if (!isAr) return title;
+    return title
+        .replaceFirst(
+            RegExp(r'^New Dispatch:\s*', caseSensitive: false), 'مهمة جديدة: ')
+        .replaceFirst(
+            RegExp(r'^Job Update:\s*', caseSensitive: false), 'تحديث الطلب: ')
+        .replaceFirst(RegExp(r'^Payment Update:\s*', caseSensitive: false),
+            'تحديث الدفعة: ');
+  }
+
+  String _localizedNotificationBody(String body, bool isAr) {
+    if (!isAr || body.isEmpty) return body;
+    final assignment = RegExp(
+      r'^You have been assigned to (.+?) at (.+?)\.?$',
+      caseSensitive: false,
+    ).firstMatch(body.trim());
+    if (assignment != null) {
+      final service = assignment
+          .group(1)!
+          .replaceAll('Customer', 'العميل')
+          .replaceAll('Device Repair', 'صيانة جهاز');
+      return 'تم تعيينك لخدمة $service في ${assignment.group(2)}.';
+    }
+    return body
+        .replaceAll('Job accepted', 'تم قبول الطلب')
+        .replaceAll('Job completed', 'تم إكمال الطلب')
+        .replaceAll('Payment received', 'تم استلام الدفعة');
+  }
+
+  Widget _buildNotificationItem(String title, String body, bool isRead,
+      String date, DocumentReference ref) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: kbiSurfaceRaised,
+        borderRadius: const BorderRadius.all(Radius.circular(20)),
+        border: Border.all(
+          color: isRead ? kbiSeparator : kbiBlue,
+          width: isRead ? 1.0 : 1.2,
+        ),
+      ),
+      // The ListTile needs its own Material inside the decorated Container,
+      // otherwise its ink splashes paint behind the white background.
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListTile(
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: const BoxDecoration(
+              color: kbiSurfaceMuted,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              isRead ? CupertinoIcons.bell : CupertinoIcons.bell_fill,
+              color: isRead ? kbiSecondaryLabel : kbiBlue,
+              size: 20,
+            ),
+          ),
+          title: Text(
+            title,
+            style: TextStyle(
+              color: kbiLabel,
+              fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 4),
+              Text(
+                body,
+                style: const TextStyle(
+                    color: kbiSecondaryLabel, fontSize: 12, height: 1.3),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                date,
+                style: const TextStyle(color: Color(0xFF8B8F96), fontSize: 10),
+              ),
+            ],
+          ),
+          onTap: () async {
+            if (isRead) return;
+            try {
+              await ref.update({'isRead': true});
+            } catch (_) {
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(_isArabic
+                    ? 'تعذر تحديث الإشعار. حاول مرة أخرى.'
+                    : 'Could not update notification. Please try again.'),
+              ));
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(String filterType) {
+    final isAr = _isArabic;
+    String message = isAr
+        ? 'لا توجد عروض طلبات أو تحديثات للمواعيد'
+        : 'No new job offers or schedule updates';
+    if (filterType == 'payment') {
+      message = isAr
+          ? 'لا توجد تحديثات أو تنبيهات للمدفوعات'
+          : 'No payment clearances or payout alerts';
+    }
+    if (filterType == 'system') {
+      message = isAr
+          ? 'لا توجد إشعارات للنظام أو رسائل إدارية'
+          : 'No system notifications or admin messages';
+    }
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.notifications_off_outlined,
+              size: 48, color: kbiSecondaryLabel),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: const TextStyle(color: kbiSecondaryLabel, fontSize: 13),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
