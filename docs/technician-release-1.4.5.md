@@ -14,9 +14,9 @@ The portrait now uses the actual available height, fixing four existing small-ph
 - Flutter tests: 95 passed, including English/Arabic layouts, 140% text, contrast ratios, registration validation, authentication navigation, password reset, bank and wallet calculations, service-request parsing and location-tracking logic.
 - Backend unit tests: five passed. Cloud CI passed the Firestore rules checks.
 - iPhone simulator: the final app compiled, installed and launched.
-- Download-page browser checks: 16 passed on Chromium and WebKit at widths 320, 390, 768 and 1440. Final asset links are checked separately after publication.
+- Download-page browser checks: 27 passed against the live page on Chromium, Firefox and WebKit at widths 320, 390, 768 and 1440. Both published installer links returned HTTP 200.
 - Signed iPhone archive and IPA: version 1.4.5, build 12, bundle ae.kbi.kbiTechnicianApp, iOS 15+. Code-signature verification passed.
-- Android artifacts are built and signed by GitHub Actions, since this Mac's Java runtime crashes before Gradle starts. The release pipeline completed successfully. Certificate continuity and artifact checksums are checked before publication.
+- Android artifacts are built and signed by GitHub Actions, since this Mac's Java runtime crashes before Gradle starts. The release pipeline completed successfully. Certificate continuity with 1.4.4 and all artifact checksums were verified before publication.
 
 The website staging directory was reconstructed from 458 hash-verified files from the live Vercel deployment. Only app/download/page.tsx and app/download/download.module.css differ from that production snapshot.
 
@@ -32,3 +32,11 @@ At the start of this release, an authenticated Firebase Admin check confirmed th
 - Release branch: codex/technician-design-v1.4.5
 - Android build: https://github.com/omar41oa43-ctrl/kbi-services/actions/runs/40460651331
 - Download page: https://kbi.services/download
+
+## Published result
+
+- Website deployment: dpl_C9kZm6wRG5T3Xin4Dsi5MKHztTH2, promoted to kbi.services.
+- Release: https://github.com/omar41oa43-ctrl/kbi-services/releases/tag/v1.4.5
+- App source revision: 709f016a5857519d94edf59a1ffa901e6e61615a.
+- Android and iPhone packages return HTTP 200 and show version 1.4.5 (12).
+- Final authenticated Storage check still reports that the configured bucket does not exist.
