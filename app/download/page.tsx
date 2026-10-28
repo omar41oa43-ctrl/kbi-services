@@ -18,7 +18,7 @@ import styles from "./download.module.css";
 const release = {
   version: "1.4.5",
   url: "https://github.com/omar41oa43-ctrl/kbi-services/releases/download/v1.4.5/kbi-technician.apk",
-  iosUrl: "https://github.com/omar41oa43-ctrl/kbi-services/releases/download/v1.4.5/kbi-technician.ipa",
+  iosUrl: "https://testflight.apple.com/join/sXF3fgFh",
 };
 const pageUrl = "https://kbi.services/download";
 
@@ -162,17 +162,17 @@ export default function DownloadAppPage() {
           <div className={styles.iosRow}>
             <Smartphone size={17} aria-hidden="true" />
             <span>iPhone</span>
-            <span className={styles.comingSoon}>Registered devices</span>
+            <span className={styles.comingSoon}>TestFlight beta</span>
           </div>
           <a href={release.iosUrl} className={styles.iosDownload} data-testid="ios-download">
-            Download iPhone test build (.ipa)
+            Open iPhone TestFlight invite
             <ArrowDown size={17} aria-hidden="true" />
           </a>
           <p className={styles.iosNote}>
-            Version {release.version} · For iPhones already registered with KBI.
-            Download on a Mac and install with Apple Configurator or Xcode.
-            This file does not install directly from Safari. Public TestFlight
-            access isn’t available yet.
+            Version {release.version} (13) · Apple beta review pending.
+            Use this invitation link once Apple approves the beta. Install
+            Apple’s TestFlight app on your iPhone, then open the invite to join.
+            No Mac or device registration is needed for TestFlight.
           </p>
         </section>
 
@@ -216,14 +216,14 @@ export default function DownloadAppPage() {
                 <ChevronDown size={15} aria-hidden="true" />
               </summary>
               <p>
-                Contact KBI to confirm your iPhone is registered before downloading.
-                Connect it to a Mac, unlock and trust the Mac, then add the IPA in
-                Apple Configurator or Xcode. Developer Mode must be enabled for this
-                development build. Android APK files cannot be installed on iPhone.
+                Install TestFlight from the App Store, then open the iPhone invitation
+                link above on your phone. The beta is awaiting Apple’s review;
+                installation becomes available after approval. Sign in with your
+                approved KBI technician account. Android APK files cannot be installed on iPhone.
               </p>
               <p>
-                <a href="https://developer.apple.com/documentation/xcode/distributing-your-app-to-registered-devices"
-                  target="_blank" rel="noopener noreferrer">Apple’s registered-device installation guide</a>
+                <a href="https://testflight.apple.com/"
+                  target="_blank" rel="noopener noreferrer">Get Apple TestFlight</a>
               </p>
             </details>
             <details>

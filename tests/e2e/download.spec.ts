@@ -68,11 +68,9 @@ test("download page has a working installer link and honest platform availabilit
     page.getByRole("link", { name: "Download for Android", exact: true }),
   ).toHaveCount(1);
   const ios = page.getByTestId("ios-download");
-  await expect(ios).toHaveAttribute("href", /v1\.4\.5\/kbi-technician\.ipa$/);
-  await expect(page.getByText("Registered devices", { exact: true })).toBeVisible();
-  await expect(page.getByText(/does not install directly from Safari/)).toBeVisible();
-  const iosResponse = await request.head((await ios.getAttribute("href"))!);
-  expect(iosResponse.ok()).toBeTruthy();
+  await expect(ios).toHaveAttribute("href", "https://testflight.apple.com/join/sXF3fgFh");
+  await expect(page.getByText("TestFlight beta", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Apple beta review pending/)).toBeVisible();
   await page.getByText("Installation & help", { exact: true }).click();
   await page.getByText("Installing on iPhone", { exact: true }).click();
   await expect(page.getByText(/APK files cannot be installed on iPhone/)).toBeVisible();

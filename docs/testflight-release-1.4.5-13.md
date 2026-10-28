@@ -45,6 +45,13 @@ The existing Android 1.4.5 (12) release and registered-device development IPA re
 - Internal: `READY_FOR_BETA_TESTING`; attached to KBI Internal Testing.
 - External: `WAITING_FOR_BETA_REVIEW`; attached to KBI Technician Beta and submitted for Beta App Review.
 - Beta review notes and What to Test disclose the unavailable uploads and pending GPS/push checks.
-- Tester invitation addresses are pending user input. No unspecified people were invited.
-- Public TestFlight installation is pending Apple beta-review approval.
+- User requested link invitations. Enabled public invitation https://testflight.apple.com/join/sXF3fgFh with a 100-tester limit. No email invitations were sent.
+- Public TestFlight installation is pending Apple beta-review approval. The invitation URL returns HTTP 200; the download page now links to it with a review-pending notice.
 - Signature verified: Apple Distribution, App Store provisioning profile, no registered-device restriction, debugging disabled, production push entitlement.
+
+## Published invitation page
+
+- Production: https://kbi.services/download
+- Deployment: `dpl_D6DTbz1usHJeykaxqxcfMSqrD2Mf`
+- Built from the same 458-file source snapshot as the preceding production deployment; only the download page changed. Unrelated local changes were excluded.
+- Live download-page tests: 27 passed across Chromium, Firefox, and WebKit.

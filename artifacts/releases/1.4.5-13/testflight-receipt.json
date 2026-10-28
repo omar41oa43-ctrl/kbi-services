@@ -18,6 +18,12 @@
     "unitWidgetTests": 95,
     "simulatorOrderLifecycle": "passed",
     "locationIntegration": "incomplete",
-    "realDevicePush": "unverified"
-  }
+    "realDevicePush": "unverified",
+    "liveDownloadBrowserTests": 27
+  },
+  "publicInviteUrl": "https://testflight.apple.com/join/sXF3fgFh",
+  "publicInviteEnabled": true,
+  "publicTesterLimit": 100,
+  "downloadPage": "https://kbi.services/download",
+  "websiteDeploymentId": "dpl_D6DTbz1usHJeykaxqxcfMSqrD2Mf"
 }
