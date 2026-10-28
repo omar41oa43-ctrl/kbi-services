@@ -60,7 +60,7 @@ test("download page has a working installer link and honest platform availabilit
   const installer = page.getByTestId("android-download");
   const href = await installer.getAttribute("href");
   expect(href).toMatch(
-    /^https:\/\/github\.com\/omar41oa43-ctrl\/kbi-services\/releases\/download\/v1\.4\.6\/kbi-technician\.apk$/,
+    /^https:\/\/github\.com\/omar41oa43-ctrl\/kbi-services\/releases\/download\/v1\.4\.7\/kbi-technician\.apk$/,
   );
   const response = await request.head(href!);
   expect(response.ok()).toBeTruthy();
