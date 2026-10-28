@@ -9,6 +9,12 @@ abstract final class AppConfig {
     defaultValue: false,
   );
 
+  static const technicianFileServiceUrl = String.fromEnvironment(
+    'TECHNICIAN_FILE_SERVICE_URL',
+    defaultValue:
+        'https://ydxbojizwxpehzfgqbku.supabase.co/functions/v1/technician-files',
+  );
+
   static const webVapidKey = String.fromEnvironment('FIREBASE_WEB_VAPID_KEY');
 
   static const apiBaseUrl = String.fromEnvironment(

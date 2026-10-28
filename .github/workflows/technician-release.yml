@@ -79,7 +79,10 @@ jobs:
           fi
           "$BUILD_TOOLS_DIR/aapt" dump badging \
             build/app/outputs/flutter-apk/app-release.apk | tee build/release-badging.txt
-          grep -F "package: name='ae.kbi.kbi_technician_app' versionCode='12' versionName='1.4.5'" \
+          RELEASE_VERSION="$(sed -n 's/^version: *//p' pubspec.yaml)"
+          VERSION_NAME="${RELEASE_VERSION%+*}"
+          VERSION_CODE="${RELEASE_VERSION##*+}"
+          grep -F "package: name='ae.kbi.kbi_technician_app' versionCode='$VERSION_CODE' versionName='$VERSION_NAME'" \
             build/release-badging.txt
           grep -F "targetSdkVersion:'36'" build/release-badging.txt
           sha256sum \

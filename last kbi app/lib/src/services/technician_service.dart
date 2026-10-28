@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../config/app_config.dart';
+import 'storage_service.dart';
 import '../utils/job_utils.dart';
 
 class JobDecisionAlreadyRecordedException implements Exception {
@@ -133,10 +134,10 @@ class TechnicianService {
         body: const {'channel': 'app'},
       );
 
-  Future<void> deleteAccount() => _authorizedRequest(
-        path: '/api/technician/account',
-        method: 'DELETE',
-      );
+  Future<void> deleteAccount() async {
+    await StorageService.instance.deleteTechnicianFiles();
+    await _authorizedRequest(path: '/api/technician/account', method: 'DELETE');
+  }
 
   Future<void> updateNotificationToken({
     required String? token,

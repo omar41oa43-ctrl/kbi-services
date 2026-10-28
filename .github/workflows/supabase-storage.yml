@@ -1,0 +1,27 @@
+name: Supabase file security
+on:
+  push:
+    paths:
+      - 'supabase/**'
+      - 'tests/technician-file-security.test.mjs'
+      - '.github/workflows/supabase-storage.yml'
+  pull_request:
+    paths:
+      - 'supabase/**'
+      - 'tests/technician-file-security.test.mjs'
+      - '.github/workflows/supabase-storage.yml'
+permissions:
+  contents: read
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: '2.9.7'
+      - run: node --test tests/technician-file-security.test.mjs
+      - run: deno check --no-config supabase/functions/technician-files/index.ts
