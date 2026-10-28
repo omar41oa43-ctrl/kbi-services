@@ -393,7 +393,7 @@ class _WalletScreenState extends State<WalletScreen> {
                                           ? (isAr ? '0%' : '0%')
                                           : '${commissionRate.toStringAsFixed(0)}%',
                                       label:
-                                          isAr ? 'نسبة العمولة' : 'Tech Split',
+                                          isAr ? 'رسوم المنصة' : 'Platform fee',
                                       isAr: isAr,
                                     ),
                                   ),

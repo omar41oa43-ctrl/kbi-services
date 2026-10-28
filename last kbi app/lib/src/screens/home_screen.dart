@@ -453,7 +453,9 @@ class _NavigationItem extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      label: label,
+      label: badgeCount > 0 ? '$label, $badgeCount' : label,
+      onTap: onTap,
+      excludeSemantics: true,
       child: Tooltip(
         message: label,
         child: Material(
