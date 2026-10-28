@@ -16,8 +16,8 @@ import {
 import styles from "./download.module.css";
 
 const release = {
-  version: "1.4.5",
-  url: "https://github.com/omar41oa43-ctrl/kbi-services/releases/download/v1.4.5/kbi-technician.apk",
+  version: "1.4.6",
+  url: "https://github.com/omar41oa43-ctrl/kbi-services/releases/download/v1.4.6/kbi-technician.apk",
   iosUrl: "https://testflight.apple.com/join/sXF3fgFh",
 };
 const pageUrl = "https://kbi.services/download";
@@ -169,7 +169,7 @@ export default function DownloadAppPage() {
             <ArrowDown size={17} aria-hidden="true" />
           </a>
           <p className={styles.iosNote}>
-            Version {release.version} (13) · Apple beta review pending.
+            Version {release.version} (14) · Apple beta review pending.
             Use this invitation link once Apple approves the beta. Install
             Apple’s TestFlight app on your iPhone, then open the invite to join.
             No Mac or device registration is needed for TestFlight.

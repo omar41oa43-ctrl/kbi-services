@@ -30,6 +30,8 @@ Flutter configuration: `TECHNICIAN_FILE_SERVICE_URL` defaults to the hosted func
 
 ```sh
 node --test tests/technician-file-security.test.mjs
+# Authenticated CLI + local Firebase Admin credentials required:
+node scripts/run-technician-storage-e2e.mjs
 deno check --no-config supabase/functions/technician-files/index.ts
 cd 'last kbi app'
 flutter analyze

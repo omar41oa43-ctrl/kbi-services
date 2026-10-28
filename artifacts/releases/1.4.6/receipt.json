@@ -1,0 +1,34 @@
+{
+  "version": "1.4.6",
+  "build": 14,
+  "sourceCommit": "be1b23e247d4ac82bb178d4ff04a24b8940c6be9",
+  "supabaseProjectRef": "ydxbojizwxpehzfgqbku",
+  "bucket": "technician-files",
+  "bucketPublic": false,
+  "fileSizeLimit": 10485760,
+  "appleBuildId": "28486085-7dc7-48bc-83ac-96e138670c79",
+  "appleProcessingState": "VALID",
+  "internalBuildState": "READY_FOR_BETA_TESTING",
+  "externalBuildState": "WAITING_FOR_BETA_REVIEW",
+  "testflightInvite": "https://testflight.apple.com/join/sXF3fgFh",
+  "androidReleaseUrl": "https://github.com/omar41oa43-ctrl/kbi-services/releases/tag/v1.4.6",
+  "downloadPage": "https://kbi.services/download",
+  "websiteDeploymentId": "dpl_B3jqfDFTY8tzqp7H2ntrCxrY8jSJ",
+  "sha256": {
+    "apk": "340e9ca7340dabf30c47d2dd67a204a2b70b86977e225d334ee8719bc717de71",
+    "aab": "1a0ced3ed60b140af043022c47f951fa4194ef43a38b912b5c53f14ed55f92af",
+    "ipa": "223c4fa469f15cfae732bb09f7ae4cd79868ea35cdb5a6bde529305c098e3d1a"
+  },
+  "verification": {
+    "flutterTests": 98,
+    "fileSecurityTests": 3,
+    "nativeSimulatorUploadAndDeletion": "passed",
+    "liveStorageApi": "passed",
+    "liveBrowserTests": 27,
+    "staticAnalysis": "passed",
+    "cloudAppChecks": "passed",
+    "signedAndroidRelease": "passed",
+    "supabaseSecurityCi": "passed",
+    "physicalGpsAndPush": "unverified"
+  }
+}

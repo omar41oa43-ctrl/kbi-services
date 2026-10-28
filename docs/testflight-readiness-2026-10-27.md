@@ -1,5 +1,7 @@
 # KBI Technician: TestFlight readiness
 
+> Update 28 October: photo/document uploads are now verified through private Supabase storage in 1.4.6 (14). See [the current release record](technician-release-1.4.6.md).
+
 > Superseded: Apple agreement, app record, signing and upload setup were resolved. See [build 13 release status](testflight-release-1.4.5-13.md) for current results and remaining Storage/device checks.
 
 Checked 27 October 2026. App version 1.4.5 (12), bundle ae.kbi.kbiTechnicianApp, Apple team PQUS4YTNNP.
