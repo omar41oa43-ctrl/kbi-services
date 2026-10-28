@@ -22,8 +22,12 @@ void main() {
       (tester) async {
     expect(_token, isNotEmpty,
         reason: 'Supply a dedicated approved test account.');
-    await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform);
+    try {
+      await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform);
+    } on FirebaseException catch (error) {
+      if (error.code != 'duplicate-app') rethrow;
+    }
     await FirebaseAuth.instance.signInWithCustomToken(_token);
     for (final language in ['en', 'ar']) {
       final locale = Locale(language);
