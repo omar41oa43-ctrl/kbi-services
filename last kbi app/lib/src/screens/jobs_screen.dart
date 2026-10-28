@@ -435,7 +435,7 @@ class _JobsScreenState extends State<JobsScreen> {
       titleSpacing: 16,
       title: Text(
         widget.locale.languageCode == 'ar' ? 'الطلبات' : 'Orders',
-        style: Theme.of(context).textTheme.displaySmall,
+        style: Theme.of(context).textTheme.headlineMedium,
       ),
       actions: [
         _buildSortPopupMenu(),

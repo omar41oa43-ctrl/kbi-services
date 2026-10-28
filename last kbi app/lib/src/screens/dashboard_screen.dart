@@ -13,8 +13,10 @@ import '../models/service_request.dart';
 import '../services/location_tracking_service.dart';
 import '../services/technician_service.dart';
 import '../theme.dart';
+import '../widgets/app_load_error.dart';
 import '../utils/job_utils.dart';
 import '../widgets/stable_profile_image.dart';
+import '../widgets/dashboard_overview.dart';
 import 'job_details_screen.dart';
 import 'notifications_screen.dart';
 
@@ -41,8 +43,8 @@ class _DashboardScreenState extends State<DashboardScreen>
   bool _initialAutoOnlineTriggered = false;
   bool _isUpdatingAvailability = false;
 
-  late final Stream<DocumentSnapshot<Map<String, dynamic>>> _techStream;
-  late final Stream<List<DocumentSnapshot<Map<String, dynamic>>>> _jobsStream;
+  late Stream<DocumentSnapshot<Map<String, dynamic>>> _techStream;
+  late Stream<List<DocumentSnapshot<Map<String, dynamic>>>> _jobsStream;
   bool _restoredLocationTracking = false;
   Future<void>? _locationSetupFuture;
   bool _locationIssueDialogVisible = false;
@@ -341,12 +343,16 @@ class _DashboardScreenState extends State<DashboardScreen>
         body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
           stream: _techStream,
           builder: (context, techSnap) {
+            if (techSnap.hasError) return _buildLoadError(isAr);
+            if (!techSnap.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
             final techData = techSnap.data?.data();
             _handlePendingLocationRequest(techData);
             final String techName = techData?['full_name'] ??
                 techData?['name'] ??
                 user?.displayName ??
-                'Ahmed';
+                (isAr ? 'فني KBI' : 'KBI Technician');
             final rawStatus =
                 (techData?['status'] ?? techData?['availability'] ?? '')
                     .toString()
@@ -380,9 +386,11 @@ class _DashboardScreenState extends State<DashboardScreen>
               );
             }
 
-            final String techId =
-                (techData?['employeeId'] ?? techData?['techId'] ?? 'KBI-007396')
-                    .toString();
+            final String techId = (techData?['employeeId'] ??
+                    techData?['techId'] ??
+                    user?.uid ??
+                    '')
+                .toString();
             final String photoUrl = (techData?['profile_photo'] ??
                     techData?['photoUrl'] ??
                     techData?['avatarUrl'] ??
@@ -394,6 +402,10 @@ class _DashboardScreenState extends State<DashboardScreen>
             return StreamBuilder<List<DocumentSnapshot<Map<String, dynamic>>>>(
               stream: _jobsStream,
               builder: (context, jobsSnap) {
+                if (jobsSnap.hasError) return _buildLoadError(isAr);
+                if (!jobsSnap.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
                 final myJobs = jobsSnap.data ?? [];
 
                 // Feature a new, unaccepted dispatch before work already in
@@ -513,6 +525,17 @@ class _DashboardScreenState extends State<DashboardScreen>
           },
         ),
       ),
+    );
+  }
+
+  Widget _buildLoadError(bool isAr) {
+    return AppLoadError(
+      title: isAr ? 'تعذر تحميل لوحة العمل' : 'Couldn’t load your dashboard',
+      isArabic: isAr,
+      onRetry: () => setState(() {
+        _techStream = TechnicianService.instance.watchMyTechDoc();
+        _jobsStream = TechnicianService.instance.watchMyJobDocs();
+      }),
     );
   }
 
@@ -965,13 +988,10 @@ class _DashboardScreenState extends State<DashboardScreen>
     // -------------------------------------------------------------
     // Extract Real Destination Location and Calculate Live Distance & ETA
     // -------------------------------------------------------------
-    final rawLat = data['latitude'] ??
-        (data['location'] is Map ? (data['location'] as Map)['lat'] : null);
-    final rawLng = data['longitude'] ??
-        (data['location'] is Map ? (data['location'] as Map)['lng'] : null);
-    final bool hasDestination = rawLat is num && rawLng is num;
-    final double destLat = hasDestination ? rawLat.toDouble() : 25.2048;
-    final double destLng = hasDestination ? rawLng.toDouble() : 55.2708;
+    final destination = jobCoordinates(data);
+    final bool hasDestination = destination != null;
+    final double destLat = destination?.latitude ?? 25.2048;
+    final double destLng = destination?.longitude ?? 55.2708;
     final latlng.LatLng jobPoint = latlng.LatLng(destLat, destLng);
 
     // Get current tech position
@@ -1427,17 +1447,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                         width: double.infinity,
                         child: FilledButton.icon(
                           onPressed: () {
-                            final lat = data['latitude'] ??
-                                (data['location'] is Map
-                                    ? (data['location'] as Map)['lat']
-                                    : null);
-                            final lng = data['longitude'] ??
-                                (data['location'] is Map
-                                    ? (data['location'] as Map)['lng']
-                                    : null);
                             _openNavigation(
-                              lat != null ? (lat as num).toDouble() : null,
-                              lng != null ? (lng as num).toDouble() : null,
+                              destination?.latitude,
+                              destination?.longitude,
                               address,
                             );
                           },
@@ -1511,281 +1523,14 @@ class _DashboardScreenState extends State<DashboardScreen>
     required int activeJobs,
     required bool isAr,
   }) {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              isAr ? 'نظرة عامة على اليوم' : 'Today Overview',
-              style: const TextStyle(
-                color: kbiLabel,
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.3,
-              ),
-            ),
-            GestureDetector(
-              onTap: () => widget.onNavigate?.call(2),
-              child: Text(
-                isAr ? 'عرض الكل' : 'View all',
-                style: const TextStyle(
-                  color: kbiBrand,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Card 1: Jobs Today (Blue Icon)
-              Expanded(
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: kbiSurfaceRaised,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: kbiSeparator),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.02),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: kbiBrand.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(CupertinoIcons.briefcase,
-                            color: kbiBrand, size: 17),
-                      ),
-                      const SizedBox(height: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              '$jobsToday',
-                              style: const TextStyle(
-                                color: kbiLabel,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -0.3,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            isAr ? 'طلبات اليوم' : 'Jobs Today',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: kbiSecondaryLabel,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            isAr
-                                ? '$completedJobs مكتمل'
-                                : '$completedJobs Completed',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: kbiSecondaryLabel,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-
-              // Card 2: Earnings Today (Green Icon)
-              Expanded(
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: kbiSurfaceRaised,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: kbiSeparator),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.02),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: kbiBrand.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(CupertinoIcons.creditcard,
-                            color: kbiSuccess, size: 17),
-                      ),
-                      const SizedBox(height: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              'AED ${earningsToday.toStringAsFixed(0)}',
-                              style: const TextStyle(
-                                color: kbiLabel,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -0.3,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            isAr ? 'أرباح اليوم' : 'Earnings Today',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: kbiSecondaryLabel,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            completedJobs > 0
-                                ? (isAr
-                                    ? 'من $completedJobs طلب مكتمل'
-                                    : 'From $completedJobs completed')
-                                : (isAr
-                                    ? 'لا توجد أرباح مسجلة'
-                                    : 'No earnings recorded'),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: completedJobs > 0
-                                  ? kbiSuccess
-                                  : const Color(0xFF94A3B8),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-
-              // Card 3: Active Job (Orange Icon)
-              Expanded(
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: kbiSurfaceRaised,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: kbiSeparator),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.02),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: kbiOrange.withValues(alpha: 0.14),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(CupertinoIcons.square_grid_2x2,
-                            color: kbiOrange, size: 17),
-                      ),
-                      const SizedBox(height: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              '$activeJobs',
-                              style: const TextStyle(
-                                color: kbiLabel,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -0.3,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            isAr ? 'طلب نشط' : 'Active Job',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: kbiSecondaryLabel,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            isAr ? 'قيد التنفيذ' : 'In Progress',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: kbiSecondaryLabel,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+    return DashboardOverview(
+      jobsToday: jobsToday,
+      completedJobs: completedJobs,
+      earningsToday: earningsToday,
+      activeJobs: activeJobs,
+      isArabic: isAr,
+      onOpenWallet:
+          widget.onNavigate == null ? null : () => widget.onNavigate!(2),
     );
   }
 }

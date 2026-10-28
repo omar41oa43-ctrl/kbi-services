@@ -12,6 +12,7 @@ import '../services/fcm_service.dart';
 import '../services/storage_service.dart';
 import '../services/technician_service.dart';
 import '../theme.dart';
+import '../widgets/app_load_error.dart';
 import '../utils/bank_utils.dart';
 import '../utils/job_utils.dart';
 import '../widgets/stable_profile_image.dart';
@@ -31,8 +32,8 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  late final Stream<DocumentSnapshot<Map<String, dynamic>>> _techStream;
-  late final Stream<List<DocumentSnapshot<Map<String, dynamic>>>> _jobsStream;
+  late Stream<DocumentSnapshot<Map<String, dynamic>>> _techStream;
+  late Stream<List<DocumentSnapshot<Map<String, dynamic>>>> _jobsStream;
   bool _notificationToggled = false;
   bool _notificationPreferenceLoaded = false;
 
@@ -1037,6 +1038,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _buildLoadError(bool isAr) => AppLoadError(
+        title: isAr ? 'تعذر تحميل الملف الشخصي' : 'Couldn’t load your profile',
+        isArabic: isAr,
+        onRetry: () => setState(() {
+          _techStream = TechnicianService.instance.watchMyTechDoc();
+          _jobsStream = TechnicianService.instance.watchMyJobDocs();
+        }),
+      );
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -1054,12 +1064,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               return const Center(child: CircularProgressIndicator());
             }
             if (techSnap.hasError) {
-              return Center(
-                child: Text(
-                  'Unable to load profile: ${techSnap.error}',
-                  textAlign: TextAlign.center,
-                ),
-              );
+              return _buildLoadError(isAr);
             }
             final techData = techSnap.data?.data();
             if (!_notificationPreferenceLoaded && techData != null) {
@@ -1118,12 +1123,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (jobsSnap.hasError) {
-                  return Center(
-                    child: Text(
-                      'Unable to load performance: ${jobsSnap.error}',
-                      textAlign: TextAlign.center,
-                    ),
-                  );
+                  return _buildLoadError(isAr);
                 }
                 final jobs = jobsSnap.data ?? const [];
                 final completedJobs = jobs.where((job) {
@@ -1192,6 +1192,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         : null,
                     title: Text(
                       isAr ? 'الملف الشخصي' : 'Profile',
+                      style: Theme.of(context).textTheme.headlineMedium,
                     ),
                     actions: [
                       Padding(

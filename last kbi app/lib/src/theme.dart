@@ -44,7 +44,7 @@ ThemeData buildKbiTheme({bool highContrast = false}) {
     surfaceContainer: kbiSurfaceRaised,
     surfaceContainerHigh: kbiSurfaceMuted,
     outline: kbiSeparator,
-    outlineVariant: const Color(0x1F1ECBC7),
+    outlineVariant: kbiSeparator,
   );
 
   const baseTextTheme = TextTheme(

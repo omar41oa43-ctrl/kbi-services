@@ -766,13 +766,16 @@ class _AuthScreenState extends State<AuthScreen>
                                               : null,
                                         ),
                                         const SizedBox(width: 8),
-                                        Text(
-                                          isArabic ? 'تذكرني' : 'Remember me',
+                                        Flexible(
+                                            child: Text(
+                                          isArabic
+                                              ? 'تذكر بريدي الإلكتروني'
+                                              : 'Remember email',
                                           style: TextStyle(
                                             color: secondaryColor,
                                             fontSize: 12.5,
                                           ),
-                                        ),
+                                        )),
                                       ],
                                     ),
                                   ),

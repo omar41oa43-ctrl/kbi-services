@@ -10,6 +10,7 @@ import 'package:kbi_technician_app/src/screens/auth_screen.dart';
 import 'package:kbi_technician_app/src/screens/registration_screen.dart';
 import 'package:kbi_technician_app/src/screens/request_received_screen.dart';
 import 'package:kbi_technician_app/src/theme.dart';
+import 'package:kbi_technician_app/src/widgets/dashboard_overview.dart';
 
 void main() {
   setUpAll(() async {
@@ -50,7 +51,7 @@ void main() {
   });
 
   for (final language in ['en', 'ar']) {
-    for (final screen in ['login', 'registration', 'received']) {
+    for (final screen in ['login', 'registration', 'received', 'overview']) {
       testWidgets(
           '$language $screen supports enlarged text and shared dark styling',
           (tester) async {
@@ -65,6 +66,19 @@ void main() {
               initialShowLoginForm: true),
           'registration' =>
             RegistrationScreen(locale: locale, onLocaleChanged: (_) {}),
+          'overview' => Scaffold(
+                body: SafeArea(
+                    child: SingleChildScrollView(
+              child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: DashboardOverview(
+                      jobsToday: 8,
+                      completedJobs: 5,
+                      earningsToday: 1250.75,
+                      activeJobs: 3,
+                      isArabic: language == 'ar',
+                      onOpenWallet: () {})),
+            ))),
           _ => RequestReceivedScreen(locale: locale),
         };
         await tester.pumpWidget(MaterialApp(

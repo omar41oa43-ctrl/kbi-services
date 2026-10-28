@@ -37,7 +37,7 @@ class LiquidGlassBackdrop extends StatelessWidget {
             right: -150,
             child: _AmbientOrb(
               size: 360,
-              color: kbiBrand.withValues(alpha: 0.16),
+              color: kbiBrand.withValues(alpha: 0.06),
             ),
           ),
           Positioned(
@@ -45,7 +45,7 @@ class LiquidGlassBackdrop extends StatelessWidget {
             left: -170,
             child: _AmbientOrb(
               size: 380,
-              color: kbiBrand.withValues(alpha: 0.11),
+              color: kbiBrand.withValues(alpha: 0.04),
             ),
           ),
           child ?? const SizedBox.expand(),
@@ -112,8 +112,8 @@ class LiquidGlassSurface extends StatelessWidget {
         (highContrast
             ? kbiSurfaceRaised
             : kbiSurfaceRaised.withValues(alpha: 0.82));
-    final resolvedBorder = borderColor ??
-        (highContrast ? kbiBrand : kbiBrand.withValues(alpha: 0.40));
+    final resolvedBorder =
+        borderColor ?? (highContrast ? kbiBrand : kbiSeparator);
 
     Widget surface = Container(
       decoration: BoxDecoration(
@@ -127,7 +127,7 @@ class LiquidGlassSurface extends StatelessWidget {
                 offset: const Offset(0, 12),
               ),
               BoxShadow(
-                color: kbiBrand.withValues(alpha: 0.12),
+                color: kbiBrand.withValues(alpha: 0.04),
                 blurRadius: 18,
                 spreadRadius: -6,
               ),
@@ -151,7 +151,7 @@ class LiquidGlassSurface extends StatelessWidget {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        kbiBrand.withValues(alpha: 0.12),
+                        kbiBrand.withValues(alpha: 0.04),
                         kbiBlack.withValues(alpha: 0.04),
                       ],
                     ),

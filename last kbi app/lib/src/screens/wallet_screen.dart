@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' as intl;
 import '../services/technician_service.dart';
 import '../theme.dart';
+import '../widgets/app_load_error.dart';
 import '../utils/bank_utils.dart';
 import '../utils/job_utils.dart';
 import '../utils/wallet_utils.dart';
@@ -20,9 +21,9 @@ class WalletScreen extends StatefulWidget {
 }
 
 class _WalletScreenState extends State<WalletScreen> {
-  late final Stream<DocumentSnapshot<Map<String, dynamic>>> _techStream;
-  late final Stream<QuerySnapshot<Map<String, dynamic>>> _paymentsStream;
-  late final Stream<List<DocumentSnapshot<Map<String, dynamic>>>> _jobsStream;
+  late Stream<DocumentSnapshot<Map<String, dynamic>>> _techStream;
+  late Stream<QuerySnapshot<Map<String, dynamic>>> _paymentsStream;
+  late Stream<List<DocumentSnapshot<Map<String, dynamic>>>> _jobsStream;
   String _selectedFilter = 'ALL'; // 'ALL', 'COMPLETED', 'PENDING'
 
   @override
@@ -1331,31 +1332,15 @@ class _WalletScreenState extends State<WalletScreen> {
   }
 
   Widget _buildError(Object? error) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(CupertinoIcons.exclamationmark_triangle,
-                color: kbiRed, size: 44),
-            const SizedBox(height: 12),
-            const Text(
-              'Wallet data could not be loaded.',
-              style: TextStyle(
-                color: kbiLabel,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              '$error',
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: kbiSecondaryLabel, fontSize: 12),
-            ),
-          ],
-        ),
-      ),
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    return AppLoadError(
+      title: isAr ? 'تعذر تحميل المحفظة' : 'Couldn’t load your wallet',
+      isArabic: isAr,
+      onRetry: () => setState(() {
+        _techStream = TechnicianService.instance.watchMyTechDoc();
+        _paymentsStream = TechnicianService.instance.watchMyPayments();
+        _jobsStream = TechnicianService.instance.watchMyJobDocs();
+      }),
     );
   }
 }

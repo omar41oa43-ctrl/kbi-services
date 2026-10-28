@@ -105,7 +105,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             ],
             title: Text(
               isAr ? 'صندوق الوارد' : 'Inbox',
-              style: Theme.of(context).textTheme.displaySmall,
+              style: Theme.of(context).textTheme.headlineMedium,
             ),
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(50),

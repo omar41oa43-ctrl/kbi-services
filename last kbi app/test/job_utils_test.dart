@@ -3,6 +3,25 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kbi_technician_app/src/utils/job_utils.dart';
 
 void main() {
+  test('navigation accepts legacy coordinates and rejects invalid locations',
+      () {
+    expect(jobCoordinates({'latitude': '24.4539', 'longitude': '54.3773'}),
+        (latitude: 24.4539, longitude: 54.3773));
+    expect(
+        jobCoordinates({
+          'location': {'lat': 24.4, 'lng': 54.3}
+        }),
+        (latitude: 24.4, longitude: 54.3));
+    for (final invalid in [
+      {'latitude': 'NaN', 'longitude': 54},
+      {'latitude': 91, 'longitude': 54},
+      {'latitude': 24, 'longitude': 'Infinity'},
+      {'latitude': 24, 'longitude': 181},
+      <String, dynamic>{},
+    ]) {
+      expect(jobCoordinates(invalid), isNull);
+    }
+  });
   group('job status normalization', () {
     test('normalizes case, whitespace, and underscore separators', () {
       expect(normalizeJobStatus(' In_Progress '), 'in progress');

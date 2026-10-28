@@ -28,157 +28,166 @@ class PayoutBankCard extends StatelessWidget {
                   fontSize: 12,
                   fontWeight: FontWeight.w600)),
         ),
-        AspectRatio(
-          aspectRatio: 1.586,
-          child: Container(
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(
-                  color: const Color(0xFF527B7C).withValues(alpha: .5)),
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF25464A),
-                  Color(0xFF102C33),
-                  Color(0xFF071C25)
-                ],
-                stops: [0, .48, 1],
-              ),
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.black.withValues(alpha: .3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8))
-              ],
-            ),
-            child: Stack(
-              children: [
-                Positioned(
-                    right: -100,
-                    top: -130,
-                    child: Container(
-                      width: 330,
-                      height: 330,
-                      decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                              color: Colors.white.withValues(alpha: .055),
-                              width: 35)),
-                    )),
-                Positioned(
-                    right: -90,
-                    bottom: -180,
-                    child: Container(
-                      width: 330,
-                      height: 330,
-                      decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                              color: const Color(0xFF8BBDB9)
-                                  .withValues(alpha: .07),
-                              width: 1)),
-                    )),
-                Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                                child: Text(
-                                    complete
-                                        ? bank
-                                        : (isAr
-                                            ? 'حسابك البنكي'
-                                            : 'Your bank account'),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w700,
-                                        height: 1.1))),
-                            const SizedBox(width: 12),
-                            const Text('KBI',
-                                style: TextStyle(
-                                    color: Color(0xFFA8D9D1),
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 2)),
-                          ]),
-                      const Spacer(),
-                      Row(children: [
-                        const SizedBox(
-                            width: 39,
-                            height: 29,
-                            child: CustomPaint(painter: _ChipPainter())),
-                        const SizedBox(width: 12),
-                        Transform.rotate(
-                            angle: math.pi / 2,
-                            child: const Icon(Icons.wifi_rounded,
-                                color: Color(0xFFB7C9C8), size: 22)),
-                      ]),
-                      const SizedBox(height: 14),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: AlignmentDirectional.centerStart,
-                        child: Text(
-                            complete
-                                ? maskIban(iban)
-                                : 'AE•• •••• •••• •••• ••••',
-                            textDirection: TextDirection.ltr,
-                            style: const TextStyle(
-                                color: Color(0xFFE8F3EF),
-                                fontFamily: 'monospace',
-                                fontSize: 20,
-                                letterSpacing: 1.5)),
-                      ),
-                      const Spacer(),
-                      Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Expanded(
-                                child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                  Text(isAr ? 'صاحب الحساب' : 'ACCOUNT HOLDER',
-                                      style: const TextStyle(
-                                          color: Color(0xFF9FB9B8),
-                                          fontSize: 8,
-                                          letterSpacing: 1.2)),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                      complete
-                                          ? holder
-                                          : (isAr
-                                              ? 'أضف بيانات البنك من الملف الشخصي'
-                                              : 'Add bank details in Profile'),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          letterSpacing: .6)),
-                                ])),
-                            const SizedBox(width: 10),
-                            const Text('IBAN\nAE / AED',
-                                textAlign: TextAlign.end,
-                                style: TextStyle(
-                                    color: Color(0xFF9FB9B8),
-                                    fontSize: 9,
-                                    height: 1.5,
-                                    letterSpacing: .5)),
-                          ]),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: AspectRatio(
+              aspectRatio: 1.586,
+              child: Container(
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(
+                      color: const Color(0xFF527B7C).withValues(alpha: .5)),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF25464A),
+                      Color(0xFF102C33),
+                      Color(0xFF071C25)
                     ],
+                    stops: [0, .48, 1],
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withValues(alpha: .3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8))
+                  ],
                 ),
-              ],
+                child: Stack(
+                  children: [
+                    Positioned(
+                        right: -100,
+                        top: -130,
+                        child: Container(
+                          width: 330,
+                          height: 330,
+                          decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                  color: Colors.white.withValues(alpha: .055),
+                                  width: 35)),
+                        )),
+                    Positioned(
+                        right: -90,
+                        bottom: -180,
+                        child: Container(
+                          width: 330,
+                          height: 330,
+                          decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                  color: const Color(0xFF8BBDB9)
+                                      .withValues(alpha: .07),
+                                  width: 1)),
+                        )),
+                    Padding(
+                      padding: const EdgeInsets.all(18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                    child: Text(
+                                        complete
+                                            ? bank
+                                            : (isAr
+                                                ? 'حسابك البنكي'
+                                                : 'Your bank account'),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w700,
+                                            height: 1.1))),
+                                const SizedBox(width: 12),
+                                const Text('KBI',
+                                    style: TextStyle(
+                                        color: Color(0xFFA8D9D1),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 2)),
+                              ]),
+                          const Spacer(),
+                          Row(children: [
+                            const SizedBox(
+                                width: 39,
+                                height: 29,
+                                child: CustomPaint(painter: _ChipPainter())),
+                            const SizedBox(width: 12),
+                            Transform.rotate(
+                                angle: math.pi / 2,
+                                child: const Icon(Icons.wifi_rounded,
+                                    color: Color(0xFFB7C9C8), size: 22)),
+                          ]),
+                          const SizedBox(height: 14),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: AlignmentDirectional.centerStart,
+                            child: Text(
+                                complete
+                                    ? maskIban(iban)
+                                    : 'AE•• •••• •••• •••• ••••',
+                                textDirection: TextDirection.ltr,
+                                style: const TextStyle(
+                                    color: Color(0xFFE8F3EF),
+                                    fontFamily: 'monospace',
+                                    fontSize: 20,
+                                    letterSpacing: 1.5)),
+                          ),
+                          const Spacer(),
+                          Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Expanded(
+                                    child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                      Text(
+                                          isAr
+                                              ? 'صاحب الحساب'
+                                              : 'ACCOUNT HOLDER',
+                                          style: const TextStyle(
+                                              color: Color(0xFF9FB9B8),
+                                              fontSize: 8,
+                                              letterSpacing: 1.2)),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                          complete
+                                              ? holder
+                                              : (isAr
+                                                  ? 'أضف بيانات البنك من الملف الشخصي'
+                                                  : 'Add bank details in Profile'),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                              letterSpacing: .6)),
+                                    ])),
+                                const SizedBox(width: 10),
+                                const Text('IBAN\nAE / AED',
+                                    textAlign: TextAlign.end,
+                                    style: TextStyle(
+                                        color: Color(0xFF9FB9B8),
+                                        fontSize: 9,
+                                        height: 1.5,
+                                        letterSpacing: .5)),
+                              ]),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),

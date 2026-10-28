@@ -224,7 +224,12 @@ class _HomeScreenState extends State<HomeScreen> {
     return Stack(
       children: [
         Positioned.fill(
-          child: IndexedStack(index: _index, children: _pages),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 760),
+              child: IndexedStack(index: _index, children: _pages),
+            ),
+          ),
         ),
         if (_showOfflineNotice)
           PositionedDirectional(

@@ -356,3 +356,23 @@ DateTime? _parseDate(Object? value) {
   }
   return null;
 }
+
+/// Accept legacy numeric strings, rejecting invalid and out-of-range locations.
+({double latitude, double longitude})? jobCoordinates(
+    Map<String, dynamic> data) {
+  final location = data['location'];
+  final nested = location is Map ? location : const {};
+  final latitude =
+      double.tryParse((data['latitude'] ?? nested['lat'] ?? '').toString());
+  final longitude =
+      double.tryParse((data['longitude'] ?? nested['lng'] ?? '').toString());
+  if (latitude == null ||
+      longitude == null ||
+      !latitude.isFinite ||
+      !longitude.isFinite ||
+      latitude.abs() > 90 ||
+      longitude.abs() > 180) {
+    return null;
+  }
+  return (latitude: latitude, longitude: longitude);
+}

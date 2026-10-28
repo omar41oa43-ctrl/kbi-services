@@ -9,7 +9,7 @@ const bank = {
 };
 
 void main() {
-  for (final width in [280.0, 320.0, 400.0]) {
+  for (final width in [280.0, 320.0, 400.0, 760.0]) {
     for (final isAr in [false, true]) {
       testWidgets('bank card fits $width with Arabic=$isAr', (tester) async {
         await tester.pumpWidget(MaterialApp(
