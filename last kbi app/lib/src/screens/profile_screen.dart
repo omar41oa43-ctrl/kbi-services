@@ -12,6 +12,7 @@ import '../services/fcm_service.dart';
 import '../services/storage_service.dart';
 import '../services/technician_service.dart';
 import '../theme.dart';
+import '../utils/service_areas.dart';
 import '../widgets/app_load_error.dart';
 import '../utils/bank_utils.dart';
 import '../utils/job_utils.dart';
@@ -61,19 +62,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     'Network & IT',
     'Apple Devices',
     'Android Devices',
-  ];
-
-  final List<String> _allAreas = [
-    'Abu Dhabi City',
-    'Khalifa City',
-    'Mussafah',
-    'MBZ City',
-    'Al Reem Island',
-    'Yas Island',
-    'Saadiyat',
-    'Al Raha',
-    'Baniyas',
-    'Shamkha',
   ];
 
   Future<void> _pickAndUploadPhoto() async {
@@ -804,8 +792,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
 
                       const SizedBox(height: 24),
-                      const Text('Service Areas Covered',
-                          style: TextStyle(
+                      Text(
+                          widget.locale.languageCode == 'ar'
+                              ? 'مناطق الخدمة في الإمارات'
+                              : 'Service Areas Covered',
+                          style: const TextStyle(
                               color: kbiLabel,
                               fontWeight: FontWeight.bold,
                               fontSize: 14)),
@@ -813,10 +804,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: _allAreas.map((area) {
+                        children: serviceAreaOptions(selectedAreas).map((area) {
                           final isSel = selectedAreas.contains(area);
                           return FilterChip(
-                            label: Text(area,
+                            label: Text(
+                                serviceAreaLabel(area,
+                                    isArabic:
+                                        widget.locale.languageCode == 'ar'),
                                 style: const TextStyle(fontSize: 12)),
                             selected: isSel,
                             selectedColor: kbiBrand.withValues(alpha: 0.2),
@@ -2041,7 +2035,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const Icon(Icons.location_on_outlined,
                           color: kbiBrand, size: 14),
                       const SizedBox(width: 6),
-                      Text(area,
+                      Text(
+                          serviceAreaLabel(area,
+                              isArabic: widget.locale.languageCode == 'ar'),
                           style:
                               const TextStyle(color: kbiLabel, fontSize: 12)),
                     ],

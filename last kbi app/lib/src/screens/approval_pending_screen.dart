@@ -1,4 +1,5 @@
 import '../theme.dart';
+import '../utils/service_areas.dart';
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -1031,23 +1032,14 @@ class _ApprovalPendingScreenState extends State<ApprovalPendingScreen> {
   }
 
   Widget _buildStep3() {
-    final areas = [
-      'Abu Dhabi',
-      'Al Reem Island',
-      'Khalifa City',
-      'MBZ City',
-      'Mussafah',
-      'Yas Island',
-      'Al Raha',
-      'Saadiyat',
-      'Baniyas',
-      'Al Ain'
-    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Service Areas Covered',
-            style: TextStyle(
+        Text(
+            widget.locale.languageCode == 'ar'
+                ? 'مناطق الخدمة في الإمارات'
+                : 'Service Areas Covered',
+            style: const TextStyle(
                 fontSize: 14, fontWeight: FontWeight.bold, color: kbiBrand)),
         const SizedBox(height: 10),
         Container(
@@ -1060,10 +1052,13 @@ class _ApprovalPendingScreenState extends State<ApprovalPendingScreen> {
           child: Wrap(
             spacing: 8.0,
             runSpacing: 8.0,
-            children: areas.map((area) {
+            children: serviceAreaOptions(_selectedAreas).map((area) {
               final isSel = _selectedAreas.contains(area);
               return FilterChip(
-                label: Text(area, style: const TextStyle(fontSize: 13)),
+                label: Text(
+                    serviceAreaLabel(area,
+                        isArabic: widget.locale.languageCode == 'ar'),
+                    style: const TextStyle(fontSize: 13)),
                 selected: isSel,
                 onSelected: (selected) {
                   setState(() {

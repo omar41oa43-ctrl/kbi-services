@@ -1,3 +1,4 @@
+import '../utils/service_areas.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
@@ -585,15 +586,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         _buildDropdown(
                             label: _t('Emirate *', 'الإمارة *'),
                             value: isEmp ? _empEmirate : _compEmirate,
-                            items: const [
-                              'Abu Dhabi',
-                              'Dubai',
-                              'Sharjah',
-                              'Ajman',
-                              'Umm Al Quwain',
-                              'Ras Al Khaimah',
-                              'Fujairah'
-                            ],
+                            items: uaeEmirates,
                             onChanged: (value) {
                               if (value != null) {
                                 setState(() {
