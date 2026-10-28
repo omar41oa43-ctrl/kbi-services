@@ -8,9 +8,9 @@ Updated 28 October 2026 (Asia/Dubai).
 - App Store Connect record: `6827450526` (KBI Technician).
 - Version 1.4.5, build 13, built with Xcode 27.1 (`27A9275`), iPhoneOS 27.1 SDK.
 - App Store Connect automatic signing/export succeeded using the authorized API key. Existing certificates were not revoked.
-- App Store IPA: `/tmp/kbi-testflight-build13-export/KBI Technician.ipa`.
+- App Store IPA: `last kbi app/build/ios/testflight/KBI-Technician-1.4.5-13-AppStore.ipa`.
 - SHA-256: `c4021bc9aa55adbca291408dfba661c00f07c7e166a92e62033232d1512c122e`.
-- Apple accepted the package upload on 28 October 2026. Processing and beta distribution are checked separately; upload acceptance is not beta-review approval.
+- Apple accepted the package upload on 28 October 2026. Upload ID: `cfa82e0c-e25c-41d3-88eb-cf69d9527b62`; upload state: COMPLETE, with no reported errors or warnings. Build processing state: VALID. Processing and beta distribution are checked separately; upload acceptance is not beta-review approval.
 
 ## Configuration completed
 
@@ -33,8 +33,18 @@ Updated 28 October 2026 (Asia/Dubai).
 
 ## Firebase Storage blocker
 
-The expected bucket `kbi2-f4f19.firebasestorage.app` remains unavailable. The project-owner CLI login was refreshed and confirmed to have Firebase default-bucket creation permission. Storage creation still returned HTTP 403. The Cloud Billing API reports `billingEnabled: false` for this project, including after the user reported billing was active. The linked billing account must actually be active before provisioning can finish. Storage rules deployment and an authenticated owner-scoped photo/PDF upload must be verified afterward. No billing account was linked and no payment commitment was made by the agent.
+The expected bucket `kbi2-f4f19.firebasestorage.app` remains unavailable. The project-owner CLI login was refreshed and confirmed to have Firebase default-bucket creation permission. Storage creation still returned HTTP 403. The Cloud Billing API reports `billingEnabled: false` for this project, including after the user reported billing was active. The linked billing account API also reports `open: false`; it must be reopened or replaced with an active account before provisioning can finish. Storage rules deployment and an authenticated owner-scoped photo/PDF upload must be verified afterward. No billing account was linked and no payment commitment was made by the agent.
 
 ## Distribution distinction
 
 The existing Android 1.4.5 (12) release and registered-device development IPA remain separate artifacts. This build 13 App Store package is intended for TestFlight. A public TestFlight link requires the processed build and applicable Beta App Review approval; the App Store production submission is a separate action.
+
+## Verified TestFlight state
+
+- Build ID: `cfa82e0c-e25c-41d3-88eb-cf69d9527b62`.
+- Internal: `READY_FOR_BETA_TESTING`; attached to KBI Internal Testing.
+- External: `WAITING_FOR_BETA_REVIEW`; attached to KBI Technician Beta and submitted for Beta App Review.
+- Beta review notes and What to Test disclose the unavailable uploads and pending GPS/push checks.
+- Tester invitation addresses are pending user input. No unspecified people were invited.
+- Public TestFlight installation is pending Apple beta-review approval.
+- Signature verified: Apple Distribution, App Store provisioning profile, no registered-device restriction, debugging disabled, production push entitlement.

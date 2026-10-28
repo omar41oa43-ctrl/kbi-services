@@ -1,0 +1,23 @@
+{
+  "app": "KBI Technician",
+  "bundleId": "ae.kbi.kbiTechnicianApp",
+  "version": "1.4.5",
+  "build": 13,
+  "appStoreConnectAppId": "6827450526",
+  "buildId": "cfa82e0c-e25c-41d3-88eb-cf69d9527b62",
+  "ipaSha256": "c4021bc9aa55adbca291408dfba661c00f07c7e166a92e62033232d1512c122e",
+  "uploadState": "COMPLETE",
+  "processingState": "VALID",
+  "internalBuildState": "READY_FOR_BETA_TESTING",
+  "externalBuildState": "WAITING_FOR_BETA_REVIEW",
+  "storageReady": false,
+  "billingEnabled": false,
+  "linkedBillingAccountOpen": false,
+  "tests": {
+    "flutterAnalysis": "passed",
+    "unitWidgetTests": 95,
+    "simulatorOrderLifecycle": "passed",
+    "locationIntegration": "incomplete",
+    "realDevicePush": "unverified"
+  }
+}
