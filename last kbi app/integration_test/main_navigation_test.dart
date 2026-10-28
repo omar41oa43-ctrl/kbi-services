@@ -29,6 +29,12 @@ void main() {
       if (error.code != 'duplicate-app') rethrow;
     }
     await FirebaseAuth.instance.signInWithCustomToken(_token);
+    final previousErrorHandler = FlutterError.onError;
+    FlutterError.onError = (details) {
+      debugPrint(details.toString());
+      previousErrorHandler?.call(details);
+    };
+    addTearDown(() => FlutterError.onError = previousErrorHandler);
     for (final language in ['en', 'ar']) {
       final locale = Locale(language);
       await tester.pumpWidget(MaterialApp(

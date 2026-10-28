@@ -1478,15 +1478,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
+              Flexible(
+                  child: Text(
                 name,
+                textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: kbiLabel,
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.4,
                 ),
-              ),
+              )),
               const SizedBox(width: 8),
               if (isApproved)
                 const Icon(Icons.verified_rounded, color: kbiBrand, size: 20),

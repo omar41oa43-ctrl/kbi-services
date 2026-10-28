@@ -407,9 +407,11 @@ class _WalletScreenState extends State<WalletScreen> {
                             child: Padding(
                               padding:
                                   const EdgeInsets.fromLTRB(20, 10, 20, 10),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                              child: Wrap(
+                                alignment: WrapAlignment.spaceBetween,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                spacing: 12,
+                                runSpacing: 8,
                                 children: [
                                   Text(
                                     isAr
@@ -424,6 +426,7 @@ class _WalletScreenState extends State<WalletScreen> {
                                   ),
                                   // Filter Pills (All / Completed / Pending)
                                   Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
                                       _buildFilterPill(
                                           'ALL', isAr ? 'الكل' : 'All'),
@@ -623,7 +626,8 @@ class _WalletScreenState extends State<WalletScreen> {
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
                   children: [
-                    Text(
+                    Flexible(
+                        child: Text(
                       'AED ${balance.toStringAsFixed(2)}',
                       style: const TextStyle(
                         color: Colors.white,
@@ -631,7 +635,7 @@ class _WalletScreenState extends State<WalletScreen> {
                         fontWeight: FontWeight.w900,
                         letterSpacing: -1,
                       ),
-                    ),
+                    )),
                   ],
                 ),
 
@@ -766,9 +770,7 @@ class _WalletScreenState extends State<WalletScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          isAr
-                              ? 'طلب سحب الرصيد البنكي'
-                              : 'Request Payout / Withdrawal',
+                          isAr ? 'طلب سحب الرصيد' : 'Request payout',
                           style: const TextStyle(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w800,
