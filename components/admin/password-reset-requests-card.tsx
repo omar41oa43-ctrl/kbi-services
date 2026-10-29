@@ -2,12 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
-import { CheckCircle2, Clock3, KeyRound, Loader2, ShieldCheck, Key } from "lucide-react";
+import { Clock3, KeyRound, Loader2, ShieldCheck, Key, Trash2 } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +39,8 @@ const requestDate = (value: unknown) => {
 export function PasswordResetRequestsCard() {
   const [requests, setRequests] = useState<ResetRequest[]>([]);
   const [selected, setSelected] = useState<ResetRequest | null>(null);
+  const [deleting, setDeleting] = useState<ResetRequest | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -90,7 +91,7 @@ export function PasswordResetRequestsCard() {
   };
 
   const submitReset = async () => {
-    if (!selected) return;
+    if (!selected || submitting) return;
     if (password.length < 12) {
       setError("Use at least 12 characters for the temporary password.");
       return;
@@ -116,7 +117,10 @@ export function PasswordResetRequestsCard() {
       if (!response.ok || !result?.success) {
         throw new Error(result?.error || "Password could not be reset.");
       }
-      closeDialog();
+      setSelected(null);
+      setPassword("");
+      setConfirmPassword("");
+      setError(null);
     } catch (submitError) {
       setError(
         submitError instanceof Error
@@ -127,6 +131,34 @@ export function PasswordResetRequestsCard() {
       setSubmitting(false);
     }
   };
+
+  const deleteRequest = async () => {
+    if (!deleting || submitting) return;
+    setSubmitting(true);
+    setDeleteError(null);
+    try {
+      const response = await authorizedFetch(
+        `/api/admin/password-reset-requests/${encodeURIComponent(deleting.id)}`,
+        { method: "DELETE" },
+      );
+      const result = await response.json() as { success?: boolean; error?: string };
+      if (!response.ok || !result.success) throw new Error(result.error || "Request could not be deleted.");
+      setDeleting(null);
+    } catch (error) {
+      setDeleteError(error instanceof Error ? error.message : "Request could not be deleted.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loadError) {
+    return (
+      <Alert variant="destructive">
+        <AlertTitle>Password reset requests unavailable</AlertTitle>
+        <AlertDescription>{loadError}</AlertDescription>
+      </Alert>
+    );
+  }
 
   if (requests.length === 0) {
     return null;
@@ -180,14 +212,25 @@ export function PasswordResetRequestsCard() {
                 </div>
               </div>
 
-              <Button
-                size="sm"
-                onClick={() => setSelected(request)}
-                className="h-9 px-4 bg-primary text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition cursor-pointer hover:brightness-110 shadow-xs shrink-0"
-              >
-                <KeyRound className="size-3.5" />
-                Set New Password
-              </Button>
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <Button
+                  size="sm"
+                  onClick={() => setSelected(request)}
+                  className="h-9 px-4 bg-primary text-primary-foreground font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition cursor-pointer hover:brightness-110 shadow-xs shrink-0"
+                >
+                  <KeyRound className="size-3.5" />
+                  Set New Password
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-9 rounded-xl border-destructive/40 text-destructive hover:bg-destructive/10"
+                  onClick={() => { setDeleteError(null); setDeleting(request); }}
+                  aria-label={`Delete password reset request for ${request.email}`}
+                >
+                  <Trash2 className="size-3.5 mr-1.5" /> Delete
+                </Button>
+              </div>
             </div>
           ))}
         </div>
@@ -214,8 +257,10 @@ export function PasswordResetRequestsCard() {
             )}
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground">New Temporary Password *</Label>
+              <Label htmlFor="reset-new-password" className="text-xs font-semibold text-muted-foreground">New Temporary Password *</Label>
               <Input
+                id="reset-new-password"
+                autoComplete="new-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -225,8 +270,10 @@ export function PasswordResetRequestsCard() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground">Confirm Password *</Label>
+              <Label htmlFor="reset-confirm-password" className="text-xs font-semibold text-muted-foreground">Confirm Password *</Label>
               <Input
+                id="reset-confirm-password"
+                autoComplete="new-password"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -248,6 +295,26 @@ export function PasswordResetRequestsCard() {
               ) : (
                 "Save Password"
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={Boolean(deleting)} onOpenChange={(open) => {
+        if (!open && !submitting) { setDeleting(null); setDeleteError(null); }
+      }}>
+        <DialogContent className="max-w-md rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Delete password reset request?</DialogTitle>
+            <DialogDescription>
+              Remove the request for <strong>{deleting?.email}</strong> from the pending list.
+              The technician’s account and password will stay unchanged. An audit record is retained.
+            </DialogDescription>
+          </DialogHeader>
+          {deleteError && <Alert variant="destructive"><AlertDescription>{deleteError}</AlertDescription></Alert>}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" disabled={submitting} onClick={() => setDeleting(null)}>Cancel</Button>
+            <Button variant="destructive" disabled={submitting} onClick={deleteRequest}>
+              {submitting ? <><Loader2 className="size-4 mr-2 animate-spin" /> Deleting…</> : "Delete Request"}
             </Button>
           </DialogFooter>
         </DialogContent>
